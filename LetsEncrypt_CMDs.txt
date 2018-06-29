@@ -1,0 +1,3 @@
+./certbot-auto --apache -d owncloud.greenlightgroup.com
+
+./certbot-auto certonly --manual --preferred-challenge dns -d secure.greenlightgroup.com
