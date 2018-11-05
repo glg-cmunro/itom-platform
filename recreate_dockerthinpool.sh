@@ -8,8 +8,10 @@ DOCKER_THINPOOL_PART=1
 BS_DOCKER_THINPOOL_PART=2
 
 #Remove existing Volume Groups for Docker Thinpool
-vgcreate docker
-vgcreate bootstrap-docker
+vgremove docker -y
+vgremove bootstrap-docker -y
+
+pvremove $THINPOOL_DEVICE$DOCKER_THINPOOL_PART $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART
 
 
 #Create the Physical Volumes for Docker Thinpool

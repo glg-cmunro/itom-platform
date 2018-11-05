@@ -10,6 +10,30 @@ IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2
 sed -i "s/127.0.1.1/$IPADDR/g" /etc/hosts
 sed -i -e "1i$(head -$(grep -n $IPADDR /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)" -e "$(grep -n $IPADDR /etc/hosts | grep -v 1: | awk -F: '{print $1}')d" /etc/hosts
 
+#Turn off and disable swap
+swapoff -a
+
+KUBE_DEVICE=/dev/sdc
+KUBE_DISK_PART=1
+
+#Format Disk: KUBE_DEVICE
+echo "n
+p
+
+
+
+t
+8e
+w
+"|fdisk $KUBE_DEVICE
+
+pvcreate $KUBE_DEVICE$KUBE_DISK_PART
+vgcreate itom $KUBE_DEVICE$KUBE_DISK_PART
+lvcreate -l +100%FREE -n kubernetes itom
+mkfs.xfs /dev/mapper/itom-kubernetes
+
+##
+
 DOCKER_THINPOOL_DEVICE=/dev/sdb1
 BS_DOCKER_THINPOOL_DEVICE=/dev/sdb2
 
