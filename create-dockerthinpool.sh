@@ -50,14 +50,14 @@ lvs -o+seg_monitor
 #Create the Bootstrap-Docker Thinpool and setup the lvm profile
 lvcreate --wipesignatures y -n thinpool bootstrap_docker -l 95%VG -y
 lvcreate --wipesignatures y -n thinpoolmeta bootstrap_docker -l 1%VG -y
-lvconvert -y --zero n -c 512K --thinpool bootstrap-docker/thinpool --poolmetadata bootstrap-docker/thinpoolmeta
+lvconvert -y --zero n -c 512K --thinpool bootstrap_docker/thinpool --poolmetadata bootstrap_docker/thinpoolmeta
 
-cat <<EOT > /etc/lvm/profile/bootstrap-docker-thinpool.profile
+cat <<EOT > /etc/lvm/profile/bootstrap_docker-thinpool.profile
 activation {
   thin_pool_autoextend_threshold=80
   thin_pool_autoextend_percent=20
 }
 EOT
 
-lvchange --metadataprofile bootstrap-docker-thinpool bootstrap-docker/thinpool 
+lvchange --metadataprofile bootstrap_docker-thinpool bootstrap_docker/thinpool 
 lvs -o+seg_monitor
