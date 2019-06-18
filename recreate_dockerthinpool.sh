@@ -9,7 +9,7 @@ BS_DOCKER_THINPOOL_PART=2
 
 #Remove existing Volume Groups for Docker Thinpool
 vgremove docker -y
-vgremove bootstrap-docker -y
+vgremove bootstrap_docker -y
 
 pvremove $THINPOOL_DEVICE$DOCKER_THINPOOL_PART $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART
 
@@ -19,7 +19,7 @@ pvcreate $THINPOOL_DEVICE$DOCKER_THINPOOL_PART $THINPOOL_DEVICE$BS_DOCKER_THINPO
 
 #Create the Volume Groups for Docker Thinpool
 vgcreate docker $THINPOOL_DEVICE$DOCKER_THINPOOL_PART
-vgcreate bootstrap-docker $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART
+vgcreate bs_docker $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART
 
 #Create the Docker Thinpool and setup the lvm profile
 lvcreate --wipesignatures y -n thinpool docker -l 95%VG -y
@@ -36,17 +36,17 @@ EOT
 lvchange --metadataprofile docker-thinpool docker/thinpool 
 lvs -o+seg_monitor 
 
-#Create the Bootstrap-Docker Thinpool and setup the lvm profile
-lvcreate --wipesignatures y -n thinpool bootstrap-docker -l 95%VG -y
-lvcreate --wipesignatures y -n thinpoolmeta bootstrap-docker -l 1%VG -y
-lvconvert -y --zero n -c 512K --thinpool bootstrap-docker/thinpool --poolmetadata bootstrap-docker/thinpoolmeta
+#Create the Bootstrap_Docker Thinpool and setup the lvm profile
+lvcreate --wipesignatures y -n thinpool bs_docker -l 95%VG -y
+lvcreate --wipesignatures y -n thinpoolmeta bs_docker -l 1%VG -y
+lvconvert -y --zero n -c 512K --thinpool bs_docker/thinpool --poolmetadata bs_docker/thinpoolmeta
 
-cat <<EOT > /etc/lvm/profile/bootstrap-docker-thinpool.profile
+cat <<EOT > /etc/lvm/profile/bs_docker-thinpool.profile
 activation {
   thin_pool_autoextend_threshold=80
   thin_pool_autoextend_percent=20
 }
 EOT
 
-lvchange --metadataprofile bootstrap-docker-thinpool bootstrap-docker/thinpool 
+lvchange --metadataprofile bs_docker-thinpool bs_docker/thinpool 
 lvs -o+seg_monitor

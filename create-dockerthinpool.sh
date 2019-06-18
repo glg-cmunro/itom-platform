@@ -2,7 +2,7 @@
 # Purpose:  Create Partitions on disk and configure as thinpool devices for docker and bootstrap-docker
 
 #Setup the thinpool device variables
-THINPOOL_DEVICE=/dev/sdb
+THINPOOL_DEVICE=/dev/sdc
 DOCKER_THINPOOL_PART=1
 BS_DOCKER_THINPOOL_PART=2
 
