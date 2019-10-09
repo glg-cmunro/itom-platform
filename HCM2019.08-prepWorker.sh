@@ -2,7 +2,7 @@
 #
 # AUTHOR : chris@greenlightgroup.com
 # 
-# System prep for CDF Master host used for ?HCM? on ITOM Platform
+# System prep for CDF Worker host used for HCM on ITOM Platform
 #
 
 ################################################################################
@@ -12,30 +12,21 @@ IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2
 
 KUBE_DEVICE=/dev/sdb
 KUBE_PART=1
+KUBE_MP=/opt/kubernetes
 KUBE_VG=kube
 KUBE_LV=kube_lv
-KUBE_MP=/opt/kubernetes
 
 THINPOOL_DEVICE=/dev/sdc
-THINPOOL_SIZE=70
 DOCKER_THINPOOL_PART=1
-DOCKER_THINPOOL_SIZE=$(expr $THINPOOL_SIZE \* 85 \/ 100)
 BS_DOCKER_THINPOOL_PART=2
 
-################################################################################
-#####                     SYSTEM SECURITY AND FIREWALL                     #####
-################################################################################
-# Ensure Firewalld is set to disabled and stopped
-systemctl disable firewalld
-systemctl stop firewalld
+#Turn off and disable swap
+swapoff -a
 
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry from VMware adding hostname as 127.0.1.1
 sed -i "s/127.0.1.1/$IPADDR/g" /etc/hosts
 sed -i -e "1i$(head -$(grep -n $IPADDR /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)" -e "$(grep -n $IPADDR /etc/hosts | grep -v 1: | awk -F: '{print $1}')d" /etc/hosts
-
-#Turn off and disable swap
-swapoff -a
 
 ################################################################################
 #####                      SYSTEM DISK INFRASTRUCTURE                      #####
@@ -59,7 +50,7 @@ mkfs -t xfs /dev/$KUBE_VG/$KUBE_LV
 
 mkdir $KUBE_MP
 mount /dev/$KUBE_VG/$KUBE_LV $KUBE_MP
-echo "/dev/mapper/$KUBE_VG-$KUBE_LV $KUBE_MP                  xfs     defaults        0 0" >> /etc/fstab
+echo "/dev/mapper/$KUBE_VG-$KUBE_LV $KUBE_MP xfs defaults 0 0" >> /etc/fstab
 
 ## DOCKER THINPOOL SETUP ##
 #Format Disk: THINPOOL_DEVICE
@@ -67,7 +58,7 @@ echo "n
 p
 1
 
-+$DOCKER_THINPOOL_SIZE G
++80G
 t
 8e
 n
@@ -120,19 +111,25 @@ lvs -o+seg_monitor
 
 ## SYSCTL SETTINGS ##
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf && sysctl -p && sysctl -w vm.max_map_count=262144
-echo "net.ipv4.ip_forward=1" >> /usr/lib/sysctl.d/50-default.conf
-echo "net.core.wmem_max=4194304" >> /usr/lib/sysctl.d/50-default.conf 
-echo "net.core.rmem_max=4194304" >> /usr/lib/sysctl.d/50-default.conf
-echo "net.ipv4.tcp_wmem=4096 87380 4194304" >> /usr/lib/sysctl.d/50-default.conf
-echo "net.ipv4.tcp_rmem=4096 87380 4194304" >> /usr/lib/sysctl.d/50-default.conf
-echo "net.ipv4.ip_local_port_range = 1024 65535" >> /usr/lib/sysctl.d/50-default.conf
+echo "net.ipv4.ip_forward = 1" >> /usr/lib/sysctl.d/50-default.conf
 /sbin/sysctl --system
 
 ## USER SETUP ##
 groupadd -g 1999 itom
 useradd -g 1999 -u 1999 itom
 
-##Install required  software
+################################################################################
+#####                   INSTALLATION - REQUIRED PACKAGES                   #####
+################################################################################
 ## Only the first master needs httpd-tools
-yum install -y device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount --nogpgcheck
-yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount httpd-tools
+yum install -y java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack curl lvm2 showmount --nogpgcheck
+#yum install -y device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount --nogpgcheck
+yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl.x86_64 net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount
+
+
+################################################################################
+#####                     SYSTEM SECURITY AND FIREWALL                     #####
+################################################################################
+# Ensure Firewalld is set to disabled and stopped
+systemctl disable firewalld
+systemctl stop firewalld

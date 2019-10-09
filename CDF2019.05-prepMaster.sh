@@ -59,6 +59,7 @@ mkfs -t xfs /dev/$KUBE_VG/$KUBE_LV
 
 mkdir $KUBE_MP
 mount /dev/$KUBE_VG/$KUBE_LV $KUBE_MP
+echo "/dev/mapper/$KUBE_VG-$KUBE_LV $KUBE_MP                  xfs     defaults        0 0" >> /etc/fstab
 
 ## DOCKER THINPOOL SETUP ##
 #Format Disk: THINPOOL_DEVICE

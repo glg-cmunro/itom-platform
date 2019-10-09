@@ -16,9 +16,12 @@ NFS_MP=/var/vols/itom
 ################################################################################
 #####                     SYSTEM SECURITY AND FIREWALL                     #####
 ################################################################################
-# Ensure Firewalld is set to disabled and stopped
-systemctl disable firewalld
-systemctl stop firewalld
+## Ensure Firewalld is set to disabled and stopped
+#systemctl disable firewalld
+#systemctl stop firewalld
+firewall-cmd --zone=public --add-service=nfs --permanent
+firewall-cmd --zone=public --add-service=nfs
+systemctl reload firewalld
 
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry from VMware adding hostname as 127.0.1.1
