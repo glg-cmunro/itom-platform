@@ -1,6 +1,7 @@
 #!/bin/bash
 # Purpose:  Create Partitions on disk and configure as thinpool devices for docker and bootstrap-docker
 
+
 #Setup the thinpool device variables
 THINPOOL_DEVICE=/dev/sdc
 THINPOOL_SIZE=100
@@ -13,6 +14,7 @@ vgremove docker -y
 vgremove bootstrap_docker -y
 
 pvremove $THINPOOL_DEVICE$DOCKER_THINPOOL_PART $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART
+
 
 #Create the Physical Volumes for Docker Thinpool
 pvcreate $THINPOOL_DEVICE$DOCKER_THINPOOL_PART $THINPOOL_DEVICE$BS_DOCKER_THINPOOL_PART

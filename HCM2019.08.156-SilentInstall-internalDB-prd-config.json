@@ -1,0 +1,257 @@
+{
+    "capabilities": {
+        "configuration": [
+            {
+                "suite": {
+                    "suite-content": {
+                        "container": true,
+                        "databases": true,
+                        "monitoring": true,
+                        "network": true,
+                        "compute": true,
+                        "it_service_management": true,
+                        "middleware": true,
+                        "applications": true
+                    },
+                    "suite-vertica": {
+                        "type": "vertica",
+                        "expanded-type": "",
+                        "isInternal": false,
+                        "password": "dbadmin",
+                        "dbname": "hcmdb",
+                        "port": "5434",
+                        "host": "slcvp-hcm-v01.prd.glg.lcl",
+                        "hosts": "slcvp-hcm-v01.prd.glg.lcl",
+                        "servicename": "",
+                        "initialize": false,
+                        "user": "dbadmin"
+                    },
+                    "suite-deployment": {
+                        "type": "install"
+                    },
+                    "suite-sso": {
+                        "token": "9db7d02e0d21804975030b16c2582aed"
+                    },
+                    "suite-mpp": {
+                        "port": 8089
+                    },
+                    "suite-login": {
+                        "codarIntegrationUser": "Gr33nl1ght_",
+                        "consumerAdmin": "Gr33nl1ght_",
+                        "admin": "Gr33nl1ght_",
+                        "UISysadmin": "Gr33nl1ght_",
+                        "ooInboundUser": "Gr33nl1ght_",
+                        "idmTransportUser": "Gr33nl1ght_",
+                        "csaTransportUser": "Gr33nl1ght_",
+                        "csaReportingUser": "Gr33nl1ght_",
+                        "csbTransportUser": "Gr33nl1ght_",
+                        "sysadmin": "Gr33nl1ght_",
+                        "consumer": "Gr33nl1ght_"
+                    },
+                    "suite-database": {
+                        "oo": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "oo",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "ucmdb": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "ucmdb",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "autopass": {
+                            "type": "postgres",
+                            "expanded-type": "postgres",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "autopass",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "oodesigner": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "oodesigner",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "csa": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "csa",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "ara": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "ara",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "suite": {
+                            "type": "postgres",
+                            "expanded-type": "",
+                            "host": "default-postgresql-svc.core",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "",
+                            "isInternal": true,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "idm": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "cdfidmuser",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "cdfidmdb",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        }
+                    }
+                }
+            }
+        ],
+        "capabilitySelection": [
+            { "name": "csa-cap" },
+            { "name": "oo-cap" },
+            { "name": "co-cap" },
+            { "name": "ucmdb-cap" },
+            { "name": "codar-cap" },
+            { "name": "dma-cap" },
+            { "name": "broker-cap" },
+            { "name": "showback-cap" },
+            { "name": "governance-cap" }
+        ],
+        "edition": "ULTIMATE",
+        "version": "2019.08-156",
+        "suite": "hcm",
+        "installSize": "MEDIUM"
+    },
+    "workerNodes": [
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "slcvp-hcm-w01.prd.glg.lcl",
+            "flannelIface": "",
+            "user": "root",
+            "password": "gr33nl!ght",
+            "type": "standard"
+        },
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "slcvp-hcm-w02.prd.glg.lcl",
+            "flannelIface": "",
+            "user": "root",
+            "password": "gr33nl!ght",
+            "type": "standard"
+        },
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "slcvp-hcm-w03.prd.glg.lcl",
+            "flannelIface": "",
+            "user": "root",
+            "password": "gr33nl!ght",
+            "type": "standard"
+        }
+    ],
+    "volumes": [
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "itom-vol-claim",
+            "path": "/var/vols/itom/core",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "hcm-vol-claim",
+            "path": "/var/vols/itom/hcm",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "db-single-vol",
+            "path": "/var/vols/itom/postgres",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "itom-logging-vol",
+            "path": "/var/vols/itom/logs",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "db-backup-vol",
+            "path": "/var/vols/itom/db-backup",
+            "type": "NFS"
+        }
+    ],
+    "licenseAgreement": {
+        "eula": true,
+        "callHome": false
+    },
+    "database": {
+        "type": "intpostgres",
+        "param": {
+            "highAvailability": false
+        }
+    },
+    "useCustomizedCert": false,
+    "masterHA": false,
+    "masterNodes": [],
+    "allowWorkerOnMaster": false,
+    "connection": {
+        "port": "443",
+        "externalHostname": "hcm.gitops.com"
+    }
+}

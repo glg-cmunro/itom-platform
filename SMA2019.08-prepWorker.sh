@@ -4,11 +4,6 @@
 # 
 # System prep for CDF Worker host used for HCM on ITOM Platform
 #
-#  System Size:
-#    CPU: 8
-#    RAM: 32 (32768MB)
-#    HDD: 60, 110, 100
-#
 
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
@@ -23,46 +18,24 @@ KUBE_VG=kube
 KUBE_LV=kube_lv
 
 THINPOOL_DEVICE=/dev/sdc
-THINPOOL_SIZE=100
 DOCKER_THINPOOL_PART=1
-DOCKER_THINPOOL_SIZE=$(expr $THINPOOL_SIZE \* 85 \/ 100)
 BS_DOCKER_THINPOOL_PART=2
+
+#Turn off and disable swap
+swapoff -a
 
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry from VMware adding hostname as 127.0.1.1
 sed -i "s/127.0.1.1/$IPADDR/g" /etc/hosts
 sed -i -e "1i$(head -$(grep -n $IPADDR /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)" -e "$(grep -n $IPADDR /etc/hosts | grep -v 1: | awk -F: '{print $1}')d" /etc/hosts
-sed -i "/::1/c\#::1\tlocalhost6 localhost6.localdomain6" /etc/hosts
-
-#Turn off and disable swap
-swapoff -a
-sed -e "/swap/ s/^#*/#/g" -i /etc/fstab
 
 ## USER SETUP ##
-groupadd -g 1999 itom
-useradd -g 1999 -u 1999 itom
+groupadd -g 1999 itsma
+useradd -g 1999 -u 1999 itsma
 
 ################################################################################
 #####                      SYSTEM DISK INFRASTRUCTURE                      #####
 ################################################################################
-## Resize root disk if necessary
-echo "d
-2
-n
-p
-2
-
-
-t
-2
-8e
-w
-"|fdisk /dev/sda
-partprobe
-pvresize /dev/sda2
-lvextend -l +100%FREE $ROOT_LVM_DEVICE
-xfs_growfs $ROOT_LVM_DEVICE
-
 ## /opt/kubernetes setup ##
 #Format Disk: KUBE_DEVICE
 echo "n
@@ -90,7 +63,7 @@ echo "n
 p
 1
 
-+$DOCKER_THINPOOL_SIZE G
++90G
 t
 8e
 n
@@ -142,28 +115,49 @@ lvchange --metadataprofile bootstrap_docker-thinpool bootstrap_docker/thinpool
 lvs -o+seg_monitor
 
 ## SYSCTL SETTINGS ##
-echo "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
+#echo "net.ipv4.tcp_tw_reuse=1" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.core.wmem_max=4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.core.rmem_max=4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.tcp_wmem=4096 87380 4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.tcp_rmem=4096 87380 4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.ip_local_port_range = 1024 65535" >> /usr/lib/sysctl.d/90-CDF.conf
+
 modprobe br_netfilter
 echo "net.bridge.bridge-nf-call-iptables=1" >> /usr/lib/sysctl.d/92-Worker.conf
 echo "net.bridge.bridge-nf-call-ip6tables=1" >> /usr/lib/sysctl.d/92-Worker.conf
+
 echo "net.ipv4.ip_forward=1" >> /usr/lib/sysctl.d/92-Worker.conf
 echo "net.ipv4.tcp_tw_recycle=0" >> /usr/lib/sysctl.d/92-Worker.conf
 echo "kernel.sem=50100 128256000 50100 2560" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "vm.max_map_count=262144" >> /usr/lib/sysctl.d/92-Worker.conf && sysctl -p && sysctl -w vm.max_map_count=262144
+echo "vm.max_map_count=262144" >> /usr/lib/sysctl.d/92-Worker.conf
+
+sysctl -p
 /sbin/sysctl --system
+
+echo "* hard nofile 1000000" >> /etc/security/limits.conf
+echo "* soft nofile 1000000" >> /etc/security/limits.conf
+echo "root hard nofile 1000000" >> /etc/security/limits.conf
+echo "root soft nofile 1000000" >> /etc/security/limits.conf
+echo "itsma hard nofile 1000000" >> /etc/security/limits.conf
+echo "itsma soft nofile 1000000" >> /etc/security/limits.conf
+echo "* soft nproc 1000000" >> /etc/security/limits.conf
+echo "* hard nproc 1000000" >> /etc/security/limits.conf
+
 
 ################################################################################
 #####                   INSTALLATION - REQUIRED PACKAGES                   #####
 ################################################################################
 ## Only the first master needs httpd-tools
-yum install -y java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack curl lvm2 showmount socat --nogpgcheck
+yum install -y java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack curl lvm2 showmount --nogpgcheck
 #yum install -y device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount --nogpgcheck
-yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl.x86_64 net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount socat
+yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl.x86_64 net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount
 
 
 ################################################################################
 #####                     SYSTEM SECURITY AND FIREWALL                     #####
 ################################################################################
-# Ensure Firewalld is set to disabled and stopped
+## Ensure Firewalld is configured properly or set to disabled and stopped
+#firewall-cmd --add-masquerade --permanent
+#firewall-cmd --reload
 systemctl disable firewalld
 systemctl stop firewalld

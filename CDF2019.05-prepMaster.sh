@@ -33,6 +33,8 @@ systemctl stop firewalld
 #Fix /etc/hosts entry from VMware adding hostname as 127.0.1.1
 sed -i "s/127.0.1.1/$IPADDR/g" /etc/hosts
 sed -i -e "1i$(head -$(grep -n $IPADDR /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)" -e "$(grep -n $IPADDR /etc/hosts | grep -v 1: | awk -F: '{print $1}')d" /etc/hosts
+#Edit IPv6 Address to remove localhost
+sed -i "s/$(head -$(grep -n ::1 /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)/::1   localhost6 localhost6.localdomain6/" /etc/hosts
 
 #Turn off and disable swap
 swapoff -a

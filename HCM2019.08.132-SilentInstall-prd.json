@@ -1,0 +1,106 @@
+{
+    "suite": "hcm",
+    "edition": "ULTIMATE",
+    "version": "2019.08.132",
+    "installSize": "SMALL",
+    "capabilitySelection": [
+        {"name": "csa-cap"},
+        {"name": "oo-cap"},
+        {"name": "co-cap"},
+        {"name": "ucmdb-cap"},
+        {"name": "dma-cap"},
+        {"name": "broker-cap"},
+        {"name": "showback-cap"},
+        {"name": "governance-cap"}
+    ],
+    "configuration": [
+        {
+            "hcm_password": "Gr33nl1ght_",
+            "suite-vertica": {
+                    "type": "vertica",
+                    "expandedType": "",
+                    "isInternal": false,
+                    "user": "dbadmin",
+                    "password": "dbadmin",
+                    "dbname": "hcmdb",
+                    "port": 5434,
+                    "host": "slcvp-hcm-v01.prd.glg.lcl",
+                    "hosts": "slcvp-hcm-v01.prd.glg.lcl",
+                    "serviceName": "",
+                    "initialize": false
+            }
+        }
+    ],
+    "masterHA": false,
+    "useCustomizedCert": false,
+    "allowWorkerOnMaster": false,
+    "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+    "flannelIface": "",
+    "skipResourceCheck": false,
+    "skipWarning": false,
+    "masterNodes": [],
+    "workerNodes": [
+        {
+            "hostname": "slcvp-hcm-w01.prd.glg.lcl",
+            "user": "root",
+            "password": "Gr33nl1ght_",
+            "skipWarning": false,
+            "skipResourceCheck": false,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "flannelIface": "",
+            "type": "standard"
+        },
+        {
+            "hostname": "slcvp-hcm-w02.prd.glg.lcl",
+            "user": "root",
+            "password": "Gr33nl1ght_",
+            "skipWarning": false,
+            "skipResourceCheck": false,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "flannelIface": "",
+            "type": "standard"
+        },
+        {
+            "hostname": "slcvp-hcm-w03.prd.glg.lcl",
+            "user": "root",
+            "password": "Gr33nl1ght_",
+            "skipWarning": false,
+            "skipResourceCheck": false,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap_docker-thinpool",
+            "flannelIface": "",
+            "type": "standard"
+        }
+    ],
+    "volumes": [
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "itom-vol-claim",
+            "path": "/var/vols/itom/core",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "hcm-vol-claim",
+            "path": "/var/vols/itom/hcm",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "itom-logging-vol",
+            "path": "/var/vols/itom/logs",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "db-backup-vol",
+            "path": "/var/vols/itom/db-backup",
+            "type": "NFS"
+        },
+        {   
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "db-single-vol",
+            "path": "/var/vols/itom/db",
+            "type": "NFS"
+        }
+    ]
+}

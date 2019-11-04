@@ -2,12 +2,7 @@
 #
 # AUTHOR : chris@greenlightgroup.com
 # 
-# System prep for CDF Worker host used for HCM on ITOM Platform
-#
-#  System Size:
-#    CPU: 8
-#    RAM: 32 (32768MB)
-#    HDD: 60, 110, 100
+# System prep for CDF Master host used for SMA on ITOM Platform
 #
 
 ################################################################################
@@ -18,9 +13,9 @@ ROOT_LVM_DEVICE=/dev/mapper/centos_glg--centos7-root
 
 KUBE_DEVICE=/dev/sdb
 KUBE_PART=1
-KUBE_MP=/opt/kubernetes
 KUBE_VG=kube
 KUBE_LV=kube_lv
+KUBE_MP=/opt/kubernetes
 
 THINPOOL_DEVICE=/dev/sdc
 THINPOOL_SIZE=100
@@ -28,19 +23,29 @@ DOCKER_THINPOOL_PART=1
 DOCKER_THINPOOL_SIZE=$(expr $THINPOOL_SIZE \* 85 \/ 100)
 BS_DOCKER_THINPOOL_PART=2
 
+
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry from VMware adding hostname as 127.0.1.1
 sed -i "s/127.0.1.1/$IPADDR/g" /etc/hosts
 sed -i -e "1i$(head -$(grep -n $IPADDR /etc/hosts | awk -F: '{print $1}') /etc/hosts | tail -1)" -e "$(grep -n $IPADDR /etc/hosts | grep -v 1: | awk -F: '{print $1}')d" /etc/hosts
-sed -i "/::1/c\#::1\tlocalhost6 localhost6.localdomain6" /etc/hosts
 
 #Turn off and disable swap
-swapoff -a
-sed -e "/swap/ s/^#*/#/g" -i /etc/fstab
+#swapoff -a
+#sed -i "s//dev/mapper/centos_glg--centos7-swap"
 
 ## USER SETUP ##
-groupadd -g 1999 itom
-useradd -g 1999 -u 1999 itom
+groupadd -g 1999 itsma
+useradd -g 1999 -u 1999 itsma
+
+
+################################################################################
+#####                   INSTALLATION - REQUIRED PACKAGES                   #####
+################################################################################
+## Install required  software for CDF Master Server
+## Only the first master needs httpd-tools
+yum install -y device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount socat httpd-tools --nogpgcheck
+#yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount socat httpd-tools
+
 
 ################################################################################
 #####                      SYSTEM DISK INFRASTRUCTURE                      #####
@@ -142,28 +147,40 @@ lvchange --metadataprofile bootstrap_docker-thinpool bootstrap_docker/thinpool
 lvs -o+seg_monitor
 
 ## SYSCTL SETTINGS ##
-echo "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
+#echo "net.ipv4.tcp_tw_reuse=1" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.core.wmem_max=4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.core.rmem_max=4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.tcp_wmem=4096 87380 4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.tcp_rmem=4096 87380 4194304" >> /usr/lib/sysctl.d/90-CDF.conf
+echo "net.ipv4.ip_local_port_range = 1024 65535" >> /usr/lib/sysctl.d/90-CDF.conf
+
 modprobe br_netfilter
-echo "net.bridge.bridge-nf-call-iptables=1" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "net.bridge.bridge-nf-call-ip6tables=1" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "net.ipv4.ip_forward=1" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "net.ipv4.tcp_tw_recycle=0" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "kernel.sem=50100 128256000 50100 2560" >> /usr/lib/sysctl.d/92-Worker.conf
-echo "vm.max_map_count=262144" >> /usr/lib/sysctl.d/92-Worker.conf && sysctl -p && sysctl -w vm.max_map_count=262144
+echo "net.bridge.bridge-nf-call-iptables=1" >> /usr/lib/sysctl.d/91-Master.conf
+echo "net.bridge.bridge-nf-call-ip6tables=1" >> /usr/lib/sysctl.d/91-Master.conf
+
+echo "net.ipv4.ip_forward=1" >> /usr/lib/sysctl.d/91-Master.conf
+echo "net.ipv4.tcp_tw_recycle=0" >> /usr/lib/sysctl.d/91-Master.conf
+echo "kernel.sem=50100 128256000 50100 2560" >> /usr/lib/sysctl.d/91-Master.conf
+echo "vm.max_map_count=262144" >> /usr/lib/sysctl.d/91-Master.conf
+
+sysctl -p
 /sbin/sysctl --system
 
-################################################################################
-#####                   INSTALLATION - REQUIRED PACKAGES                   #####
-################################################################################
-## Only the first master needs httpd-tools
-yum install -y java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack curl lvm2 showmount socat --nogpgcheck
-#yum install -y device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount --nogpgcheck
-yum list device-mapper-libs java-1.8.0-openjdk libgcrypt libseccomp libtool-ltdl.x86_64 net-tools nfs-utils rpcbind systemd-libs unzip conntrack-tools curl lvm2 showmount socat
+echo "* hard nofile 1000000" >> /etc/security/limits.conf
+echo "* soft nofile 1000000" >> /etc/security/limits.conf
+echo "root hard nofile 1000000" >> /etc/security/limits.conf
+echo "root soft nofile 1000000" >> /etc/security/limits.conf
+echo "itsma hard nofile 1000000" >> /etc/security/limits.conf
+echo "itsma soft nofile 1000000" >> /etc/security/limits.conf
+echo "* soft nproc 1000000" >> /etc/security/limits.conf
+echo "* hard nproc 1000000" >> /etc/security/limits.conf
 
 
 ################################################################################
 #####                     SYSTEM SECURITY AND FIREWALL                     #####
 ################################################################################
-# Ensure Firewalld is set to disabled and stopped
+## Ensure Firewalld is configured properly or set to disabled and stopped
+#firewall-cmd --add-masquerade --permanent
+#firewall-cmd --reload
 systemctl disable firewalld
 systemctl stop firewalld
