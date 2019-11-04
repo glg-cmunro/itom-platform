@@ -32,6 +32,7 @@ useradd -g 1999 -u 1999 itom
 #####                      SYSTEM DISK INFRASTRUCTURE                      #####
 ################################################################################
 ## /var/vols/itom filesystem setup ##
+
 echo "n
 p
 1
