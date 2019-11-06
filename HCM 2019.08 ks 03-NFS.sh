@@ -2,13 +2,14 @@
 #
 # AUTHOR : chris@greenlightgroup.com
 # 
-# System prep for ALL VMs cloned in VMware vCenter using a Custom Spec File
+# System prep for NFS Server host used for HCM on ITOM Platform
+# *** For use with systems built from SA Kickstart Template ***
 #
-#  VMware clone ends up putting a hostname entry in /etc/hosts with:
-#    127.0.1.1  <hostname>
-#  
-#  This is to replace that entry with the current IP Address
-#  And to drop the IPv6 entry from use
+#  System Size:
+#    CPU: 8
+#    RAM: 16 (16384MB)
+#    HDD: 50, 200
+#
 
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
