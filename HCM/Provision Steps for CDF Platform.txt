@@ -1,0 +1,85 @@
+Provision Steps taken for CDF Platform/Suite installations
+
+1. Clone base image
+2. Flex Memory / CPU / Disk
+3. Add additional Disks (/dev/sdb, /dev/sdc)
+4. Resize / partition
+5. Partition additional Disks
+6. Create/Mount /opt/kubernetes Masters/Workers
+7. Create/configure thinpool Masters/Workers
+8. Disable swap Masters/Workers
+9. Setup NFS
+10. Setup Postgres
+11. Setup Vertica
+
+
+#VARIABLES FOR SILENT INSTALL
+Suite FQDN
+Master 01 Hostname
+<Master 02 Hostname>
+<Master 03 Hostname>
+Worker 01 Hostname
+Worker 02 Hostname
+Worker 03 Hostname
+Vertica DB Hostname
+Postgres DB Hostname
+NFS Server Hostname
+
+#Command to trigger silent install
+/tmp/ITOM_Suite_Foundation_2019.08.00132/install -m /tmp/hcm-2019.08-metadata.tgz -c /tmp/hcm-gitops-com-config.json -P Gr33nl1ght_ --nfs-server slcvp-hcm-n01.prd.glg.lcl --nfs-folder /var/vols/itom/core -e suite -i /tmp/images -t 180
+
+##Clean servers to re-run installer
+#1. Uninstall kubernetes on all Master/Worker nodes
+/opt/kubernetes/uninstall.sh -y
+#2. Drop/Recreate CDF IDM DB from Postgres
+#3. Clean/Recreate Docker thinpool
+#4. Clean NFS directories
+
+
+##OS SYSTEM PARAMS - ALL
+
+#Directory FreeSpace requirements
+/var    20GB
+/tmp    10GB
+
+
+
+#Values for /etc/sysctl.conf
+net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-ip6tables=1
+net.ipv4.ip_forward=1 #Not on RHEL 8.0
+net.ipv4.tcp_tw_recycle=0
+kernel.sem=50100 128256000 50100 2560
+vm.max_map_count=262144
+
+#MF Tuning recommendations
+
+
+##OS SYSTEM PARAMS - NFS
+    4CPU, 12GB
+    /dev/sda    200GB
+
+
+##OS SYSTEM PARAMS - Master
+    4CPU, 12GB
+    /dev/sda    100GB   #Covers all except /opt/kubernetes and thinpool
+    /dev/sdb    50GB
+    /dev/sdc    90GB    #Round to 100GB?
+
+    #Directory FreeSpace requirements
+    /opt/kubernetes     50GB
+    /var/opt/kubernetes 50GB
+    /var/lib/kubelet    10GB
+
+
+##OS SYSTEM PARAMS - Worker
+    8CPU, 32GB
+    /dev/sda    100GB   #Covers all except /opt/kubernetes and thinpool
+    /dev/sdb    50GB
+    /dev/sdc    70GB    #Round to 100GB?
+
+
+##OS SYSTEM PARAMS - DB (Postgres)
+    8CPU, 32GB
+    /dev/sda    200GB
+

@@ -14,6 +14,7 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
+IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2}' | cut -d "/" -f 1)
 #HOST_NFS=slcvp-hcm-n01.prd.glg.lcl
 #HOST_POSTGRES=slcvp-hcm-d01.prd.glg.lcl
 #HOST_VERTICA=slcvp-hcm-v01.prd.glg.lcl
@@ -22,7 +23,6 @@
 #HOST_WORKER02=slcvp-hcm-w02.prd.glg.lcl
 #HOST_WORKER03=slcvp-hcm-w03.prd.glg.lcl
 #EXT_HOSTNAME=hcm.gitops.com
-IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2}' | cut -d "/" -f 1)
 
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry

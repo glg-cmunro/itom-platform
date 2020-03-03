@@ -37,24 +37,11 @@ useradd dbadmin -g verticadba
 cd /tmp
 unzip $VDB_PKG
 rpm -Uvh $VDB_RPM
-/opt/vertica/sbin/install_vertica --hosts `hostname -f` --rpm $VDB_RPM --dba-user dbadmin --data-dir /opt/vertica
+/opt/vertica/sbin/install_vertica --hosts `hostname -f` --rpm $VDB_RPM --dba-user dbadmin --data-dir /opt/vertica --accept-eula --license /tmp/itom-hcm.key
 
 su - dbadmin
-/opt/vertica/bin/adminTools
 ##Install License Key itom-hcm.key
-
-
-
-
-
-
-
-
-
-
-
-
-
+#/opt/vertica/bin/adminTools
 
 
 /opt/vertica/bin/adminTools -t create_db -d hcmdb -p dbadmin --hosts=`hostname -f` --policy=always
@@ -73,12 +60,12 @@ req_extensions     = v3_req
 
 # extensions
 [ VDB_CACert ]
-countryName            = "US"                     # C=
-stateOrProvinceName    = "UT"                     # ST=
-localityName           = "West Jordan"            # L=
-organizationName       = "Greenlight Group, LLC." # O=
-organizationalUnitName = "GLG IT - CA Cert"       # OU=
-commonName             = "HCM Vertica CACert"     # CN=
+countryName            = "US"                                 # C=
+stateOrProvinceName    = "UT"                                 # ST=
+localityName           = "West Jordan"                        # L=
+organizationName       = "Greenlight Group, LLC."             # O=
+organizationalUnitName = "GLG IT - CA Cert"                   # OU=
+commonName             = "HCM Vertica CACert - `hostname -f`" # CN=
 
 [ v3_req ]
 basicConstraints    = CA:TRUE
@@ -107,6 +94,7 @@ policyConstraints = requireExplicitPolicy:3
 countryName            = "US"                     # C=
 stateOrProvinceName    = "Utah"                   # ST=
 localityName           = "West Jordan"            # L=
+organizationName       = "Greenlight Group, LLC." # O=
 organizationalUnitName = "GLG IT - Server Cert"   # OU=
 commonName             = "`hostname -f`"          # CN=
 
