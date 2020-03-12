@@ -45,7 +45,7 @@ sed -e "/max_connections/ s/^#*/#/g" -i /var/lib/pgsql/9.6/data/postgresql.conf
 sed -e "/shared_buffers/ s/^#*/#/g" -i /var/lib/pgsql/9.6/data/postgresql.conf
 
 cat <<EOT >> /var/lib/pgsql/9.6/data/postgresql.conf
-## CDF Edits - HCM 2019.08
+## CDF Edits
 max_connections = '1000'
 listen_addresses = '*'
 shared_buffers = '4GB'
@@ -55,7 +55,7 @@ effective_cache_size = '4GB'
 track_counts = on
 autovacuum = on
 #timezone = 'UTC'
-## CDF Edits - HCM 2019.08
+## CDF Edits
 EOT
 systemctl restart postgresql-9.6.service
 
