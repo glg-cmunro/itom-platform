@@ -48,6 +48,7 @@ do
   dbUser=${suiteDBs[$db]}
   sudo -u postgres /usr/pgsql-$PGSQL_VERSION/bin/pg_dump -Fc -c --inserts -f $DB_BACKUP_DIR/$dbDate.$dbName-$dbUser.dmp $dbName -U $dbUser -h `hostname -f`
 done
+  sudo -u postgres /usr/pgsql-$PGSQL_VERSION/bin/pg_dump -Fc -c --inserts -f $DB_BACKUP_DIR/$dbDate.$dbName-$dbUser.dmp $dbName -U $dbUser -h `hostname -f`
 
 ##NOT USED##
 #sudo -u postgres /usr/pgsql-9.6/bin/pg_dump -c -f /opt/sma/db/`date +%g%m%d_%H%M%S`_dr_autopassdb.dmp autopassdb -U autopass -h `hostname -f`
@@ -188,6 +189,9 @@ sudo -u postgres /usr/pgsql-9.6/bin/pg_restore -U postgres -w -c -v -h `hostname
 sudo -u postgres /usr/pgsql-9.6/bin/pg_restore -U postgres -w -c -v -h `hostname -f` -d xservices_mng `ls /opt/sma/db/*xservices_mng.dmp.Fc`
 sudo -u postgres /usr/pgsql-9.6/bin/pg_restore -U postgres -w -c -v -h `hostname -f` -d xservices_rms `ls /opt/sma/db/*xservices_rms.dmp.Fc`
 '''
+
+##To execute as pg_dumpall
+#sudo -u postgres /usr/pgsql-9.6/bin/psql -U postgres -w -f /opt/sma/db/20200313_smax_dr_dumpall.dmp
 
 
 ################################################################################

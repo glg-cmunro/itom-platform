@@ -1,0 +1,131 @@
+Process Automation:
+GLG Employee Onboarding
+
+Global Information to be collected:
+    Intake questions:
+        What Office 365 licensing do they need? (Essentials only, Business Premium)
+        Do they need a Laptop? Desktop? Both?  (Monitor, Keyboard, Mouse, etc?)
+        Do they need Join.Me conference bridge?
+        
+
+    Required:
+        First Name
+        Last Name
+        Full Name
+        Mobile Number
+        Alt. Email (To send onboarding info to)
+        Role / Title / Position [Sales,Engineer,Management,Intern, Contractor, PartnerSVC]
+
+    Optional:
+        Address
+        - City
+        - State
+        - Zip
+
+    Department
+    Office Location (Home/Remote)
+
+1. Office 365
+    Add User to O365 (Email, OneDrive, Teams, SharePoint, etc.)
+        RPA Recording - Web UI - Add User
+            Inputs: 
+                First Name
+                Last Name
+                Display Label (Full Name)
+                
+            Outputs:
+                Email Address
+
+    Dynamics (If required, for sales)
+
+2. CenturyLink VOIP
+    Setup User VOIP (GreenLight Business Phone)
+        RPA Recording - Web UI - Add User
+            Inputs:
+                First Name
+                Last Name
+                Display Label (Full Name)
+                Office Number
+                Email Address
+                Login ID (First initial, Last name, 4 digit ext.)
+
+            Outputs:
+                Office Phone Number
+
+3. GreenLight Active Directory
+    Add User to GLG A.D. (Access to GLG Network, Hardware, Repository, etc.)
+        RPA Recording - MMC.exe - Add User
+            Inputs:
+                First Name
+                Last Name
+                Display Label (Full Name)
+                Department
+                Title
+                Mobile Phone
+                Office Phone
+                Email Address
+                Login ID (First initial, Last name)
+
+            Outputs:
+
+4. Harvest
+    Add User to Harvest (Billing/Payroll)
+        Email to Teresa with User details to add to Harvest
+
+5. SMA-X
+    Add User to GLG Tenant (Support tickets)
+
+6. Hardware Package
+    What hardware is required? (Based on Role)
+    Prepare Hardware for User
+        Email to Ethan with hardware request
+
+Join.Me
+
+GLG Cisco VPN
+
+QuoteWerks
+
+Sonitrol
+
+Verizon
+
+
+
+GLG Employee Termination:
+
+1. SMA-X
+
+2. Harvest
+    Remove User from Harvest
+        Email to Teresa with details to Remove
+
+3. GreenLight Active Directory
+
+4. CenturyLink VOIP
+    Remove User from VOIP
+        RPA Recording - Web UI - Remove User
+            Inputs:
+                Display Label (Full Name)
+
+            Outputs:
+
+5. Office 365
+    Remove user from O365
+        RPA Recording - Web UI - Remove User
+            Inputs:
+                Full Name
+            Outputs:
+
+6. Hardware Package
+    Recover GreenLight Hardware from User
+
+Join.Me
+
+GLG Cisco VPN (??)
+
+QuoteWerks (??)
+
+Sonitrol (??)
+
+Verizon (??)
