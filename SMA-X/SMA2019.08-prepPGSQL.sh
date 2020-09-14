@@ -59,3 +59,29 @@ xfs_growfs $ROOT_LVM_DEVICE
 firewall-cmd --zone=public --add-port=5432/tcp --permanent
 firewall-cmd --zone=public --add-port=5432/tcp
 systemctl reload firewalld
+
+### SUITE Specific: SMA
+### Task: CREATE Users/Databases
+sudo -u postgres psql
+CREATE USER cdfidmuser login PASSWORD 'Gr33nl1ght_'; 
+GRANT cdfidmuser TO postgres; 
+CREATE DATABASE cdfidmdb WITH owner=cdfidmuser;
+CREATE DATABASE cdfidmuser WITH owner=cdfidmuser;
+CREATE DATABASE suitedb WITH owner=cdfidmuser;
+\c cdfidmdb; 
+ALTER SCHEMA public OWNER TO cdfidmuser;
+ALTER SCHEMA public RENAME TO cdfidmschema;
+REVOKE ALL ON SCHEMA cdfidmschema from public;
+GRANT ALL ON SCHEMA cdfidmschema to cdfidmuser; 
+ALTER USER cdfidmuser SET search_path TO cdfidmschema;
+
+CREATE USER dbadmin login password 'Gr33nl1ght_' inherit;
+#CREATE DATABASE idm with owner=dbadmin;
+#CREATE DATABASE csa with owner=dbadmin;
+#CREATE DATABASE oo with owner=dbadmin;
+#CREATE DATABASE oodesigner with owner=dbadmin;
+#CREATE DATABASE ucmdb with owner=dbadmin;
+#CREATE DATABASE autopass with owner=dbadmin;
+#CREATE DATABASE ara with owner=dbadmin;
+\q
+

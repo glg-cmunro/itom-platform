@@ -4,9 +4,13 @@ GLG Employee Onboarding
 Global Information to be collected:
     Intake questions:
         What Office 365 licensing do they need? (Essentials only, Business Premium)
+        Do they need Dynamics CRM?
         Do they need a Laptop? Desktop? Both?  (Monitor, Keyboard, Mouse, etc?)
         Do they need Join.Me conference bridge?
-        
+        What Groups do they belong in? (Sales, Engineers, Support, Info, Employees, Contractors, etc.)
+        Do they need QuoteWerks?
+        Do they need an office key? Security Code?
+
 
     Required:
         First Name
@@ -23,15 +27,31 @@ Global Information to be collected:
         - Zip
 
     Department
-    Office Location (Home/Remote)
+    Office Location (GLG Office || Home/Remote)
 
 1. Office 365
+    NOTES:
+        New User cannot be added directly to a group - mailbox could take up to 1 hour to provision before add to group works
+
+    Questions to address:
+        What Groups / Distribution Lists do they get added to?
+        What O365 license(s) should be assigned
+        
     Add User to O365 (Email, OneDrive, Teams, SharePoint, etc.)
         RPA Recording - Web UI - Add User
             Inputs: 
                 First Name
                 Last Name
                 Display Label (Full Name)
+                Username (First Name all lowercase is the default)
+                Address
+                City
+                State
+                Zip
+                Mobile Number
+                Title
+                Department
+                Location
                 
             Outputs:
                 Email Address
@@ -85,6 +105,8 @@ Join.Me
 GLG Cisco VPN
 
 QuoteWerks
+    Add User to AD Group for Access to QuoteWerks SharePoint
+    Map Network drive Q: to QuoteWerks share
 
 Sonitrol
 

@@ -8,23 +8,23 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
-DR_BIN_DIR='/opt/sma/bin'
-DR_TMP_DIR='/opt/sma/tmp'
-DR_OUTPUT_DIR='/opt/sma/output'
+DR_BIN_DIR='/var/vols/itom/toolkit_1.1.3'
+DR_TMP_DIR='/var/vols/itom/tmp'
+DR_OUTPUT_DIR='/var/vols/itom/dr_backup/suite_backup'
 DR_NFS_DIR='/opt/sma/nfs'
 DR_SMARTA_DIR='/opt/sma/smarta-nfs'
 
 ##PRD
-#SRC_MASTER_HOST='azr6133prdapp01.earaa6133.azr.slb.com'
-#SRC_NFS_HOST='10.192.236.147'
+#SRC_MASTER_HOST='10.0.1.127'
+#SRC_NFS_HOST='10.0.1.127'
 #SRC_GLOBAL_VOL='/PRD_SIS_ITSMA_GLOBAL'
 #SRC_SMARTA_VOL='/PRD_SIS_ITMSA_SMARANALYTICS'
 
 ##QTY
-SRC_MASTER_HOST='azr6133qtyapp01.earaa6133.azr.slb.com'
-SRC_NFS_HOST='10.192.240.161'
-SRC_GLOBAL_VOL='/QTY_SIS_ITSMA_GLOBAL'
-SRC_SMARTA_VOL=''
+SRC_MASTER_HOST='10.0.1.163'
+SRC_NFS_HOST='10.0.1.163'
+SRC_GLOBAL_VOL='/var/vols/itom/itsma/global-volume'
+SRC_SMARTA_VOL='/var/vols/itom/itsma/smartanalytics-volume'
 
 ##DEV
 #SRC_MASTER_HOST='azr6133devapp10.earaa6133.azr.slb.com'
@@ -42,10 +42,10 @@ function backup_suite() {
     ##Verify pre-requisites with preaction script to ensure all mount points are accessible
     #python /opt/sma/bin/disaster_recovery/sma_dr_executors/dr_preaction.py
     
-    mkdir -p $DR_TMP_DIR
-    mkdir -p $DR_OUTPUT_DIR
-    mkdir -p $DR_NFS_DIR
-    mkdir -p $DR_SMARTA_DIR
+    sudo mkdir -p $DR_TMP_DIR
+    sudo mkdir -p $DR_OUTPUT_DIR
+    sudo mkdir -p $DR_NFS_DIR
+    sudo mkdir -p $DR_SMARTA_DIR
 
     ##Mount the necessary NFS directories for the Suite
     mount $SRC_NFS_HOST:$SRC_GLOBAL_VOL $DR_NFS_DIR

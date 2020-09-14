@@ -114,3 +114,4 @@ CREATE DATABASE ucmdb with owner=hcmadmin;
 CREATE DATABASE autopass with owner=hcmadmin;
 CREATE DATABASE ara with owner=hcmadmin;
 \q
+
