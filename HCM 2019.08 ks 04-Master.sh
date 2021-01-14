@@ -54,6 +54,5 @@ unzip ITOM_Suite_Foundation_2019.08.00132.zip
 
 cd /tmp/sInstall
 unzip /tmp/ITOM_Suite_Foundation_2019.08.00132/tools/generate-download/offline-download.zip
-/tmp/sInstall/offline-download/downloadimages.sh -d /tmp/sInstall/images -u jcthepcguy -p Cmandm42181 -y
 
 /tmp/ITOM_Suite_Foundation_2019.08.00132/install -m /tmp/sInstall/hcm-2019.08-metadata.tgz -c /tmp/sInstall/hcm-silentInstall-config.json -P Gr33nl1ght_ --nfs-server slcvu-hcm-n01.uat.glg.lcl --nfs-folder /var/vols/itom/cdf/itom-vol-claim -e suite -i /tmp/sInstall/images --skip-warning -t 180

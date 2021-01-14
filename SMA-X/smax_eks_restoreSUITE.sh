@@ -27,7 +27,7 @@ ns=$(sudo kubectl get ns | grep itsma | awk {'print $1'});
 function restore_suite() {
 
     ##Uncompress the backup file to restorable content
-    sudo python $DR_BIN_DIR/disaster_recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUT_DIR -m restore -f `ls $DR_TOOL_PATH/sma-dr-*.gz`
+    sudo python $DR_BIN_DIR/disaster_recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUT_DIR -m restore -f `ls $DR_TOOL_PATH/suite_backup/sma-dr-*.gz`
 
     ##Restore SUITE Configuration content only
     sudo python $DR_BIN_DIR/disaster_recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol --disable-nfs --disable-attachment

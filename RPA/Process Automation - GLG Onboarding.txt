@@ -99,16 +99,19 @@ Global Information to be collected:
     What hardware is required? (Based on Role)
     Prepare Hardware for User
         Email to Ethan with hardware request
+        Create SMAX Request for Hardware requisition
 
 Join.Me
 
 GLG Cisco VPN
+    Add User to AD Group for VPN
 
 QuoteWerks
     Add User to AD Group for Access to QuoteWerks SharePoint
     Map Network drive Q: to QuoteWerks share
 
 Sonitrol
+    Email to Sonitrol to add code to Access Office
 
 Verizon
 
@@ -123,6 +126,8 @@ GLG Employee Termination:
         Email to Teresa with details to Remove
 
 3. GreenLight Active Directory
+    Disable Account
+    Move Account to Disabled Users
 
 4. CenturyLink VOIP
     Remove User from VOIP
@@ -145,9 +150,12 @@ GLG Employee Termination:
 Join.Me
 
 GLG Cisco VPN (??)
+    Disable User - Remove from AD Group?
 
 QuoteWerks (??)
-
+    Disable User - Remove from AD Group?
+    
 Sonitrol (??)
-
+    Email Sonitrol request user code removed
+    
 Verizon (??)

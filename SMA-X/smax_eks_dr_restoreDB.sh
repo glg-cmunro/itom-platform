@@ -68,7 +68,7 @@ function restore_db() {
     suiteDBs[smartadb]='smarta;Gr33nl1ght_'
 
     ##Create .pgpass file to hold db login
-    echo "\#$DB_PASS_FILE" | sudo tee $DB_PASS_FILE
+    echo "#$DB_PASS_FILE" | $SUDO_ tee $DB_PASS_FILE
     for db in "${!suiteDBs[@]}"
     do
         DB_NAME=$db
@@ -76,25 +76,25 @@ function restore_db() {
         DB_USER=${dbARR[0]}
         DB_PASS=${dbARR[1]}
     
-        echo "$TGT_DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" | sudo tee -a $DB_PASS_FILE
+        echo "$TGT_DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" | $SUDO_ tee -a $DB_PASS_FILE
     done
-    sudo chmod 600 $DB_PASS_FILE
+    $SUDO_ chmod 600 $DB_PASS_FILE
 
-    ##Create DB Users and blank Databases if needed
-    echo "$TGT_DB_HOST:5432:postgres:postgres:Gr33nl1ght_" | sudo tee -a $DB_PASS_FILE
-    echo sudo $PG_BIN_DIR/psql -U postgres -h $TGT_DB_HOST
-    for db in "${!suiteDBs[@]}"
-    do
-        DB_NAME=$db
-        IFS=';' read -ra dbARR <<< ${suiteDBs[$db]}
-        DB_USER=${dbARR[0]}
-        DB_PASS=${dbARR[1]}
-    
-        echo "CREATE DATABASE $DB_NAME;"
-        echo "CREATE USER $DB_USER with password $DB_PASS;"
-        echo "GRANT ALL PRIVILEGES ON $DB_NAME TO $DB_USER;"
-    done
-    echo "\q"
+    ## Create DB Users and blank Databases if needed
+    #echo "$TGT_DB_HOST:5432:postgres:postgres:Gr33nl1ght_" | $SUDO_ tee -a $DB_PASS_FILE
+    #echo $SUDO_ $PG_BIN_DIR/psql -U postgres -h $TGT_DB_HOST
+    #for db in "${!suiteDBs[@]}"
+    #do
+    #    DB_NAME=$db
+    #    IFS=';' read -ra dbARR <<< ${suiteDBs[$db]}
+    #    DB_USER=${dbARR[0]}
+    #    DB_PASS=${dbARR[1]}
+    #
+    #    echo "CREATE DATABASE $DB_NAME;"
+    #    echo "CREATE USER $DB_USER with password $DB_PASS;"
+    #    echo "GRANT ALL PRIVILEGES ON $DB_NAME TO $DB_USER;"
+    #done
+    #echo "\q"
 
     START_TIME=$(date +%Y%m%d_%H%M%S)
     DR_DATE=$(date +%Y%m%d_%H%M%S)
@@ -109,20 +109,6 @@ function restore_db() {
 
         sudo $PG_RESTORE -Fc -c -d $DB_NAME -U $DB_USER -h $TGT_DB_HOST -v < $DB_FILENAME
         #sudo $PG_RESTORE -Fc -c -d xservices_rms -U maas_admin -h $TGT_DB_HOST < 20200824_213626.xservices_rms-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts $DB_NAME -U $DB_USER -h $TGT_DB_HOST -f $DB_FILENAME
-        #sudo $PG_DUMP -Fc -c --inserts bo_config -U bo_db_user -h $TGT_DB_HOST -f 20200824_213626.bo_config-bo_db_user.dmp
-        #sudo $PG_DUMP -Fc -c --inserts bo_ats -U bo_db_user -h $TGT_DB_HOST -f 20200824_213626.bo_ats-bo_db_user.dmp
-        #sudo $PG_DUMP -Fc -c --inserts bo_license -U bo_db_user -h $TGT_DB_HOST -f 20200824_213626.bo_license-bo_db_user.dmp
-        #sudo $PG_DUMP -Fc -c --inserts bo_user -U bo_db_user -h $TGT_DB_HOST -f 20200824_213626.bo_user-bo_db_user.dmp
-        #sudo $PG_DUMP -Fc -c --inserts autopassdb -U autopass -h $TGT_DB_HOST -f 20200824_213626.autopassdb-autopass.dmp
-        #sudo $PG_DUMP -Fc -c --inserts idm -U idm -h $TGT_DB_HOST -f 20200824_213626.idm-idm.dmp
-        #sudo $PG_DUMP -Fc -c --inserts maas_admin -U maas_admin -h $TGT_DB_HOST -f 20200824_213626.maas_admin-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts maas_template -U maas_admin -h $TGT_DB_HOST -f 20200824_213626.maas_template-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts xservices_ems -U maas_admin -h $TGT_DB_HOST -f 20200824_213626.xservices_ems-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts xservices_mng -U maas_admin -h $TGT_DB_HOST -f 20200824_213626.xservices_mng-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts xservices_rms -U maas_admin -h $TGT_DB_HOST -f 20200824_213626.xservices_rms-maas_admin.dmp
-        #sudo $PG_DUMP -Fc -c --inserts smartadb -U smarta -h $TGT_DB_HOST -f 20200824_213626.smartadb-smarta.dmp
-        #sudo $PG_DUMP -Fc -c --inserts autopassdb -U autopass -h $TGT_DB_HOST -f 20200824_213626.autopassdb-autopass.dmp
     done
     COMPLETE_TIME=$(date +%Y%m%d_%H%M%S)
     echo "Completed RESTORE: $START_TIME - $COMPLETE_TIME"
@@ -130,3 +116,28 @@ function restore_db() {
 }
 
 restore_db $DB_RESTORE_DIR
+
+
+### Create DB Users if needed (Blank Database Instance)
+"""
+CREATE USER autopass login PASSWORD 'Gr33nl1ght_'; 
+CREATE USER bo_db_user login PASSWORD 'Gr33nl1ght_'; 
+CREATE USER idm login PASSWORD 'Gr33nl1ght_'; 
+CREATE USER maas_admin login PASSWORD 'Gr33nl1ght_'; 
+CREATE USER smarta login PASSWORD 'Gr33nl1ght_'; 
+
+CREATE DATABASE autopassdb WITH owner=autopass;
+CREATE DATABASE bo_ats WITH owner=bo_db_user;
+CREATE DATABASE bo_config WITH owner=bo_db_user;
+CREATE DATABASE bo_license WITH owner=bo_db_user;
+CREATE DATABASE bo_user WITH owner=bo_db_user;
+CREATE DATABASE idm WITH owner=idm;
+CREATE DATABASE maas_admin WITH owner=maas_admin;
+CREATE DATABASE maas_template WITH owner=maas_admin;
+CREATE DATABASE xservices_ems WITH owner=maas_admin;
+CREATE DATABASE xservices_mng WITH owner=maas_admin;
+CREATE DATABASE xservices_rms WITH owner=maas_admin;
+CREATE DATABASE smartadb WITH owner=smarta;
+
+GRANT ALL ON DATABASE autopassdb to autopass;
+"""

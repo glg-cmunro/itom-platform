@@ -86,3 +86,16 @@ CREATE DATABASE ucmdb with owner=suitedbadmin;
 CREATE DATABASE autopass with owner=suitedbadmin;
 CREATE DATABASE ara with owner=suitedbadmin;
 \q
+
+
+###SMAX External CDF DB...
+CREATE USER cdfapiserver login PASSWORD 'Gr33nl1ght_';
+GRANT cdfapiserver TO postgres;
+CREATE DATABASE cdfapiserverdb WITH owner=cdfapiserver;
+
+\c cdfapiserverdb
+ALTER SCHEMA public OWNER TO cdfapiserver;
+ALTER SCHEMA public RENAME TO cdfapiserver;
+REVOKE ALL ON SCHEMA cdfapiserver FROM public;
+GRANT ALL ON SCHEMA cdfapiserver TO cdfapiserver;
+ALTER USER cdfapiserver SET search_path TO cdfapiserver;
