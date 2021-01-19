@@ -1,0 +1,10 @@
+Step by Step:  DR Backup / Restore - SMAX 2020.02
+
+
+1. On Source System: SSH in and verify SUITE is up and running
+2. 
+
+
+Transfer sma_dr_backup files to TARGET System
+    i. Create SSH Tunnel from TARGET system to SOURCE System
+    ssh -L 2222:10.0.1.98:22 -i /home/cmunro/.ssh/id_rsa cmunro@34.214.24.21 cat -

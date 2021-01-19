@@ -1,0 +1,21 @@
+Enter text into a form field
+
+1. Select the browser object to place the cursor in the field (Using RPA)
+
+
+    ##Set the replay type to Mouse instead of Browser events
+    
+    Setting.WebPackage("ReplayType") = 2'Set to use Mouse events instead of Browser events
+    Browser("CenturyLink Portal").Page("Manage Users_2").WebList("viewns_Z7_0IK81C41I0D780I73J0P").Select "#3"
+
+Wait 2
+Browser("CenturyLink Portal").Page("Manage Users_2").WebEdit("viewns_Z7_0IK81C41I0D780I73J0P_3").Click
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.SendKeys(Parameter("voip_number"))
+Wait 2
+WshShell.SendKeys("{ENTER}")
+Wait 2
+Set WshShell = Nothing
+
+    ##Set the replay type back to Browser events when done
+    Setting.WebPackage("ReplayType") = 1'Set back to Browser events

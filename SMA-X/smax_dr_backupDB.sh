@@ -8,6 +8,10 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
+<<<<<<< HEAD
+=======
+USE_SUDO=1
+>>>>>>> 7159625be18995e887c5cb2adc504196760a78d2
 PG_VERSION='9.6'
 DB_BACKUP_DIR='/opt/sma/db'
 
@@ -52,6 +56,7 @@ function backup_db() {
     mkdir -p $DB_BACKUP_DIR
     
     declare -A suiteDBs
+<<<<<<< HEAD
     suiteDBs[autopassdb]=autopass
     suiteDBs[bo_ats]=bo_db_user
     suiteDBs[bo_config]=bo_db_user
@@ -65,6 +70,36 @@ function backup_db() {
     suiteDBs[xservices_rms]=maas_admin
     suiteDBs[smartadb]=smarta
     #suiteDBs[sxdb]=dbadmin
+=======
+    #suiteDBs[autopassdb]=autopass
+    #suiteDBs[bo_ats]=bo_db_user
+    #suiteDBs[bo_config]=bo_db_user
+    #suiteDBs[bo_license]=bo_db_user
+    #suiteDBs[bo_user]=bo_db_user
+    #suiteDBs[idm]=idm
+    #suiteDBs[maas_admin]=maas_admin
+    #suiteDBs[maas_template]=maas_admin
+    #suiteDBs[xservices_ems]=maas_admin
+    #suiteDBs[xservices_mng]=maas_admin
+    #suiteDBs[xservices_rms]=maas_admin
+    #suiteDBs[smartadb]=smarta
+    #suiteDBs[sxdb]=dbadmin
+    
+    ##If schemas all owned by postgres use this instead
+    suiteDBs[autopassdb]=postgres
+    suiteDBs[bo_ats]=postgres
+    suiteDBs[bo_config]=postgres
+    suiteDBs[bo_license]=postgres
+    suiteDBs[bo_user]=postgres
+    suiteDBs[idm]=postgres
+    suiteDBs[maas_admin]=postgres
+    suiteDBs[maas_template]=postgres
+    suiteDBs[xservices_ems]=postgres
+    suiteDBs[xservices_mng]=postgres
+    suiteDBs[xservices_rms]=postgres
+    suiteDBs[smartadb]=postgres
+    #suiteDBs[sxdb]=postgres
+>>>>>>> 7159625be18995e887c5cb2adc504196760a78d2
 
     DR_DATE=$(date +%Y%m%d_%H%M%S)
     for db in "${!suiteDBs[@]}"
@@ -74,7 +109,14 @@ function backup_db() {
         DB_FILENAME=$DB_BACKUP_DIR/$DR_DATE.$DB_NAME-$DB_USER.dmp
 
         echo DR Backup DB: Backing up $DB_NAME to File $DB_FILENAME ...
+<<<<<<< HEAD
         sudo -u postgres $PG_DUMP -Fc -c --inserts -f $DB_FILENAME $DB_NAME -U $DB_USER -h `hostname -f`
+=======
+        sudo -u postgres $PG_DUMP -Fc -c --inserts $DB_NAME -U $DB_USER -h `hostname -f` -w -f $DB_FILENAME
+        ##If using PostgreSQL 9.5 -f is not an option instead output command to a file
+        #sudo -u postgres $PG_DUMP -Fc -c --inserts -d $DB_NAME -w -U $DB_USER > $DB_FILENAME
+        #sudo -u postgres $PG_DUMP -Fc -c --inserts -d $DB_NAME -w -U $DB_USER > $DB_FILENAME
+>>>>>>> 7159625be18995e887c5cb2adc504196760a78d2
     done
 }
 

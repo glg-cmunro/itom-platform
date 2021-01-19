@@ -126,6 +126,31 @@
                             "isInternal": false,
                             "initialize": true,
                             "servicename": ""
+                        },
+                        "suite": {
+                            "type": "postgres",
+                            "expanded-type": "postgres",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "port": "5432",
+                            "user": "cdfidmuser",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "suitedb",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "idm": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "slcvp-hcm-d01.prd.glg.lcl",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "hcmadmin",
+                            "password": "Gr33nl1ght_",
+                            "dbname": "idm",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
                         }
                     }
                 }
@@ -183,25 +208,25 @@
         {
             "host": "slcvp-hcm-n01.prd.glg.lcl",
             "name": "itom-vol-claim",
-            "path": "/var/vols/itom/core",
+            "path": "/var/vols/itom/cdf/itom-vol-claim",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "itom-logging-vol",
+            "path": "/var/vols/itom/cdf/itom-logging-vol",
+            "type": "NFS"
+        },
+        {
+            "host": "slcvp-hcm-n01.prd.glg.lcl",
+            "name": "db-backup-vol",
+            "path": "/var/vols/itom/cdf/db-backup-vol",
             "type": "NFS"
         },
         {
             "host": "slcvp-hcm-n01.prd.glg.lcl",
             "name": "hcm-vol-claim",
             "path": "/var/vols/itom/hcm",
-            "type": "NFS"
-        },
-        {
-            "host": "slcvp-hcm-n01.prd.glg.lcl",
-            "name": "itom-logging-vol",
-            "path": "/var/vols/itom/logs",
-            "type": "NFS"
-        },
-        {
-            "host": "slcvp-hcm-n01.prd.glg.lcl",
-            "name": "db-backup-vol",
-            "path": "/var/vols/itom/db-backup",
             "type": "NFS"
         }
     ],

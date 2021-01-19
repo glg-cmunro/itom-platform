@@ -1,0 +1,283 @@
+{
+    "capabilities": {
+        "configuration": [
+            {
+                "suite": {
+                    "suite-content": {
+                        "container": true,
+                        "databases": true,
+                        "monitoring": true,
+                        "network": true,
+                        "compute": true,
+                        "it_service_management": true,
+                        "middleware": true,
+                        "applications": true
+                    },
+                    "suite-vertica": {
+                        "type": "vertica",
+                        "expanded-type": "",
+                        "isInternal": false,
+                        "password": "somepassword",
+                        "dbname": "somedbpassword",
+                        "port": 5433,
+                        "host": "vertica.example.com",
+                        "hosts": "vertica.example.com",
+                        "servicename": "",
+                        "initialize": false,
+                        "user": "someuser"
+                    },
+                    "suite-deployment": {
+                        "type": "install"
+                    },
+                    "suite-sso": {
+                        "token": "9db7d02e0d21804975030b16c2582aed"
+                    },
+                    "suite-mpp": {
+                        "port": 8089
+                    },
+                    "suite-login": {
+                        "codarIntegrationUser": "Cloud_123",
+                        "consumerAdmin": "Cloud_123",
+                        "admin": "Cloud_123",
+                        "UISysadmin": "Cloud_123",
+                        "ooInboundUser": "Cloud_123",
+                        "idmTransportUser": "Cloud_123",
+                        "csaTransportUser": "Cloud_123",
+                        "csaReportingUser": "Cloud_123",
+                        "csbTransportUser": "Cloud_123",
+                        "sysadmin": "Cloud_123",
+                        "consumer": "Cloud_123"
+                    },
+                    "suite-database": {
+                        "oo": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "oo",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "ucmdb": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "ucmdb",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "autopass": {
+                            "type": "postgres",
+                            "expanded-type": "postgres",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "autopass",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "oodesigner": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "oodesigner",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "csa": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "csa",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "ara": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "hosts": "",
+                            "host": "hcm-postgres.example.com",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "ara",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "suite": {
+                            "type": "postgres",
+                            "expanded-type": "",
+                            "host": "default-postgresql-svc.core",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "",
+                            "isInternal": true,
+                            "initialize": true,
+                            "servicename": ""
+                        },
+                        "idm": {
+                            "type": "postgres",
+                            "expanded-type": "postgresql",
+                            "host": "hcm-postgres.example.com",
+                            "hosts": "",
+                            "port": "5432",
+                            "user": "someuser",
+                            "password": "somepassword",
+                            "dbname": "idm",
+                            "isInternal": false,
+                            "initialize": true,
+                            "servicename": ""
+                        }
+                    },
+                    "suite-proxy": {
+                        "enabled": true,
+                        "url": "http://proxydetials:<<port>>",
+                        "password": "",
+                        "port": port,
+                        "host": " proxydetials ",
+                        "user": ""
+                    }
+                }
+            }
+        ],
+        "capabilitySelection": [
+            {
+                "name": "csa-cap"
+            },
+            {
+                "name": "oo-cap"
+            },
+            {
+                "name": "co-cap"
+            },
+            {
+                "name": "ucmdb-cap"
+            },
+            {
+                "name": "codar-cap"
+            },
+            {
+                "name": "dma-cap"
+            },
+            {
+                "name": "broker-cap"
+            },
+            {
+                "name": "showback-cap"
+            },
+            {
+                "name": "governance-cap"
+            }
+        ],
+        "edition": "ULTIMATE",
+        "version": "2019.08-XX",
+        "suite": "hcm",
+        "installSize": "MEDIUM"
+    },
+    "workerNodes": [
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap--docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "hcm-worker1.example.com",
+            "flannelIface": "",
+            "user": "someuser",
+            "password": "somepassword ",
+            "type": "<<STANDARD_NODE_SIZE_LABEL>>"
+        },
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap--docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "hcm-worker2.example.com",
+            "flannelIface": "",
+            "user": "someuser",
+            "password": "somepassword",
+            "type": "<<STANDARD_NODE_SIZE_LABEL>>"
+        },
+        {
+            "skipWarning": true,
+            "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/bootstrap--docker-thinpool",
+            "skipResourceCheck": true,
+            "hostname": "hcm-worker3.example.com",
+            "flannelIface": "",
+            "user": "someuser",
+            "password": "somepassword",
+            "type": "<<STANDARD_NODE_SIZE_LABEL>>"
+        }
+    ],
+    "volumes": [
+        {
+            "type": "NFS",
+            "name": "hcm-vol-claim",
+            "host": "hcm-nfs.example.com",
+            "path": "/var/vols/itom/hcm"
+        },
+        {
+            "type": "NFS",
+            "name": "itom-vol-claim",
+            "host": "hcm-nfs.example.com",
+            "path": "/var/vols/itom/core"
+        },
+        {
+            "type": "NFS",
+            "name": "db-single-vol",
+            "host": "hcm-nfs.example.com",
+            "path": "/var/vols/itom/db"
+        },
+        {
+            "type": "NFS",
+            "name": "itom-logging-vol",
+            "host": "hcm-nfs.example.com",
+            "path": "/var/vols/itom/logs"
+        },
+        {
+            "type": "NFS",
+            "name": "db-backup-vol",
+            "host": "hcm-nfs.example.com",
+            "path": "/var/vols/itom/db-backup"
+        }
+    ],
+    "licenseAgreement": {
+        "eula": true,
+        "callHome": false
+    },
+    "database": {
+        "type": "intpostgres",
+        "param": {
+            "highAvailability": false
+        }
+    },
+    "useCustomizedCert": false,
+    "masterHA": false,
+    "masterNodes": [],
+    "allowWorkerOnMaster": false,
+    "connection": {
+        "port": "8444",
+        "externalHostname": "hcm-master.example.com"
+    }
+}

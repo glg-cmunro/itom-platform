@@ -10,4 +10,7 @@ rm -rf /var/vols/itom/hcm/*
 
 mkdir -p /var/vols/itom/hcm/certs/ca
 scp root@slcvp-hcm-v01.prd.glg.lcl:/home/dbadmin/serverca.crt /var/vols/itom/hcm/certs/ca
+
+##PAUSE for File Transfer
+
 chown -R 1999:1999 /var/vols/itom

@@ -14,6 +14,7 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
+IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2}' | cut -d "/" -f 1)
 #HOST_NFS=slcvp-hcm-n01.prd.glg.lcl
 #HOST_POSTGRES=slcvp-hcm-d01.prd.glg.lcl
 #HOST_VERTICA=slcvp-hcm-v01.prd.glg.lcl
@@ -22,7 +23,6 @@
 #HOST_WORKER02=slcvp-hcm-w02.prd.glg.lcl
 #HOST_WORKER03=slcvp-hcm-w03.prd.glg.lcl
 #EXT_HOSTNAME=hcm.gitops.com
-IPADDR=$(ip address show scope global | grep 'inet' | head -n 1 | awk '{print $2}' | cut -d "/" -f 1)
 
 # Hostname resolution and IP Address assignment
 #Fix /etc/hosts entry
@@ -54,5 +54,6 @@ unzip ITOM_Suite_Foundation_2019.08.00132.zip
 
 cd /tmp/sInstall
 unzip /tmp/ITOM_Suite_Foundation_2019.08.00132/tools/generate-download/offline-download.zip
+/tmp/sInstall/offline-download/downloadimages.sh -d /tmp/sInstall/images -u jcthepcguy -p Cmandm42181 -y
 
 /tmp/ITOM_Suite_Foundation_2019.08.00132/install -m /tmp/sInstall/hcm-2019.08-metadata.tgz -c /tmp/sInstall/hcm-silentInstall-config.json -P Gr33nl1ght_ --nfs-server slcvu-hcm-n01.uat.glg.lcl --nfs-folder /var/vols/itom/cdf/itom-vol-claim -e suite -i /tmp/sInstall/images --skip-warning -t 180

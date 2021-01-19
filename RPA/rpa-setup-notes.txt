@@ -1,0 +1,52 @@
+#Install ERLang
+#Install RabbitMQ
+#    Add Management plugin
+#        <installDir>\sbin\rabbitmq-plugins.bat enable rabbitmq_management
+#        D:\Program Files\RabbitMQ Server\rabbitmq_server-3.8.2\sbin\rabbitmq-plugins.bat enable rabbitmq_management
+#    Restart RabbitMQ
+
+#Create RabbitMQ User admin - assign permissions to / Virtual host
+
+#Install PostgreSQL
+#pb_hba.conf updates
+## GLG Edits - RPA 2019.11
+#GLG Connections:
+host    all             all             10.10.0.0/16            trust
+host    all             all             10.100.0.0/16           trust
+
+#postgresql.conf updates
+## GLG Edits - RPA 2019.11
+max_connections = '1000'
+default_transaction_isolation = 'read committed'
+autovacuum = on
+track_counts = on
+shared_buffers = '512MB'
+effective_cache_size = '2GB'
+work_mem = '1MB'
+maintenance_work_mem = '32MB'
+
+
+
+Install RPA Designer
+    Install IDM:
+        Tenant: RPA
+        Signing Key: UoLbzCxFQy0anF8g5oZTwgCJ2WxlI2Vo
+        Users:
+            IDM Admin:  admin
+            IDM Transport User: idmTransportUser
+
+Install RPA
+    Connect to Existing IDM - Use RPA Designer idm-service
+        Signing Key: <From RPA Designer install>
+        Users:
+            IDM Admin:  <From RPA Designer install>
+            IDM Transport User: <From RPA Designer install>
+    
+Install RPA Recorder
+
+Install RPA SelfService-X
+
+Install RPA Robot
+
+
+
