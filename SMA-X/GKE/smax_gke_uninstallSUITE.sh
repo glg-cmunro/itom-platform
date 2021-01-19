@@ -9,23 +9,23 @@ SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r 
 
 ## Delete ITSMA Namespace
 echo "Deleting ITSMA Namespace"
-kubectl get namespaces|grep itsma|head -n 1|awk '{print $1}'| xargs kubectl delete ns
+sudo kubectl get namespaces|grep itsma|head -n 1|awk '{print $1}'| xargs sudo kubectl delete ns
 
 ## Delete ITSMA Persistent Volumes
 echo "Deleting ITSMA Persisten Volumes"
-kubectl  get pv | grep itsma | awk '{print $1}'|xargs kubectl delete pv
+sudo kubectl get pv | grep itsma | awk '{print $1}'|xargs sudo kubectl delete pv
 
 ### Uninstall CDF - GKE
 echo "Removing RBAC Configuration"
-kubectl delete -f /opt/smax/$SUITE_VERSION/objectdefs/rbac-config.yaml
+sudo kubectl delete -f /opt/smax/$SUITE_VERSION/objectdefs/rbac-config.yaml
 
 ## Delete Core Namespace
 echo "Deleting CORE Namespace"
-kubectl delete ns core --grace-period=0 --force
+sudo kubectl delete ns core --grace-period=0 --force
 
 ## Delete ITSMA Persistent Volumes
 echo "Deleting ITOM Persisten Volumes"
-kubectl  get pv | grep itom | awk '{print $1}'|xargs kubectl delete pv
+sudo kubectl get pv | grep itom | awk '{print $1}'|xargs sudo kubectl delete pv
 
 ## Clear out NFS Directories
 echo "Clearing NFS Directories"
