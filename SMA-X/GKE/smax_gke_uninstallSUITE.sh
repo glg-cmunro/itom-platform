@@ -1,4 +1,5 @@
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
+PSQL_DB_HOST=10.4.176.5
 JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
 SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
 #SUITE_VERSION='2019.05.00131'
@@ -74,7 +75,8 @@ smartanalytics-volume
 '''
 
 ### Database Cleanup (Note replace postgres with the dbadmin user)
-psql -U postgres -h 10.4.176.5 "sslmode=require sslrootcert=/home/jjr109_slb_com/server-ca.pem sslcert=/home/jjr109_slb_com/controlNodeDBCert.pem sslkey=/home/jjr109_slb_com/controlNodeDBKey.pem"
+#psql -U postgres -h 10.4.176.5 "sslmode=require sslrootcert=/home/jjr109_slb_com/server-ca.pem sslcert=/home/jjr109_slb_com/controlNodeDBCert.pem sslkey=/home/jjr109_slb_com/controlNodeDBKey.pem"
+psql -U postgres -h $PSQL_DB_HOST
 
 ##If you drop the databases and roles, you need to recreate them before installing
 GRANT maas_admin TO postgres;
@@ -91,6 +93,7 @@ drop database xservices_ems;
 drop database xservices_mng;
 drop database xservices_rms;
 drop database suitedb;
+drop database sxdb;
 drop database cdfapiserverdb;
 drop role maas_admin;
 drop role bo_db_user;
@@ -98,4 +101,3 @@ drop role smarta;
 drop role idm;
 drop role autopass;
 drop role cdfidm;
-create database cdfapiserverdb WITH owner=cdfapiserver;
