@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: suite-install-ingress
+  namespace: itsma-xayzm
+  labels:
+    itsmaRelease: "2019.05"
+    itsmaService: itom-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.global-static-ip-name: "smax-httplb"
+    ingress.kubernetes.io/secure-backends: "true"
+spec:
+  tls:
+    secretName: nginx-default-secret
+  rules:
+  - host: smaxdev-gke.gitops.com
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: itom-nginx-ingress-svc
+          servicePort: 443
+  backend:
+    serviceName: itom-nginx-ingress-svc
+    servicePort: 443

@@ -1,0 +1,111 @@
+{
+    "suite": "itsma",
+    "display_name": "",
+    "org_name": "hpeswitom",
+    "version": "2020.05",
+    "images": [
+      {
+        "image": "bosun-apiserver:0.2.1-6"
+      },
+      {
+        "image": "bosun-ui:0.2.1-6"
+      },
+      {
+        "image": "coreos-configmap-reload:v0.0.1"
+      },
+      {
+        "image": "coreos-kube-state-metrics:v1.9.4"
+      },
+      {
+        "image": "coreos-prometheus-config-reloader:v0.35.0"
+      },
+      {
+        "image": "coreos-prometheus-operator:v0.35.0"
+      },
+      {
+        "image": "grafana-grafana:1.0.0-0037"
+      },
+      {
+        "image": "itom-busybox:1.32.0-006"
+      },
+      {
+        "image": "itom-cdf-admin:1.10.0-0035"
+      },
+      {
+        "image": "itom-cdf-apiserver:1.6.0-00224"
+      },
+      {
+        "image": "itom-cdf-controller:0.2.0-005"
+      },
+      {
+        "image": "itom-cdf-deployer:1.5.0-00100"
+      },
+      {
+        "image": "itom-cdf-suitefrontend:1.6.0-0019"
+      },
+      {
+        "image": "itom-fluentd:1.6.0-008"
+      },
+      {
+        "image": "itom-idm:1.28.1-b92"
+      },
+      {
+        "image": "itom-k8s-dashboard:1.14.0-0011"
+      },
+      {
+        "image": "itom-logrotate:4.4.0-008"
+      },
+      {
+        "image": "itom-nginx-ingress:0.15.0-003"
+      },
+      {
+        "image": "itom-pg-backup:1.1.26"
+      },
+      {
+        "image": "itom-postgresql:10.6.0-0027"
+      },
+      {
+        "image": "itom-postgresql-pool:3.7.5-0079"
+      },
+      {
+        "image": "itom-prometheus-exporter-cert:1.0.0-0010"
+      },
+      {
+        "image": "jettech-kube-webhook-certgen:v1.0.0"
+      },
+      {
+        "image": "kiwigrid-k8s-sidecar:0.1.75"
+      },
+      {
+        "image": "kubernetes-vault:0.9.0-0017"
+      },
+      {
+        "image": "kubernetes-vault-init:0.5.0"
+      },
+      {
+        "image": "kubernetes-vault-init:0.9.0-0017"
+      },
+      {
+        "image": "kubernetes-vault-renew:0.5.0"
+      },
+      {
+        "image": "kubernetes-vault-renew:0.9.0-0017"
+      },
+      {
+        "image": "prometheus-alertmanager:v0.20.0"
+      },
+      {
+        "image": "prometheus-node-exporter:v0.18.1"
+      },
+      {
+        "image": "prometheus-prometheus:v2.15.2"
+      },
+      {
+        "image": "squareup-ghostunnel:v1.5.2"
+      },
+      {
+        "image": "vault:0.13.0-0018"
+      }
+    ]
+  }
+    

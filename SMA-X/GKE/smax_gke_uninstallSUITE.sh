@@ -1,5 +1,6 @@
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
-PSQL_DB_HOST=10.4.176.5
+#PSQL_DB_HOST=10.4.176.5
+PSQL_DB_HOST=10.161.224.2
 JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
 SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
 #SUITE_VERSION='2019.05.00131'
@@ -92,12 +93,17 @@ drop database smartadb;
 drop database xservices_ems;
 drop database xservices_mng;
 drop database xservices_rms;
-drop database suitedb;
 drop database sxdb;
-drop database cdfapiserverdb;
 drop role maas_admin;
 drop role bo_db_user;
 drop role smarta;
 drop role idm;
 drop role autopass;
-drop role cdfidm;
+
+#drop database suitedb;
+#drop database cdfapiserverdb;
+#drop role cdfidm;
+
+
+### Delete the GKE Cluster
+gcloud container clusters delete --project "gke-smax" --region "us-west1" "smax115-1905"

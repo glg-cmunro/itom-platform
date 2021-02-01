@@ -1,0 +1,153 @@
+### Order of operations for EKS Upgrade 2020.02 --- 2020.05
+Download/Extract CDF BYOK Installer
+Execute upgrade.sh -u
+Fix Load Balancers
+[UI Action] Load Metadata 2020.05-b58
+[UI Action] Apply Patch 2020.02.003
+[UI Action] Apply Upgrade 2020.05
+
+
+Version update steps
+###
+0	Upgrade Kubernetes to a supported version.  For details, see Upgrade Kubernetes.
+###
+
+## Check current version and pre-reqs for Upgrade
+# To get the cluster version (Hold on to version for upgrade later)
+sudo kubectl version --short
+
+# To get the workers version
+sudo kubectl get nodes
+
+# Check pod security settings
+# IMPORTANT: if this returns an error pod security policy needs to be setup before proceeding
+sudo kubectl get psp eks.privileged
+
+# Check for deprecated coredns setting - upstream
+# IMPORTANT: if this returns a value you will need to edit the configmap and remove this entry
+sudo kubectl get configmap coredns -n kube-system -o yaml |grep upstream
+
+# IF upstream then remove entry from config map
+sudo kubectl edit configmap coredns -n kube-system -o yaml
+
+# Use AWS CLI to upgrade the cluster
+# IMPORTANT: You can only upgrade 1 minor version at a time (1.15 -> 1.16 = ok | 1.15 -> 1.17 = NO)
+aws eks --region us-east-2 update-cluster-version --name smax-east-02 --kubernetes-version 1.16
+
+# Patch kube-proxy
+# Get current kube-proxy version
+sudo kubectl get daemonset kube-proxy --namespace kube-system -o=jsonpath='{$.spec.template.spec.containers[:1].image}'
+# Update to new kube-proxy image
+sudo kubectl set image daemonset.apps/kube-proxy -n kube-system kube-proxy=602401143452.dkr.ecr.us-east-2.amazonaws.com/eks/kube-proxy:v1.16.15-eksbuild.1
+
+# Update Node version to match cluster version
+
+
+#Upgrade to 1.17 (1.16 is not supported for upgrade)
+aws eks --region us-east-2 update-cluster-version --name smax-east-02 --kubernetes-version 1.17
+
+# Check the status of the upgrade
+aws eks --region us-east-2 describe-update --name smax-east-02 --update-id b32eb602-8bb8-4053-a3d2-d99105c52a01
+
+# Update kube-proxy to the latest image to match the cluster upgrade
+# Get current kube-proxy image
+sudo kubectl get daemonset kube-proxy --namespace kube-system -o=jsonpath='{$.spec.template.spec.containers[:1].image}'
+
+# Set new kube-proxy image
+sudo kubectl set image daemonset.apps/kube-proxy -n kube-system \
+    kube-proxy=602401143452.dkr.ecr.us-east-2.amazonaws.com/eks/kube-proxy:v1.16.9-eksbuild.1
+
+# Update coredns to the latest image to match the cluster upgrade
+# Get current coredns image
+sudo kubectl get deployment coredns --namespace kube-system -o=jsonpath='{$.spec.template.spec.containers[:1].image}'
+
+# Set new coredns image
+sudo kubectl set image --namespace kube-system deployment.apps/coredns \
+    coredns=602401143452.dkr.ecr.us-east-2.amazonaws.com/eks/coredns:v1.6.6-eksbuild.1
+
+# Update aws-node CNI
+# Get new yaml file
+sudo curl -o aws-k8s-cni.yaml https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/v1.7.5/config/v1.7/aws-k8s-cni.yaml
+
+# Set the region in the CNI file
+sed -i -e 's/us-east-2/<region-code>/' aws-k8s-cni.yaml
+
+###
+1	Back up CDF data. For details, see Back up CDF.
+###
+
+
+
+
+
+
+###
+2	Update CDF. For details, see Upgrade CDF.
+###
+
+# Download the CDF BYOK updater
+curl -k https://owncloud.greenlightgroup.com/index.php/s/UGNHcrq4FjEh2IE/download > CDF_Install_and_Upgradde_CDF2005-00100-15001-BYOK.zip
+
+unzip CDF_Install_and_Upgradde_CDF2005-00100-15001-BYOK.zip
+unzip ITOM_Platform_Foundation_BYOK_2020.05.00100.zip
+
+sudo mkdir -p /opt/smax/2020.05/byok_cdf-upgrade
+sudo mv ITOM_Platform_Foundation_BYOK_2020.05.00100/ /opt/smax/2020.05/byok_cdf-upgrade
+
+# Update the Image Set
+sudo vi /opt/smax/2020.05/byok_cdf-upgrade/scripts/cdf-image-set.json
+
+# Make necessary changes to file, then save as image-set.json
+sudo cp /opt/smax/2020.05/byok_cdf-upgrade/scripts/cdf-image-set.json /opt/smax/2020.05/byok_cdf-upgrade/scripts/image-set.json
+
+# Run the Cloud Deployment 1.2.4 image transfer scripts
+# Download deployment if needed
+curl -k https://owncloud.greenlightgroup.com/index.php/s/P6BIoLD5DLx4Ko0/download > SMA-cloud-deployment-1.2.4.tar.gz
+sudo mv SMA-cloud-deployment-1.2.4.tar.gz /opt/smax/2020.05/
+cd /opt/smax/2020.05
+sudo tar -xzvf SMA-cloud-deployment-1.2.4.tar.gz
+
+ecrUserName=AWS
+ecrUserPassword=$(aws ecr get-login-password)
+ecrURL=658787151672.dkr.ecr.us-east-2.amazonaws.com
+python ../../byok/smax-image-transfer.py -su dockerhubglg -sp 'Gr33nl1ght_' -sr registry.hub.docker.com -so hpeswitom -tu $ecrUserName -tp $ecrUserPassword -tr $ecrURL -to hpeswitom
+
+smax-image-transfer.py
+
+# Perform the CDF Upgrade [from the /opt/smax/2020.05 directory]
+sudo ./upgrade.sh -u
+
+# Patch the ingress services to set them back to Load balancer
+sudo kubectl patch services nginx-ingress-controller-svc -p '{"metadata":{"annotations":{"service.beta.kubernetes.io/aws-load-balancer-internal":"0.0.0.0/0","service.beta.kubernetes.io/aws-load-balancer-type":"nlb"}},"spec":{"type":"LoadBalancer"}}' -n core
+# Wait for the patch to complete
+sudo kubectl get svc nginx-ingress-controller-svc -n core | grep -v EXTERNAL-IP |awk '{print $4}'
+# Register new targets based on new nlb interfaces
+# De-register unhealthy targets
+
+
+###
+3	(Only if the CDF update step fails) Restore CDF to the old version. For details, see Restore CDF.
+###
+
+###
+4	Back up suite data. For details, see Back up suite data.
+###
+
+###
+5	Update the suite. For details, see Upgrade the suite.
+###
+
+# Upload the SUITE metadata
+# Login to CDF Management Portal - Navigate to Deployment --> Metadata - Load the Metadata file 'itsma-suite-metadata-2020.05-b58.tgz'
+
+#Get the Download Images image-set.json - copy to the Control node in /opt/smax/2020.05
+#Run the image transfer script to download images
+secrUserName=AWS
+ecrUserPassword=$(aws ecr get-login-password)
+ecrURL=658787151672.dkr.ecr.us-east-2.amazonaws.com
+python ../byok/smax-image-transfer.py -su dockerhubglg -sp 'Gr33nl1ght_' -sr registry.hub.docker.com -so hpeswitom -tu $ecrUserName -tp $ecrUserPassword -tr $ecrURL -to hpeswitom
+
+
+###
+6	(Only if the suite update fails) Restore the suite to the old version. For details, see Restore the suite.
+###

@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: suite-install-ingress
+  namespace: itsma-xayzm
+  labels:
+    itsmaRelease: "2019.05"
+    itsmaService: itom-ingress
+  annotations:
+    ingress.kubernetes.io/backends: '{"k8s-be-30102--b50f51830497161f":"HEALTHY"}'
+    ingress.kubernetes.io/forwarding-rule: k8s-fw-itsma-xayzm-suite-install-ingress--b50f51830497161f
+    ingress.kubernetes.io/https-forwarding-rule: k8s-fws-itsma-xayzm-suite-install-ingress--b50f51830497161f
+    ingress.kubernetes.io/https-target-proxy: k8s-tps-itsma-xayzm-suite-install-ingress--b50f51830497161f
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/ssl-cert: k8s-ssl-3fce6f074f38a89d-7af064ff2813679f--b50f51830497161f
+    ingress.kubernetes.io/static-ip: k8s-fw-itsma-xayzm-suite-install-ingress--b50f51830497161f
+    ingress.kubernetes.io/target-proxy: k8s-tp-itsma-xayzm-suite-install-ingress--b50f51830497161f
+    ingress.kubernetes.io/url-map: k8s-um-itsma-xayzm-suite-install-ingress--b50f51830497161f
+  finalizers:
+  - networking.gke.io/ingress-finalizer
+  generation: 1
+  resourceVersion: "22370417"
+  selfLink: /apis/extensions/v1beta1/namespaces/itsma-xayzm/ingresses/suite-install-ingress
+  uid: 01d91a47-1fca-11eb-bc7c-4201ac100004
+spec:
+  rules:
+  - host: smaxdev-gke.gitops.com
+  tls:
+  - hosts:
+    - smaxdev-gke.gitops.com
+    secretName: nginx-default-secret
+status:
+  loadBalancer:
+    ingress:
+    - ip: 34.82.232.8
