@@ -29,3 +29,14 @@ gcloud container --project "gke-smax" clusters create "$GKE_CLUSTER" \
 # Add Kubeconfig for access to Cluster
 sudo gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
 gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
+
+
+
+##GCP Cluster Infrastructure Build
+GKE_CLUSTER=gcp6133-np-k8s04
+GKE_REGION=europe-west1
+GKE_ZONE=europe-west1-b
+GKE_MASTER_CIDR="10.0.10.0/28"
+GKE_CLUSTER_CIDR="10.0.16.0/21"
+GKE_SERVICES_CIDR="10.0.32.0/24"
+GKE_MASTER_AUTH_NET="10.0.1.0/24"
