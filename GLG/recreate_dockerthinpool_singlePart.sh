@@ -5,9 +5,7 @@
 /opt/kubernetes/bin/kube-stop.sh -y
 
 #These lines have to be executed one at a time
-systemctl disable docker
-systemctl disable kubelet
-systemctl disable kube-proxy
+systemctl disable docker; systemctl disable kubelet; systemctl disable kube-proxy;
 
 init 6
 
@@ -50,9 +48,7 @@ lvs -o+seg_monitor
 
 
 #These lines have to be executed one at a time
-systemctl enable docker
-systemctl enable kubelet
-systemctl enable kube-proxy
+systemctl enable docker; systemctl enable kubelet; systemctl enable kube-proxy;
 
 /opt/kubernetes/bin/kube-start.sh
 

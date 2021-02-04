@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/load-balancer-type: Internal
+  labels:
+    itsmaService: itom-ingress
+  name: itom-cdf-ingress-frontend-svc
+  namespace: core
+spec:
+  ports:
+  - name: https
+    port: 3000
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    k8s-app: itom-cdf-ingress-frontend
+  sessionAffinity: None
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.62
