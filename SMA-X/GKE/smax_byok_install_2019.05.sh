@@ -1,3 +1,10 @@
+### Get Bits used for Install - Setup folder structure
+sudo mkdir -p /opt/smax
+curl -k -g https://owncloud.greenlightgroup.com/index.php/s/0bflVNJVnP2pExf/download > /opt/smax/CDF1905-00131-15001-managedk8s.zip
+sudo unzip /opt/smax/CDF1905-00131-15001-managedk8s.zip
+sudo unzip /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131.zip
+
+
 ### CDF INSTALL
 PSQL_DB_HOST=10.161.224.2
 NFS_SERVER=10.19.253.90
