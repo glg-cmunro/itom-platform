@@ -12,7 +12,7 @@ metadata:
     ingress.kubernetes.io/secure-backends: "true"
 spec:
   tls:
-    secretName: nginx-default-secret
+  - secretName: nginx-default-secret
   rules:
   - host: smaxdev-gke.gitops.com
     http:
