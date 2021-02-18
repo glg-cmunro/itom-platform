@@ -3,15 +3,22 @@ sudo mkdir -p /opt/smax
 curl -k -g https://owncloud.greenlightgroup.com/index.php/s/0bflVNJVnP2pExf/download > /opt/smax/CDF1905-00131-15001-managedk8s.zip
 sudo unzip /opt/smax/CDF1905-00131-15001-managedk8s.zip
 sudo unzip /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131.zip
+sudo mv /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131 /opt/smax/2019.05
 
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
+sudo docker load < /tmp/itom-cdf-deployer_1.1.0-00131b.tar
 
 ### CDF INSTALL
 PSQL_DB_HOST=10.161.224.2
-NFS_SERVER=10.19.253.90
+NFS_SERVER=10.145.240.146
+NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
+REGISTRY_ORG=us107795-np-sis-bsys-6133
+LB_EXT_IP=104.155.40.90
+EXT_ACCESS_FQDN=ccc-evd.greenlightgroup.com
 
 ### SSH Session #1
-sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
-#sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.117.9.75"
+#sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
+sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "ccc-dev.greenlightgroup.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
 
 ### SSH Session #2
 CDF_OUTPUT_DIR=/mnt/nfs/var/vols/itom/core/yaml/yaml_template/output
@@ -20,6 +27,10 @@ sudo ls -la $CDF_OUTPUT_DIR
 #sudo sed -i -e "s@extensions/v1beta1@apps/v1@g" $CDF_OUTPUT_DIR/itom-vault.yaml
 sudo kubectl create --save-config -f $CDF_OUTPUT_DIR/itom-vault.yaml
 sudo kubectl create --save-config -f $CDF_OUTPUT_DIR/itom-vault-svc.yaml
+
+### Create Self-Signed Cert for CDF install
+openssl req -x509 -newkey rsa:4096 -nodes -keyout Server.key -out Server.cer -days 3650 -subj "/C=US/ST=Texas/L=Sugar Land/O=Schlumberger/OU=IT/CN=ccc-dev.greenlightgroup.com"
+### Copy files to the Control Node to execute the next step
 
 # Create CDF FrontEnd Secret:
 CERT_FILE_1=$(cat Server.cer)

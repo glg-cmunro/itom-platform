@@ -1,0 +1,37 @@
+### OnPrem: 2020.05 - 2020.08 Upgrade ###
+mkdir -p /opt/smax
+curl -k -g https://owncloud.greenlightgroup.com/index.php/s/oDO8Ia0ZtvvU6Fb/download > /opt/smax/CDF2008-00153-15001-Standard.zip
+unzip /opt/smax/CDF2008-00153-15001-Standard.zip -d /opt/smax/
+unzip /opt/smax/ITOM_Platform_Foundation_Standard_2020.08.00153.zip -d /opt/smax/
+mv /opt/smax/ITOM_Platform_Foundation_Standard_2020.08.00153 /opt/smax/2020.08
+cd /opt/smax/2020.08
+./autoUpgrade.sh -d /opt/smax/tmp -n slcvd-sma-m01.dev.glg.lcl -u root
+
+
+## Login to CDF Management Portal - load metadata
+## In CDF Management Portal - start the upgrade process
+
+## Download/Upload
+unzip -d /opt/smax/offline-download_2020.08 /tmp/offline-download.zip
+cd /opt/smax/offline-download_2020.08/offline-download
+./downloadimages.sh -d /opt/smax/offline-download_2020.08/offline-images
+
+
+
+### OnPrem: 2020.08 - 2020.11 Upgrade ###
+mkdir -p /opt/smax
+curl -k -g https://owncloud.greenlightgroup.com/index.php/s/mlJKCSKyKRVekGG/download > /opt/smax/CDF2011-00134-15001-Standard.zip
+unzip /opt/smax/CDF2011-00134-15001-Standard.zip -d /opt/smax/
+unzip /opt/smax/ITOM_Platform_Foundation_Standard_2020.11.00134.zip -d /opt/smax/
+mv /opt/smax/ITOM_Platform_Foundation_Standard_2020.11.00134 /opt/smax/2020.11
+cd /opt/smax/2020.11
+./autoUpgrade -d /opt/smax/tmp -n slcvd-sma-m01.dev.glg.lcl -u root
+
+## Download/Upload
+unzip -d /opt/smax/offline-download_2020.11 /root/offline-download_2020.11.zip
+cd /opt/smax/offline-download_2020.11/offline-download
+./downloadimages.sh -d /opt/smax/offline-download_2020.11/offline-images
+
+
+
+curl -k -g https://owncloud.greenlightgroup.com/index.php/s/CoGpDg3JrO6gopm/download >/opt/smax/CDF2011-00134-15001-BYOK.zip

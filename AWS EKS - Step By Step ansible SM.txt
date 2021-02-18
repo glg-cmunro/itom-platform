@@ -1,0 +1,63 @@
+################################################################################
+#####                 AWS EKS - SMAX build - using ansible                 #####
+################################################################################
+##  Pre-Requisites:
+##    Host system with git and ansible utilities for Infrastructure build
+##    AWS Resource: IAM User with EKS-Full-Access policy (API Key and Secret)
+##    AWS Resource: Route53 Domain for naming resources
+## Host system to create Infrastructure
+
+
+
+
+SSH KeyPair for Bastion / Control Node / Workers access
+Certificate: SSL Certificate for ALB per Region
+
+vault edit (AWS API Key and Secret)
+Stack Name = Route53 is a requirement
+AWS Service Role: 'SMA EKS Service Role' - Policy: AmazonEKSClusterPolicy, AmazonEKSServicePolicy - Trusted Entities: eks
+AWS Service Role: 'SMA EKS Build Cloudformation Role' - Policy: ansible_cloudformation - Trusted Entities: cloudformation
+ALB 
+
+
+## Ansible System - for Infrastructure build
+## git: Clone aws-smax repo with ansible playbooks
+## ansible: Execute Ansible Playbook aws-create-all.yaml
+sudo ansible-playbook -vvv \
+ -e stack_name=smax-east-1 \
+ -e eks_version=1.17 \
+ -e smax_version=2020.11 \
+ -e region=us-east-1 \
+ -e SubnetAZ1=us-east-1a \
+ -e SubnetAZ2=us-east-1b \
+ -e SubnetAZ3=us-east-1c \
+ -e ssh_key_name_for_worker_nodes=glg-us-east-1 \
+ -e alb_cert_arn="arn:aws:acm:us-east-1:658787151672:certificate/d8fd4709-d26a-4c62-96f8-2c601d510900" \
+ aws-create-all.yaml
+
+
+sudo ansible-playbook \
+ -e stack_name=smax-east -vvv \
+ -e smax_version=2020.02 \
+ -e region=us-east-2 \
+ -e SubnetAZ1=us-east-2a \
+ -e SubnetAZ2=us-east-2b \
+ -e SubnetAZ3=us-east-2c \
+ -e ssh_key_name_for_worker_nodes=glg-us-east-2 \
+ -e alb_cert_arn="arn:aws:acm:us-east-2:658787151672:certificate/b9e499bf-c006-4e3d-a3a2-dad9783e30d7" \
+ aws-create-all.yaml
+
+
+###Connect to the Control Node through the Bastion Host SSH Gateway
+ssh -J centos@34.203.13.100 centos@10.0.20.227 -i ~/.ssh/glg-us-east-2.pem
+
+git clone https://github.com/GreenlightGroup/aws-smax
+cd aws-smax/ansible/playbook
+#sudo ansible-playbook --skip-tags download_images -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 app-configure-control-node.yaml
+sudo ansible-playbook -e rds_version=10.9 -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 app-configure-control-node.yaml
+sudo ansible-playbook -e rds_version=10.9 -e region=us-east-2 -e smax_version=2020.05 -e stack_name=smax-east app-configure-control-node.yaml
+
+#AFTER SILENT INSTALL IS DONE
+#sudo ansible-playbook --skip-tags download_images -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 aws-post-depoy-config.yaml
+sudo ansible-playbook -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 aws-post-depoy-config.yaml
+

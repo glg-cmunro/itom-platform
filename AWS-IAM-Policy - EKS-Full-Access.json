@@ -1,0 +1,120 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "1",
+            "Effect": "Allow",
+            "Action": "ec2:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "2",
+            "Effect": "Allow",
+            "Action": "cloudformation:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "3",
+            "Effect": "Allow",
+            "Action": "elasticfilesystem:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "4",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:GetRole",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:ListRoles",
+                "iam:DeleteRole",
+                "iam:CreateRole",
+                "iam:PassRole",
+                "iam:AttachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:AddRoleToInstanceProfile",
+                "iam:ListAttachedRolePolicies",
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:DetachRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:ListServerCertificates",
+                "iam:CreateServiceLinkedRole",
+                "acm:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "5",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "6",
+            "Effect": "Allow",
+            "Action": [
+                "sns:ListTopics",
+                "sns:ListSubscriptions"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "7",
+            "Effect": "Allow",
+            "Action": "rds:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "8",
+            "Effect": "Allow",
+            "Action": "eks:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "9",
+            "Effect": "Allow",
+            "Action": "elasticloadbalancing:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "10",
+            "Effect": "Allow",
+            "Action": [
+                "autoscaling:DescribeAutoScalingGroups",
+                "autoscaling:DescribeLaunchConfigurations",
+                "autoscaling:UpdateAutoScalingGroup",
+                "autoscaling:DeleteAutoScalingGroup",
+                "autoscaling:CreateAutoScalingGroup"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "11",
+            "Effect": "Allow",
+            "Action": "route53:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "12",
+            "Effect": "Allow",
+            "Action": "ecr:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "13",
+            "Effect": "Allow",
+            "Action": [
+                "aws-marketplace:ViewSubscriptions",
+                "aws-marketplace:Subscribe"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
