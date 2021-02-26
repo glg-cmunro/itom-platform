@@ -32,7 +32,7 @@ gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
 
 
 
-##GCP Cluster Infrastructure Build
+##GCP Cluster Infrastructure Build - SLB Non-Production
 GKE_CLUSTER=gcp6133-np-k8s04
 GKE_REGION=europe-west1
 GKE_ZONE=europe-west1-b

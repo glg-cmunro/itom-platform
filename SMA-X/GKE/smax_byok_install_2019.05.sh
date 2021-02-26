@@ -1,24 +1,39 @@
 ### Get Bits used for Install - Setup folder structure
+sudo yum install docker unzip -y
 sudo mkdir -p /opt/smax
-curl -k -g https://owncloud.greenlightgroup.com/index.php/s/0bflVNJVnP2pExf/download > /opt/smax/CDF1905-00131-15001-managedk8s.zip
-sudo unzip /opt/smax/CDF1905-00131-15001-managedk8s.zip
-sudo unzip /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131.zip
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/0bflVNJVnP2pExf/download > /opt/smax/CDF1905-00131-15001-managedk8s.zip
+sudo unzip /opt/smax/CDF1905-00131-15001-managedk8s.zip -d /opt/smax
+sudo unzip /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131.zip -d /opt/smax
 sudo mv /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131 /opt/smax/2019.05
 
 sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
+docker login -u oauth2accesstoken -p `gcloud auth print-access-token` gcr.io
 sudo docker load < /tmp/itom-cdf-deployer_1.1.0-00131b.tar
 
 ### CDF INSTALL
-PSQL_DB_HOST=10.161.224.2
-NFS_SERVER=10.145.240.146
-NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
-REGISTRY_ORG=us107795-np-sis-bsys-6133
-LB_EXT_IP=104.155.40.90
-EXT_ACCESS_FQDN=ccc-evd.greenlightgroup.com
+PSQL_DB_HOST=10.241.160.2
+NFS_SERVER=10.12.81.138
+NFS_PATH_CORE=/gcp6133_p_nfs01/var/vols/itom/core
+NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
+REGISTRY_ORG=us102173-p-sis-bsys-6133
+LB_EXT_IP=34.77.69.152
+SUITE_VERSION=2019.05
+EXT_ACCESS_FQDN=ccc.greenlightgroup.com
+
+sudo gcloud config set $REGISTRY_ORG
+sudo gcloud container clusters get-credentials --region europe-west1 gcp6133-p-k8s01
+
+### Download/Upload SUITE images
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/VTzjWIkutCQwKFm/download > /tmp/itsma-suite-metadata-2019.05.b62.tgz
+cd /opt/smax/$SUITE_VERSION/scripts
+sudo ./genImageSet.sh -o hpeswitom -m /tmp/itsma-suite-metadata-2019.05.b62.tgz -v 2019.05
+sudo ./downloadimages.sh -u dockerhubglg -p Gr33nl1ght_ -d ./images_2019.05
+sudo ./uploadimages.sh -r gcr.io -o $REGISTRY_ORG -u oauth2accesstoken -P 'gcloud auth print-access-token' -d ./images_2019.05
+
 
 ### SSH Session #1
 #sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
-sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "ccc-dev.greenlightgroup.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
+sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
 
 ### SSH Session #2
 CDF_OUTPUT_DIR=/mnt/nfs/var/vols/itom/core/yaml/yaml_template/output
