@@ -4,16 +4,30 @@
 ##  Pre-Requisites:
 ##    Host system with git and ansible utilities for Infrastructure build
 ##    AWS Resource: IAM User with EKS-Full-Access policy (API Key and Secret)
+##    AWS Resource: SSH KeyPair for Bastion / Control Node / Workers access
+##    AWS Resource: Certificate: SSL Certificate for ALB per Region
 ##    AWS Resource: Route53 Domain for naming resources
+
 ## Host system to create Infrastructure
 
+#Install git and ansible
+sudo yum install dnf -y
+sudo dnf install git python3 epel-release -y #Add the EPEL Release repo if needed
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install awscli boto3
+
+#Add AWS Credentials to root for ansible to use
+sudo /usr/local/bin/aws configure
+
+#Update ansible-vault with AWS credentials (AWS API Key and Secret)
+/usr/local/bin/ansible-vault edit aws-smax/files/aws_cred_vars.yaml
+
+#GIT Clone AWS SMAX repo
+git clone https://github.com/GreenlightGroup/aws-smax
 
 
 
-SSH KeyPair for Bastion / Control Node / Workers access
-Certificate: SSL Certificate for ALB per Region
 
-vault edit (AWS API Key and Secret)
 Stack Name = Route53 is a requirement
 AWS Service Role: 'SMA EKS Service Role' - Policy: AmazonEKSClusterPolicy, AmazonEKSServicePolicy - Trusted Entities: eks
 AWS Service Role: 'SMA EKS Build Cloudformation Role' - Policy: ansible_cloudformation - Trusted Entities: cloudformation
@@ -24,40 +38,161 @@ ALB
 ## git: Clone aws-smax repo with ansible playbooks
 ## ansible: Execute Ansible Playbook aws-create-all.yaml
 sudo ansible-playbook -vvv \
- -e stack_name=smax-east-1 \
- -e eks_version=1.17 \
+ -e stack_name=smax-east-dev \
+ -e cluster_domain=gitops.io. \
+ -e eks_version=1.18 \
  -e smax_version=2020.11 \
  -e region=us-east-1 \
  -e SubnetAZ1=us-east-1a \
  -e SubnetAZ2=us-east-1b \
  -e SubnetAZ3=us-east-1c \
  -e ssh_key_name_for_worker_nodes=glg-us-east-1 \
- -e alb_cert_arn="arn:aws:acm:us-east-1:658787151672:certificate/d8fd4709-d26a-4c62-96f8-2c601d510900" \
+ -e alb_cert_arn="	arn:aws:acm:us-east-1:658787151672:certificate/806a5fc1-3228-4325-8769-1170d3bd47b6" \
  aws-create-all.yaml
 
 
-sudo ansible-playbook \
- -e stack_name=smax-east -vvv \
- -e smax_version=2020.02 \
- -e region=us-east-2 \
- -e SubnetAZ1=us-east-2a \
- -e SubnetAZ2=us-east-2b \
- -e SubnetAZ3=us-east-2c \
- -e ssh_key_name_for_worker_nodes=glg-us-east-2 \
- -e alb_cert_arn="arn:aws:acm:us-east-2:658787151672:certificate/b9e499bf-c006-4e3d-a3a2-dad9783e30d7" \
- aws-create-all.yaml
+###US-EAST-2 build
+#sudo ansible-playbook \
+# -e stack_name=smax-east -vvv \
+# -e smax_version=2020.02 \
+# -e region=us-east-2 \
+# -e SubnetAZ1=us-east-2a \
+# -e SubnetAZ2=us-east-2b \
+# -e SubnetAZ3=us-east-2c \
+# -e ssh_key_name_for_worker_nodes=glg-us-east-2 \
+# -e alb_cert_arn="arn:aws:acm:us-east-2:658787151672:certificate/b9e499bf-c006-4e3d-a3a2-dad9783e30d7" \
+# aws-create-all.yaml
 
 
 ###Connect to the Control Node through the Bastion Host SSH Gateway
 ssh -J centos@34.203.13.100 centos@10.0.20.227 -i ~/.ssh/glg-us-east-2.pem
 
+sudo yum install dnf -y
+sudo dnf install git python3 epel-release -y #Add the EPEL Release repo if needed
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install awscli boto3
+
 git clone https://github.com/GreenlightGroup/aws-smax
 cd aws-smax/ansible/playbook
-#sudo ansible-playbook --skip-tags download_images -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 app-configure-control-node.yaml
 sudo ansible-playbook -e rds_version=10.9 -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 app-configure-control-node.yaml
-sudo ansible-playbook -e rds_version=10.9 -e region=us-east-2 -e smax_version=2020.05 -e stack_name=smax-east app-configure-control-node.yaml
 
 #AFTER SILENT INSTALL IS DONE
 #sudo ansible-playbook --skip-tags download_images -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 aws-post-depoy-config.yaml
-sudo ansible-playbook -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 aws-post-depoy-config.yaml
+sudo /usr/local/bin/ansible-playbook -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 aws-post-deploy-config.yaml
 
+
+
+##Other Environments
+#sudo ansible-playbook --skip-tags download_images -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-dev app-configure-control-node.yaml
+#sudo ansible-playbook -e rds_version=10.9 -e region=us-east-2 -e smax_version=2020.05 -e stack_name=smax-east app-configure-control-node.yaml
+
+sudo ansible-playbook -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-dev app-configure-control-node.yaml
+
+#AWS API Key (set in ansible-vault)
+#AWS API Secret (set in ansible-vault)
+#AWS Region
+#NFS Hostname
+#RDS Hostname
+#RDS DB Version (PostgreSQL 10.x)
+#RDS DB Admin (set in ansible-vault)
+#RDS DB Admin pass (set in ansible-vault)
+#stack_name (left most part of application FQDN)
+#cluster_name (same as <stack_name>)
+#cluster_fqdn (combined <stack_name> and <cluster_domain> )
+#ALB Target Group 3000 (Named:  <stack_name>-ext-ALB-TG3000)
+#ALB Target Group 5443 (Named:  <stack_name>-ext-ALB-TG5443)
+#ALB Target Group 443 (Named:  <stack_name>-ext-ALB-TG443)
+
+-e nfs_host=smax-east-dev-efs.gitops.io
+-e db_host=smax-east-dev-rds.gitops.io
+-e cluster_name="{{ stack_name }}" \
+-e cluster_fqdn="{{ stack_name }}.{{ cluster_domain }}" \
+-e ssh_key_name_for_worker_nodes=glg-us-east-1 \
+
+sudo ansible-playbook -vvv --ask-vault-pass \
+-e stack_name=smax-east-dev \
+-e cluster_domain=gitops.io \
+-e rds_version=10.9 \
+-e nfs_host=smax-east-dev-efs.gitops.io \
+-e db_host=smax-east-dev-rds.gitops.io \
+-e region=us-east-1 \
+-e smax_version=2020.11 \
+--skip-tags download_images \
+app-configure-control-node.yaml
+
+sudo ansible-playbook -vvv -e region=us-east-1 -e stack_name=smax-east-dev aws-post-deploy-config.yaml
+
+
+      template_location: "./templates/templates"
+        #worker_instance_type: "m5.xlarge" # 4cpu x 16GB $0.192/hour
+        #worker_instance_type: "m5.2xlarge" # 8pu x 32GB $0.384/hour
+      worker_instance_type: "r5.xlarge"  # 4cpu x 32GB $0.252/hour
+      node_instance_role: "gets set in createEKSout"
+      node_group_name: "{{ cluster_name }}-workernodes"
+      node_asg_desired: "1" # 4 * $0.252/hour = $0.756/hour
+      node_asg_max: "4" # 4 * $0.252/hour = $1.08/hour
+      node_asg_min: "1" # 3 * $0.252/hour = $0.756/hour
+      efs_performance_mode: "generalPurpose" # https://docs.aws.amazon.com/efs/latest/ug/performance.html
+      bastion_ami_os: "CentOS-7"
+      bastion_instance_type: "t2.micro" # t2.micro | m5.large
+      bastion_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+      bastion_root_volume_size: "100" # in GB
+      rds_version: "10.9" # 10.9 | 9.5
+      pgsql_base_version: "{{ rds_version.split('.')[0] }}"
+      rds_multi_az: "true" # true | false
+      rds_db_storage: "100" # db size in GB; min 100GB; max 1024GB
+      rds_instance_type: "db.m4.xlarge" # db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge | db.r4.8xlarge
+      rds_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+
+    stack_name: 'ansibleTest'
+    vpc_name: "{{ stack_name }}Vpc"
+    cluster_name: "{{ stack_name }}"
+    cluster_domain: "gitops.com." #Route53 requires the final . in this for some reason????
+    cluster_fqdn: "{{ stack_name }}.{{ cluster_domain }}"
+    region: "us-east-2"
+    SubnetAZ1: "us-east-2a"
+    SubnetAZ2: "us-east-2b"
+    SubnetAZ3: "us-east-2c"
+    template_location: "./templates/templates"
+    role_arn: "arn:aws:iam::658787151672:policy/CloudFormation-Admin"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-cloudformation-role"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-cloudformation-role"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-eks-build-cloudformation-role"
+    ssh_key_name_for_worker_nodes: "glg-us-east-2"
+      #worker_instance_type: "m5.xlarge" # 4cpu x 16GB $0.192/hour
+      #worker_instance_type: "m5.2xlarge" # 8pu x 32GB $0.384/hour
+    worker_instance_type: "r5.xlarge"  # 4cpu x 32GB $0.252/hour
+    node_instance_role: "gets set in createEKSout"
+    node_group_name: "{{ cluster_name }}-workernodes"
+    node_asg_desired: "1" # 4 * $0.252/hour = $0.756/hour
+    node_asg_max: "4" # 4 * $0.252/hour = $1.08/hour
+    node_asg_min: "1" # 3 * $0.252/hour = $0.756/hour
+    efs_performance_mode: "generalPurpose" # https://docs.aws.amazon.com/efs/latest/ug/performance.html
+    bastion_ami_os: "CentOS-7"
+    bastion_instance_type: "t2.micro" # t2.micro | m5.large
+    bastion_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+    bastion_root_volume_size: "100" # in GB
+    rds_version: "10.9" # 10.9 | 9.5
+    pgsql_base_version: "{{ rds_version.split('.')[0] }}"
+    rds_db_user: "dbadmin"
+    rds_db_password: "Gr33nl1ght_"
+    rds_multi_az: "true" # true | false
+    rds_db_storage: "100" # db size in GB; min 100GB; max 1024GB
+    rds_instance_type: "db.m4.xlarge" # db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge | db.r4.8xlarge
+    rds_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+    smax_version: "2020.05"
+    tmp_location: "/tmp/glg_byok"
+    utils_location: "/opt/smax/{{ smax_version }}"
+    byok_source_location: "{{ git_repo_base_location }}/BYOK/{{ smax_version }}/"
+    git_repo_base_location: "/home/centos/aws-smax"
+    nfs_configure_script: "configureEFS.sh"
+    nfs_filestore_ip_address: "notUsedWithAWS"
+    nfs_fileshare_name: "/var/vols/itom/itsma/core"
+    deployment_cloud: "aws"
+    pg_script: "pg_configure.sql"
+    db_host: "{{ cluster_name }}-rds.{{ cluster_domain }}"
+    db_port: 5432
+    db_user: "{{ rds_db_user }}"
+    db_password: "{{ rds_db_password }}"
+    docker_hub_username: "dockerhubglg"
+    docker_hub_password: "Gr33nl1ght_"
