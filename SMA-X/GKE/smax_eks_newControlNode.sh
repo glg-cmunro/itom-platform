@@ -16,9 +16,6 @@ ecrUserName=AWS
 ecrUserPassword=$(aws ecr get-login-password)
 ecrURL=658787151672.dkr.ecr.us-east-1.amazonaws.com
 
-sudo docker login $ecrURL -u $ecrUserName -p $ecrUserPassword
-docker pull $ecrURL/hpeswitom/jdbc-drivers-container:1.0
-
 cd /opt/smax/2020.11/scripts
 sudo ./build_jdbc.sh -o hpeswitom
 sudo python3 create_aws_repositories.py -r us-east-1 -o hpeswitom -n jdbc-drivers-container
@@ -26,3 +23,7 @@ sudo ./uploadimages.sh -r $ecrURL -u $ecrUserName -p $ecrUserPassword -d jdbc_im
 
 
 sudo /usr/local/bin/ansible-playbook --ask-vault-pass -e eks_version=1.18 -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-1 app-configure-control-node.yaml
+
+
+sudo docker login $ecrURL -u $ecrUserName -p $ecrUserPassword
+docker pull $ecrURL/hpeswitom/jdbc-drivers-container:1.0

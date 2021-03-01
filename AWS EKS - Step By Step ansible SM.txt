@@ -9,6 +9,15 @@
 ##    AWS Resource: Route53 Domain for naming resources
 
 ## Host system to create Infrastructure
+### Cloud Formation Templates used to build the following:
+###   - VPC Stack,
+###     EKS Stack,
+###     EKSNodes Stack,
+###     ALB Stack,
+###     EFS Stack,
+###     Bastion Stack,
+###     ControlNode Stack,
+###     RDS Stack
 
 #Install git and ansible
 sudo yum install dnf -y
@@ -88,6 +97,9 @@ sudo /usr/local/bin/ansible-playbook -e rds_version=10.9  --ask-vault-pass -e re
 
 sudo ansible-playbook -e rds_version=10.9  --ask-vault-pass -e region=us-east-1 -e smax_version=2020.11 -e stack_name=smax-east-dev app-configure-control-node.yaml
 
+
+### DEFAULT VALUES IF NOT ENTERED WITH -e
+
 #AWS API Key (set in ansible-vault)
 #AWS API Secret (set in ansible-vault)
 #AWS Region
@@ -121,6 +133,10 @@ sudo ansible-playbook -vvv --ask-vault-pass \
 app-configure-control-node.yaml
 
 sudo ansible-playbook -vvv -e region=us-east-1 -e stack_name=smax-east-dev aws-post-deploy-config.yaml
+sudo ansible-playbook -vvv \
+ -e region=us-east-1 \
+ -e stack_name=smax-east-dev \
+aws-post-deploy-config.yaml
 
 
       template_location: "./templates/templates"

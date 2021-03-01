@@ -8,6 +8,8 @@ SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r 
 #SUITE_VERSION='2020.02.00119'
 
 ## Uninstall SMAX SUITE:
+NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
+SUITE_VERSION=2020.11
 
 ## Delete ITSMA Namespace
 echo "Deleting ITSMA Namespace"
@@ -100,7 +102,7 @@ drop role smarta;
 drop role idm;
 drop role autopass;
 
-#drop database suitedb;
+#drop database cdfidmdb;
 #drop database cdfapiserverdb;
 #drop role cdfidm;
 
