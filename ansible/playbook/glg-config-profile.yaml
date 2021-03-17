@@ -1,6 +1,6 @@
-#!/usr/local/bin/ansible-playbook
-# Setup GreenLight Environment - Linux Profile
-- name: 'Setup GreenLight Environment - Linux Profile'
+#!/usr/bin/ansible-playbook
+### GreenLight Environment - Configure Linux Profile
+- name: 'GreenLight Environment - Configure Linux Profile'
   hosts: localhost
   connection: local
   gather_facts: False
@@ -71,7 +71,7 @@
       blockinfile:
         path: /etc/profile.d/motd.sh
         create: yes
-        marker: "## ANSIBLE MANAGED BLOCK -- {mark} ##"
+        marker: "## GreenLight -- {mark} ##"
         content: |
           echo " "
           echo "                     Cluster Name:  {{env_cluster.EXTERNAL_ACCESS_HOST}}"
@@ -83,6 +83,6 @@
       blockinfile:
         path: /etc/bashrc
         create: yes
-        marker: "## ANSIBLE MANAGED BLOCK -- {mark} ##"
+        marker: "## GreenLight -- {mark} ##"
         content: |
           PS1="[\\u@{{env_cluster.EXTERNAL_ACCESS_HOST}} \\W]\\$ "
