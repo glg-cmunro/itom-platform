@@ -1,7 +1,59 @@
-##Issues with login post DR may be due to LWSSO Init String
-## Found the issue here to be the LWSSO init string was not in sync from the idm pod to the vault secret
-## LWSSO Secret Key:  lwsso_init_string_secret_key
+#!/usr/bin/ansible-playbook
+################################################################################
+## Ansible Playbook: Reset VAULT secret for lwsso_init_string_secret_key
+## 
+## In a DR scenario it is possible the LWSSO Init String for IDM is not in sync  
+## with the vault secret.  If this happens IDM will not be able to authenticate
+## users and you will recieve a cryptic message about unable to decode request
+##
+################################################################################
+- name: "Reset VAULT Secret - lwsso_init_string_secret_key"
+  
+  tasks:
+    #Get Namespace
+  - name: "Get SUITE info: Kubernetes Namespaces"
+    vars:
+      ansible_python_interpreter: "/usr/bin/python3"
+    k8s_info:
+      api_version: v1
+      kind: ns
+    register: ns_list
 
+  - name: "Set_Fact: ITSMA Namespace"
+    vars:
+      jq_ns: "resources[?contains(metadata.name, 'itsma')].metadata.name"
+    set_fact:
+      itsma_namespace: "{{ ns_list | to_json | from_json | json_query(jq_ns) | first }}"
+
+  - name: "DEBUG: SUITE info - ITSMA Namespace"
+    debug:
+      verbosity: 3
+      msg: |
+        itsma_namespace = {{itsma_namespace}}
+  
+  - name: "Get SUITE info: ITSMA Pod info"
+    vars:
+      ansible_python_interpreter: "/usr/bin/python3"
+    k8s_info:
+      api_version: v1
+      kind: ns
+    register: ns_list
+
+  - name: END Playbook
+    meta: end_play
+
+    #Get IDM Pod
+    #Get IDM User Password
+    #Set HEADER
+    #CURL idm-service for token
+    #Get lwsso_init_string from token
+    #[optional] Get current VAULT Secret
+    #Update VAULT secret
+    #restart SUITE (Specifically IDM and dependant pods)
+
+
+
+'''
 ##Run the following as a script – idm.sh – to get the init_string idm is currently using
 namespace=`sudo kubectl get ns | grep itsma | awk ‘{print $1}’`
 idm_pod=`kubectl get pod -n $namespace -l itsmaService=itom-idm | grep idm | awk '{print $1}'`
@@ -50,3 +102,4 @@ Solution:  Record the TENANTID for each inactive tenant, set them all to active
 Pod completed successfully and the suite upgrade finished completely
 Return each temporarily activated tenant back to inactive
 
+'''

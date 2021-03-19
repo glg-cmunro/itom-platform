@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script Name:  getLWSSOKey.sh
 
-hostname=smax-dev.gitops.com
+hostname=ccc-evd.greenlightgroup.com
 
 namespace=`sudo kubectl get ns | grep itsma | awk '{print $1}'`
 
@@ -25,7 +25,7 @@ token=`curl -X POST -H "Content-Type: application/json" \
 -H "$header" \
 -d '{"passwordCredentials":{"username" : "admin", "password" : "'$idm_admin_password'"}, "tenantName" : "provider"}\' \
 -k https://$hostname/idm-service/v2.0/tokens \
-| sudo /opt/kubernetes/bin/jq -r '.["token"]["id"]'`
+| sudo /opt/smax/2019.05/bin/jq -r '.["token"]["id"]'`
 echo "IDM token: "$token
 
 
