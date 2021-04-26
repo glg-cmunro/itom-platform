@@ -1,0 +1,88 @@
+#!/usr/bin/ansible-playbook
+### GreenLight Environment - Configure Linux Profile
+- name: 'GreenLight Environment - Configure Linux Profile'
+  hosts: localhost
+  connection: local
+  gather_facts: False
+
+  vars:
+    theState: "present"
+    stack_name: 'ansibleTest'
+    suite_type: "itmsa"
+    vpc_name: "{{ stack_name }}Vpc"
+
+  tasks:
+    - name: 'Get cluster details - namespace'
+      k8s_info:
+        api_version: v1
+        kind: ns
+      register: "ns_list"
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: 'Get cluster details - config'
+      k8s_info:
+        api_version: v1
+        kind: cm
+        name: "base-configmap"
+        namespace: "core"
+      register: "cm_list"
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: 'Output: ITSMA Namespace'
+      vars:
+        jq: "resources[?contains(metadata.name, 'itsma')].metadata.name"
+        ns_info: "{{ ns_list | to_json | from_json | json_query(jq) | first }}"
+      debug:
+        msg: "ITSMA Namespace = {{ ns_info }}"
+
+    - name: 'Output: Cluster Config'
+      vars:
+        #jq: "resources[?contains(metadata.name, 'itsma')].metadata.name"
+        cm_info: "{{ cm_list.resources[0].data }}"
+      debug:
+        msg: |
+          " CLUSTER FQDN = {{ cm_info.EXTERNAL_ACCESS_HOST }}"
+          "SUITE VERSION = {{ cm_info.PLATFORM_VERSION }}"
+
+    - set_fact:
+        env_ns: "{{ ns_list | to_json | from_json | json_query(\"resources[?contains(metadata.name, 'itsma')].metadata.name\") | first }}"
+        env_cluster: "{{ cm_list.resources[0].data }}"
+
+    - name: 'Setup /etc/motd'
+      blockinfile:
+        path: /etc/motd
+        create: yes
+        marker: "{mark}"
+        marker_begin: "\\033[2;32m"
+        content: |
+          ##################################################################################
+          ##      ____________________       _____             _____ __  ______   _  __   ##
+          ##     / ____/  _/_  __/ __ \____ / ___/            / ___//  |/  /   | | |/ /   ##
+          ##    / / __ / /  / / / / / / __ \\__ \   ______    \__ \/ /|_/ / /| | |   /    ##
+          ##   / /_/ // /  / / / /_/ / /_/ /__/ /  /_____/   ___/ / /  / / ___ |/   |     ##
+          ##   \____/___/ /_/  \____/ .___/____/            /____/_/  /_/_/  |_/_/|_|     ##
+          ##                       /_/                                                    ##
+          ##################################################################################
+        marker_end: "\\033[0m"
+
+    - name: 'Setup /etc/profile.d/motd.sh'
+      blockinfile:
+        path: /etc/profile.d/motd.sh
+        create: yes
+        marker: "## GreenLight -- {mark} ##"
+        content: |
+          echo " "
+          echo "                     Cluster Name:  {{env_cluster.EXTERNAL_ACCESS_HOST}}"
+          echo "                  Cluster Version:  {{env_cluster.PLATFORM_VERSION}}"
+          echo "                  ITSMA Namespace:  {{env_ns}}"
+          echo " "
+
+    - name: 'Setup PS1 prompt - /etc/bashrc'
+      blockinfile:
+        path: /etc/bashrc
+        create: yes
+        marker: "## GreenLight -- {mark} ##"
+        content: |
+          PS1="[\\u@{{env_cluster.EXTERNAL_ACCESS_HOST}} \\W]\\$ "
