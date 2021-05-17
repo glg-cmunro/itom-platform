@@ -12,7 +12,7 @@ DATE=`date +%d%m%y%H%M%S`
 PG_BIN_DIR='/usr/bin'
 #DB_TGT_HOST='smaxdev-rds.cz4qew1aonte.us-west-2.rds.amazonaws.com'
 DB_PASS_FILE='/root/.pgpass'
-#DB_BACKUP_DIR='/opt/sma/dr_backup/db_backup'
+#DB_BACKUP_DIR='/opt/smax//dr_backup/db_backup'
 DB_BACKUP_DIR='/opt/kubernetes/dr_backup/db_backup'
 
 ## Database Admin user to perform the psql and pg_dump operations

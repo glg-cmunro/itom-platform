@@ -56,7 +56,7 @@ sudo ansible-playbook -vvv \
  -e SubnetAZ2=us-east-1b \
  -e SubnetAZ3=us-east-1c \
  -e ssh_key_name_for_worker_nodes=glg-us-east-1 \
- -e alb_cert_arn="	arn:aws:acm:us-east-1:658787151672:certificate/806a5fc1-3228-4325-8769-1170d3bd47b6" \
+ -e alb_cert_arn="arn:aws:acm:us-east-1:658787151672:certificate/806a5fc1-3228-4325-8769-1170d3bd47b6" \
  aws-create-all.yaml
 
 

@@ -8,7 +8,13 @@
 ##
 ################################################################################
 - name: "Reset VAULT Secret - lwsso_init_string_secret_key"
+  hosts: localhost
+  connection: local
+  gather_facts: False
   
+  vars:
+    somevar: "somevalue"
+
   tasks:
     #Get Namespace
   - name: "Get SUITE info: Kubernetes Namespaces"

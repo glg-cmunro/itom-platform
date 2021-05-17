@@ -30,3 +30,12 @@ EOM
 sudo dnf install google-cloud-sdk -y
 
 gcloud init
+
+
+
+##### NEW INSTALLATION CENTOS 8 #####
+sudo dnf install -y git python3
+sudo python3 -m pip install ansible
+sudo python3 -m pip install awscli
+sudo python3 -m pip install boto3 kubernetes openshift
+

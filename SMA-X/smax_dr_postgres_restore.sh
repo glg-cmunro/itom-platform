@@ -3,19 +3,21 @@
 ################################################################################
 DATE=`date +%d%m%y%H%M%S`
 PG_BIN_DIR='/usr/bin'
-DB_BACKUP_DIR='/opt/sma/dr_backup/db_backup'
+#DB_BACKUP_DIR='/opt/sma/dr_backup/db_backup'
+DB_BACKUP_DIR='/tmp/smax-app-backup/db_backup'
 DB_PASS_FILE='/root/.pgpass'
 
 
 ## Database Host for psql connection - RESTORE TO
 #DB_TGT_HOST=$(hostname -f) # On-Prem (localhost) postgreSQL instance
-DB_TGT_HOST='smaxdev-rds.cz4qew1aonte.us-west-2.rds.amazonaws.com' # AWS RDS
+#DB_TGT_HOST='smaxdev-rds.cz4qew1aonte.us-west-2.rds.amazonaws.com' # AWS RDS
+DB_TGT_HOST='10.198.0.5' # SLB GKE
 DB_TGT_PORT=5432
 
 ## Database Admin user to perform the psql and pg_dump operations
 DBA='postgres' # For On-Prem postgreSQL instance
 #DBA='dbadmin' # For AWS RDS
-DBA_PW='Gr33nl1ght_'
+DBA_PW='K7#YND5Btxqs22$Z'
 
 
 ## FUNCTIONS ##
@@ -27,65 +29,33 @@ log() {
   fi
 }
 
-    declare -A suiteDBs
-    suiteDBs[autopassdb]='autopass;Gr33nl1ght_'
-    suiteDBs[bo_ats]='bo_db_user;Gr33nl1ght_'
-    suiteDBs[bo_config]='bo_db_user;Gr33nl1ght_'
-    suiteDBs[bo_license]='bo_db_user;Gr33nl1ght_'
-    suiteDBs[bo_user]='bo_db_user;Gr33nl1ght_'
-    suiteDBs[idm]='idm;Gr33nl1ght_'
-    suiteDBs[maas_admin]='maas_admin;Gr33nl1ght_'
-    suiteDBs[maas_template]='maas_admin;Gr33nl1ght_'
-    suiteDBs[xservices_ems]='maas_admin;Gr33nl1ght_'
-    suiteDBs[xservices_mng]='maas_admin;Gr33nl1ght_'
-    suiteDBs[xservices_rms]='maas_admin;Gr33nl1ght_'
-    suiteDBs[smartadb]='smarta;Gr33nl1ght_'
-
-
 echo "$DB_TGT_HOST:$DB_TGT_PORT:*:$DBA:$DBA_PW" | sudo tee -a $DB_PASS_FILE
 
 ## Make sure you have rights to the databases
-psql -U $DBA -d maas_admin -h $DB_TGT_HOST
-
-GRANT maas_admin TO $DBA;
-ALTER DATABASE maas_template WITH CONNECTION LIMIT -1;
-
-
-cat $DB_BACKUP_DIR/openerp-autopassdb-20200929_210446-database.gz | gunzip \
-  | $PG_BIN_DIR/psql -U $DBA -d autopassdb -h $DB_TGT_HOST
+#psql -U $DBA -d maas_admin -h $DB_TGT_HOST
+#
+#GRANT maas_admin TO $DBA;
+#ALTER DATABASE maas_template WITH CONNECTION LIMIT -1;
 
 START_TIME=$(date +%Y%m%d_%H%M%S)
 
-cat /tmp/smax-app-backup/db_backup/autopassdb.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U autopass -d autopassdb
-cat /tmp/smax-app-backup/db_backup/bo_ats.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U bo_db_user -d bo_ats
-cat /tmp/smax-app-backup/db_backup/bo_config.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U bo_db_user -d bo_config
-cat /tmp/smax-app-backup/db_backup/bo_license.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U bo_db_user -d bo_license
-cat /tmp/smax-app-backup/db_backup/bo_user.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U bo_db_user -d bo_user
-cat /tmp/smax-app-backup/db_backup/idm.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U idm -d idm
-cat /tmp/smax-app-backup/db_backup/maas_admin.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U maas_admin -d maas_admin
-cat /tmp/smax-app-backup/db_backup/maas_template.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U maas_admin -d maas_template
-cat /tmp/smax-app-backup/db_backup/smartadb.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U smarta -d smartadb
-cat /tmp/smax-app-backup/db_backup/xservices_ems.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U maas_admin -d xservices_ems
-cat /tmp/smax-app-backup/db_backup/xservices_mng.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U maas_admin -d xservices_mng
-cat /tmp/smax-app-backup/db_backup/xservices_rms.sql.gz | gunzip | sudo psql -h 10.198.0.5 -U maas_admin -d xservices_rms
+sudo cat $DB_BACKUP_DIR/autopassdb.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d autopassdb
+sudo cat $DB_BACKUP_DIR/bo_ats.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d bo_ats
+sudo cat $DB_BACKUP_DIR/bo_config.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d bo_config
+sudo cat $DB_BACKUP_DIR/bo_license.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d bo_license
+sudo cat $DB_BACKUP_DIR/bo_user.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d bo_user
+sudo cat $DB_BACKUP_DIR/idm.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d idm
+sudo cat $DB_BACKUP_DIR/maas_admin.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d maas_admin
+sudo cat $DB_BACKUP_DIR/maas_template.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d maas_template
+sudo cat $DB_BACKUP_DIR/smartadb.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d smartadb
+sudo cat $DB_BACKUP_DIR/sxdb.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d sxdb
+sudo cat $DB_BACKUP_DIR/xservices_ems.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d xservices_ems
+sudo cat $DB_BACKUP_DIR/xservices_mng.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d xservices_mng
+sudo cat $DB_BACKUP_DIR/xservices_rms.sql.gz | gunzip | sudo psql -h $DB_TGT_HOST -U postgres -d xservices_rms
 
 END_TIME=$(date +%Y%m%d_%H%M%S)
 
 echo "Database Restore Complete! $START_TIME - $END_TIME"
-
-cat /backup/DailyBackup/openerp-autopassdb-220920102849-database.gz | gunzip | psql -U postgres -d autopassdb
-cat /backup/DailyBackup/openerp-bo_ats-220920102849-database.gz | gunzip | psql -U postgres -d bo_ats
-cat /backup/DailyBackup/openerp-bo_config-220920102849-database.gz | gunzip | psql -U postgres -d bo_config
-cat /backup/DailyBackup/openerp-bo_license-220920102849-database.gz | gunzip | psql -U postgres -d bo_license
-cat /backup/DailyBackup/openerp-bo_user-220920102849-database.gz | gunzip | psql -U postgres -d bo_user
-cat /backup/DailyBackup/openerp-idm-220920102849-database.gz | gunzip | psql -U postgres -d idm
-cat /backup/DailyBackup/openerp-maas_admin-220920102849-database.gz | gunzip | psql -U postgres -d maas_admin
-cat /backup/DailyBackup/openerp-maas_template-220920102849-database.gz | gunzip | psql -U postgres -d maas_template
-cat /backup/DailyBackup/openerp-smartadb-220920102849-database.gz | gunzip | psql -U postgres -d smartadb
-cat /backup/DailyBackup/openerp-xservices_ems-220920102849-database.gz | gunzip | psql -U postgres -d xservices_ems
-cat /backup/DailyBackup/openerp-xservices_mng-220920102849-database.gz | gunzip | psql -U postgres -d xservices_mng
-cat /backup/DailyBackup/openerp-xservices_rms-220920102849-database.gz | gunzip | psql -U postgres -d xservices_rms
-
 
 
 
@@ -112,3 +82,42 @@ END_TIME=$(date +%Y%m%d_%H%M%S)
 
 echo "Database Restore Complete! $START_TIME - $END_TIME"
 
+
+
+#!/bin/bash
+#
+# SCRIPT_NAME : smax_dr_postgres_backup.sh
+# AUTHORS:
+#    jitendra@greenlightgroup.com
+#    chris@greenlightgroup.com
+
+################################################################################
+#####                           GLOBAL VARIABLES                           #####
+################################################################################
+
+## Location of the backup logfile.
+LOGFILE="$DB_BACKUP_DIR/log_$DATE"
+
+
+
+#touch $LOGFILE
+
+TIMESLOT=$(date +%Y%m%d_%H%M%S)
+DATABASES=`$PG_BIN_DIR/psql -U $DBA -h $DB_SRC_HOST -d maas_admin -q -c "\l" | awk '{ print $1}' | grep -vE '^\||^-|^List|^Name|template[0|1]|postgres|rdsadmin|^\('`
+
+echo "$DB_SRC_HOST:$DB_SRC_PORT:*:$DBA:$DBA_PW" | sudo tee -a $DB_PASS_FILE
+for i in $DATABASES; do
+    timeinfo=`date '+%T %x'`
+    log "Backup started at $timeinfo for time slot $TIMESLOT on database: $i "
+
+    $PG_BIN_DIR/pg_dump -c $i -U $DBA -h $DB_SRC_HOST | gzip > "$DB_BACKUP_DIR/openerp-$i-$TIMESLOT-database.gz"
+    
+    RC=$?
+    timeinfo=`date '+%T %x'`
+
+    if [ $RC = 0 ]; then
+        log "Backup completed successfully at $timeinfo for time slot $TIMESLOT on database: $i"
+    else
+        log "Backup Failed at $timeinfo for time slot $TIMESLOT on database: $i"
+    fi
+done
