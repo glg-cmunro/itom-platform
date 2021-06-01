@@ -1,29 +1,121 @@
-### Get Bits used for Install - Setup folder structure
-sudo yum install docker unzip -y
-sudo mkdir -p /opt/smax
-sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/0bflVNJVnP2pExf/download > /opt/smax/CDF1905-00131-15001-managedk8s.zip
-sudo unzip /opt/smax/CDF1905-00131-15001-managedk8s.zip -d /opt/smax
-sudo unzip /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131.zip -d /opt/smax
-sudo mv /opt/smax/ITOM_Suite_Foundation_Deployer_2019.05.00131 /opt/smax/2019.05
+### Setup connectiontion to Cluster
+##GCP Cluster Infrastructure Build - SLB Non-Production
+GKE_CLUSTER=gcp6133-np-k8s04
+GKE_REGION=europe-west1
+GKE_ZONE=europe-west1-b
+GKE_MASTER_CIDR="10.0.10.0/28"
+GKE_CLUSTER_CIDR="10.0.16.0/21"
+GKE_SERVICES_CIDR="10.0.32.0/24"
+GKE_MASTER_AUTH_NET="10.0.1.0/24"
 
-sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
-sudo docker login -u oauth2accesstoken -p `gcloud auth print-access-token` gcr.io
-sudo docker load < /tmp/itom-cdf-deployer_1.1.0-00131b.tar
-sudo docker tag gcr.io/itom-smax-nonprod/itom-cdf-deployer:1.1.0-00131 gcr.io/us102173-p-sis-bsys-6133/itom-cdf-deployer:1.1.0-00131
-sudo docker push gcr.io/us102173-p-sis-bsys-6133/itom-cdf-deployer:1.1.0-00131
+##GCP Cluster Infrastructure Build - SLB Production
+GKE_CLUSTER=gcp6133-p-k8s01
+GKE_REGION=europe-west1
+GKE_ZONE=europe-west1-b
+GKE_MASTER_CIDR="10.0.10.0/28"
+GKE_CLUSTER_CIDR="10.0.16.0/21"
+GKE_SERVICES_CIDR="10.0.32.0/24"
+GKE_MASTER_AUTH_NET="10.0.1.0/24"
+
+# Add Kubeconfig for access to Cluster
+sudo gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
+gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
+
+### Get Bits used for Install - Setup folder structure
+sudo yum install docker python3 unzip -y
+sudo mkdir -p /opt/smax
+sudo chmod a+w /opt/smax
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/ZlKtmvFpH5K1n6t/download > /opt/smax/CDF2011-00134-15001-BYOK.zip
+sudo unzip /opt/smax/CDF2011-00134-15001-BYOK.zip -d /opt/smax
+sudo unzip /opt/smax/ITOM_Platform_Foundation_BYOK_2020.11.00134.zip -d /opt/smax
+sudo mv /opt/smax/ITOM_Platform_Foundation_BYOK_2020.11.00134 /opt/smax/2020.11
+sudo chmod a+rx /opt/smax/2020.11
+
+## Download the SUITE Metadata to the Installer directory
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/UUsDuzrtvKw9QLd/download -o /opt/smax/2020.11/itsma-suite-metadata-2020.11-b53.tgz
+
+### Download the Cloud Deployment toolkit
+sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yndQw0OVvdEAXqt/download -o /opt/smax/CloudDeployment-1.2.7.zip
+sudo unzip /opt/smax/CloudDeployment-1.2.7.zip -d /opt/smax/
+sudo tar -zxvf /opt/smax/SMA-cloud-deployment-1.2.7.tar.gz byok/smax-image-transfer.py --strip-components 1
+
+## Generate the image-set list to download/upload to the repository
+sudo /opt/smax/2020.11/scripts/genImageSet.sh -o hpeswitom -m /opt/smax/2020.11/itsma-suite-metadata-2020.11-b53.tgz -v 2020.11
+
+##Transfer the Images for CDF and SUITE
+gcrpwd=$(gcloud auth print-access-token)
+sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/cdf-image-set.json
+sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/image-set.json
+
+
+#sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
+#sudo docker login -u oauth2accesstoken -p `gcloud auth print-access-token` gcr.io
+#sudo docker load < /tmp/itom-cdf-deployer_1.1.0-00131b.tar
+#sudo docker tag gcr.io/itom-smax-nonprod/itom-cdf-deployer:1.1.0-00131 gcr.io/us102173-p-sis-bsys-6133/itom-cdf-deployer:1.1.0-00131
+#sudo docker push gcr.io/us102173-p-sis-bsys-6133/itom-cdf-deployer:1.1.0-00131
 
 ### CDF INSTALL
-PSQL_DB_HOST=10.241.160.2
-NFS_SERVER=10.12.81.138
-NFS_PATH_CORE=/gcp6133_np_nfs01/var/vols/itom/core
-REGISTRY_ORG=us102173-p-sis-bsys-6133
+## SLB GKE NonProd
+PSQL_DB_HOST=10.198.0.5
+NFS_SERVER=10.145.240.146
+NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
+REGISTRY_ORG=us102173-np-sis-bsys-6133
 LB_EXT_IP=34.77.69.152
 SUITE_VERSION=2019.05
 EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 
+## SLB GKE Prod
+PSQL_DB_HOST=10.241.160.2
+NFS_SERVER=10.12.81.138
+NFS_PATH_CORE=/gcp6133_p_nfs01/var/vols/itom/core
+REGISTRY_ORG=us102173-p-sis-bsys-6133
+LB_EXT_IP=34.77.69.152
+SUITE_VERSION=2020.11
+EXT_ACCESS_FQDN=ccc.greenlightgroup.com
+
+
+### Setup CDF Database
+CREATE USER cdfapiserver login PASSWORD '0f5546d03a520e627f17719865aa53cd';
+grant cdfapiserver to postgres;
+CREATE DATABASE cdfapiserverdb WITH owner=cdfapiserver;
+\c cdfapiserverdb;
+ALTER SCHEMA public OWNER TO cdfapiserver;
+ALTER SCHEMA public RENAME TO cdfapiserver;
+REVOKE ALL ON SCHEMA cdfapiserver from public;
+GRANT ALL ON SCHEMA cdfapiserver to cdfapiserver; 
+ALTER USER cdfapiserver SET search_path TO cdfapiserver;
+
+
+## Make NEW required NFS folders
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-1
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-2
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-3
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-4
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-5
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-1
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-2
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-3
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-4
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-saw-con-a-5
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawarc-con-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawarc-con-1
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawarc-con-a-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawarc-con-a-1
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawmeta-con-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawmeta-con-1
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawmeta-con-a-0
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/itsma-smarta-sawmeta-con-a-1
+sudo chown 1999:1999 /mnt/nfs/var/vols/itom/itsma/itsma-smarta*
+sudo mkdir /mnt/nfs/var/vols/itom/itsma/db-backup-vol
+sudo chown 1999:1999 /mnt/nfs/var/vols/itom/itsma/db-backup-vol
+
 ### SSH Session #1
 #sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
-sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
+#sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
+#sudo /opt/smax/2020.11/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2020.11/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
+sudo /opt/smax/2020.11/install --nfs-server "10.12.81.138"  --nfs-folder "/gcp6133_p_nfs01/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "us102173-p-sis-bsys-6133"  --registry-password-file /opt/smax/2020.11/key.json  --external-access-host "ccc.greenlightgroup.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.77.69.152" --db-url "jdbc:postgresql://10.241.160.2:5432/cdfapiserverdb" --db-user "cdfapiserver" --db-password "0f5546d03a520e627f17719865aa53cd" --db-crt "./db_cert.pem"
 
 ### SSH Session #2
 CDF_OUTPUT_DIR=/mnt/nfs/var/vols/itom/core/yaml/yaml_template/output

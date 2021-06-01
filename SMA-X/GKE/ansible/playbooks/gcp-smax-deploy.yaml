@@ -1,0 +1,568 @@
+#!/usr/local/bin/ansible-playbook
+################################################################################
+# Ansible Playbook
+# Name: GreenLight Group Utils - Deploy SMAX on GCP
+# Author: Chris Munro @ GreenLight Group
+# Purpose: Using the 'Control Node' Deploy SMAX via silent install configuration
+################################################################################
+- name: 'Deploy SMAX via silent install on Google Cloud Platform'
+  hosts: localhost
+  connection: local
+  gather_facts: False
+
+  #Ansible Vault file for encrypted inputs
+  vars_files:
+    "../files/ans_vault"
+
+#### PreRequisite Tasks
+## Configure connection to Kubernetes Cluster
+
+#### SMAX Deploy Tasks
+## Download BYOK deployer
+## Download Cloud Deployment tools
+## Setup SMAX Ops Toolkit
+## Deploy CDF
+## Download Images
+## Upload Images
+## Build Silent Install config file
+## Execute Silent Install
+
+
+###AWS Deploy sample
+# Need to pass through argument "policy_name", used to name the policy being created
+
+
+  
+  vars:
+    theState: "present"
+    cluster_name: "ansibleTest"
+    cluster_domain: "gitops.com"
+    cluster_fqdn: "{{cluster_name}}.{{cluster_domain}}"
+    region: "us-east-2"
+    
+    stack_name: 'ansibleTest'
+      #vpc_name: "{{ stack_name }}Vpc"
+      #SubnetAZ1: "us-east-2a"
+      #SubnetAZ2: "us-east-2b"
+      #SubnetAZ3: "us-east-2c"
+      #template_location: "./templates/templates"
+      #role_arn: "arn:aws:iam::658787151672:policy/CloudFormation-Admin"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-cloudformation-role"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-cloudformation-role"
+      #role_arn: "arn:aws:iam::658787151672:role/sma-eks-build-cloudformation-role"
+      #ssh_key_name_for_worker_nodes: "glg-us-east-2"
+      #worker_instance_type: "m5.xlarge" # 4cpu x 16GB $0.192/hour
+      #worker_instance_type: "m5.2xlarge" # 8pu x 32GB $0.384/hour
+      #worker_instance_type: "r5.xlarge"  # 4cpu x 32GB $0.252/hour
+      #node_instance_role: "gets set in createEKSout"
+      #node_group_name: "{{ cluster_name }}-workernodes"
+      #node_asg_desired: "1" # 4 * $0.252/hour = $0.756/hour
+      #node_asg_max: "4" # 4 * $0.252/hour = $1.08/hour
+      #node_asg_min: "1" # 3 * $0.252/hour = $0.756/hour
+      #efs_performance_mode: "generalPurpose" # https://docs.aws.amazon.com/efs/latest/ug/performance.html
+      #bastion_ami_os: "CentOS-7"
+      #bastion_instance_type: "t2.micro" # t2.micro | m5.large
+      #bastion_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+      #bastion_root_volume_size: "100" # in GB
+      #rds_version: "10.9" # 10.9 | 9.5
+      #pgsql_base_version: "{{ rds_version.split('.')[0] }}"
+    rds_db_user: "{{ vault_RDS_Admin_User }}"
+    rds_db_password: "{{ vault_RDS_Admin_Pass }}"
+      #rds_multi_az: "true" # true | false
+      #rds_db_storage: "100" # db size in GB; min 100GB; max 1024GB
+      #rds_instance_type: "db.m4.xlarge" # db.m4.xlarge | db.m4.2xlarge | db.m4.4xlarge | db.r4.8xlarge
+      #rds_key_pair_name: "{{ ssh_key_name_for_worker_nodes }}"
+    smax_version: "2020.11"
+    tmp_location: "/tmp/glg_byok"
+    utils_location: "/opt/smax/{{ smax_version }}"
+    git_repo_base_location: "/home/centos/aws-smax"
+    byok_source_location: "{{ git_repo_base_location }}/BYOK/{{ smax_version }}/"
+    nfs_configure_script: "configureEFS.sh"
+    nfs_host: "{{ cluster_name }}-efs.{{ cluster_domain }}"
+    nfs_filestore_ip_address: "notUsedWithAWS"
+    nfs_fileshare_name: "/var/vols/itom/itsma/core"
+    deployment_cloud: "aws"
+    pg_script: "pg_configure.sql"
+    db_host: "{{ cluster_name }}-rds.{{ cluster_domain }}"
+    db_port: 5432
+    db_user: "{{ rds_db_user }}"
+    db_password: "{{ rds_db_password }}"
+    docker_hub_username: "{{ vault_Docker_User }}"
+    docker_hub_password: "{{ vault_Docker_Pass }}"
+    docker_hub_registry: "registry.hub.docker.com"
+    docker_hub_registry_orgname: "hpeswitom"
+
+  tasks:
+  - include_vars: "files/aws_cred_vars.yaml"
+    tags: [ "download_images" ]
+ 
+  - name: "Set Facts for deployment_cloud {{ deployment_cloud }} == gcp"
+    set_fact:
+      nfs_configure_script: "createFileStore.sh"
+      nfs_configure_command: "{{ git_repo_base_location }}/BYOK/{{ smax_version }}/{{ nfs_configure_script }} {{ nfs_filestore_ip_address }} {{ nfs_fileshare_name }}"
+    when: deployment_cloud == "gcp"
+
+  - name: "Set Facts for deployment_cloud {{ deployment_cloud }} == aws"
+    set_fact:
+      nfs_configure_command: "{{ git_repo_base_location }}/BYOK/{{ smax_version }}/{{ nfs_configure_script }} {{ nfs_host }}"
+      create_repo_script: "create_aws_repositories.py"
+    when: deployment_cloud == "aws"
+
+  - name: "Set Facts for smax_version {{ smax_version }} == 2020.02"
+    set_fact:
+      sma_metadata_zip_filename: "itsma-suite-metadata-2020.02-b34.tgz"
+      sma_cloud_deploy_zip_filename: "SMA-cloud-deployment-1.2.4.tar.gz"
+      itom_found_byok_zip_filename: "ITOM_Platform_Foundation_BYOK_2020.02.00119.zip"
+      cloud_deployment_zip_filename: "Cloud Deployment 1.2.4.zip"
+      byok_utils_zip_filename: "CDF2002-00119-15001-BYOK.zip"
+      byok_utils_zip_filename2: "ITOM_Platform_Foundation_BYOK_2020.02.00119.zip"
+      silent_install_config_file: "smax_silent_config_2020_05.j2"
+      node_asg_min: "3"
+      node_asg_max: "6"
+    when: smax_version == "2020.02"
+    tags: [ "find_file", "build_silent_install_config" ]
+
+  - name: "Set Facts for smax_version {{ smax_version }} == 2020.05"
+    set_fact:
+      sma_metadata_zip_filename: "itsma-suite-metadata-2020.05-b58.tgz"
+      sma_cloud_deploy_zip_filename: "SMA-cloud-deployment-1.2.4.tar.gz"
+      itom_found_byok_zip_filename: "ITOM_Platform_Foundation_BYOK_2020.05.00100.zip"
+      cloud_deployment_zip_filename: "Cloud Deployment 1.2.4.zip"
+      byok_utils_zip_filename: "CDF2005-00100-15001-BYOK.zip"
+      byok_utils_zip_filename2: "ITOM_Platform_Foundation_BYOK_2020.05.00100.zip"
+      byok_util_zip_url: "https://owncloud.greenlightgroup.com/index.php/s/iw8G0iPmNl5WDV2/download"
+      silent_install_config_file: "smax_silent_config_2020_05.j2"
+      node_asg_min: "3"
+      node_asg_max: "6"
+    when: smax_version == "2020.05"
+    tags: [ "find_file", "build_silent_install_config" ]
+
+  - name: "Set Facts for smax_version {{ smax_version }} == 2020.11"
+    set_fact:
+      sma_metadata_zip_filename: "itsma-suite-metadata-2020.11-b53.tgz"
+      sma_cloud_deploy_zip_filename: "SMA-cloud-deployment-1.2.7.tar.gz"
+      itom_found_byok_zip_filename: "ITOM_Platform_Foundation_BYOK_2020.11.00134.zip"
+      cloud_deployment_zip_filename: "Cloud Deployment 1.2.7.zip"
+      byok_utils_zip_filename: "CDF2011-00134-15001-BYOK.zip"
+      byok_utils_zip_filename2: "ITOM_Platform_Foundation_BYOK_2020.11.00134.zip"
+      silent_install_config_file: "smax_silent_config_2020_11.j2"
+      byok_util_zip_url: "https://owncloud.greenlightgroup.com/index.php/s/CoGpDg3JrO6gopm/download"
+      node_asg_min: "3"
+      node_asg_max: "6"
+    when: smax_version == "2020.11"
+    tags: [ "find_file", "build_silent_install_config" ]
+
+  - name: "Download CDF installer {{ byok_util_zip_url }}"
+    get_url:
+      url: "{{ byok_util_zip_url }}"
+      dest: "{{ byok_source_location }}/{{ byok_utils_zip_filename }}"
+      mode: '0440'
+    when: byok_util_zip_url is defined
+
+  - name: "Set Facts for all the other variables in AWS"
+    set_fact:
+    when: deployment_cloud == "aws"
+
+  - name: "Check Exist /mnt/efs"
+    stat:
+      path: /mnt/efs
+    register: mnt_efs_stat
+    when: deployment_cloud == "aws"
+    tags: [ configure_nfs ]
+
+  - name: "unmount nfs if its mounted"
+    command: "umount /mnt/efs"
+    become: yes
+    when: mnt_efs_stat.stat.exists == True
+    register: nfs_umount_out
+    changed_when: '"not mounted" in nfs_umount_out.stderr'
+    tags: [ configure_nfs ]
+
+  - name: "Run Script NFS configure"
+    command: "{{ nfs_configure_command }}"
+    become: yes
+    register: nfs_command_out
+    tags: [ configure_nfs ]
+
+  - name: "Create Directory {{ tmp_location }} if it does not exist"
+    file:
+      path: "{{ tmp_location }}"
+      state: directory
+      mode: '0755'
+    tags: [ find_file ]
+
+  - name: "Extract outside zip BYOK utils to {{ tmp_location }}"
+    unarchive:
+      src: "{{ byok_source_location }}/{{ byok_utils_zip_filename }}"
+      dest: "{{ tmp_location }}"
+      remote_src: yes
+    tags: [ find_file ]
+
+  - name: "Remove File {{ byok_source_location }}/{{ byok_utils_zip_filename }}"
+    file:
+      path: "{{ byok_source_location }}/{{ byok_utils_zip_filename }}"
+      state: absent
+
+  - name: "Extract the real BYOK utils {{ byok_utils_zip_filename2 }} to {{ tmp_location }}"
+    unarchive:
+      src: "{{ tmp_location }}/{{ byok_utils_zip_filename2 }}"
+      dest: "{{ tmp_location }}"
+      remote_src: yes
+    tags: [ find_file ]
+
+  - name: "Create Directory {{ utils_location }} if it does not exist"
+    file:
+      path: "{{ utils_location }}"
+      state: directory
+      mode: '0755'
+    tags: [ find_file ]
+
+  - name: "Find File {{ byok_utils_zip_filename2 | splitext | first }}"
+    find:
+      paths: "{{ tmp_location }}/{{ byok_utils_zip_filename2 | splitext | first }}"
+      file_type: any
+      hidden: yes
+    register: files
+    tags: [ find_file ]
+
+  - name: "Move File {{ tmp_location }}/{{ byok_utils_zip_filename2 | splitext | first }} to {{ utils_location }}"
+    copy:
+      remote_src: true
+      src: "{{ item.path }}"
+      dest: "{{ utils_location }}"
+    with_items:
+    - "{{ files.files }}"
+    tags: [ find_file ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+
+  - name: "File Permissions for {{ utils_location }}"
+    file:
+      path: "{{ utils_location }}"
+      owner: root
+      group: root
+      mode: '0755'
+      recurse: yes
+    become: yes
+    tags: [ find_file ]
+
+  - name: "DB Create users"
+    postgresql_user:
+      login_host: "{{ db_host }}"
+      port: "{{ db_port }}"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      db: "postgres"
+      name: "{{ item }}"
+      password: "{{ db_password }}"
+    register: cdfapiserver_user_create_out
+    #with_items:  [autopass, bo_db_user,cdfidm,idm,maas_admin,smarta,cdfapiserver,dnd, sam]
+    with_items: [cdfapiserver, cdfidm]
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    #when: smax_version == "2020.05"
+
+
+  - name: "DB Grant Role to {{ db_user }}"
+    postgresql_membership:
+      login_host: "{{ db_host }}"
+      port: "{{ db_port }}"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      db: "postgres"
+      group: "{{ item }}"
+      target_roles:
+      - "{{ db_user }}"
+      state: present
+    register: membership_out
+    #with_items:  [autopass, bo_db_user,cdfidm,maas_admin,smarta,cdfapiserver,dnd, sam]
+    with_items: [cdfapiserver, cdfidm]
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    #when: smax_version == "2020.05"
+
+  - name: "DB Create Databases with Owners"
+    postgresql_db:
+      login_host: "{{ db_host }}"
+      port: "{{ db_port }}"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      owner: "{{ item.split(':')[0] }}"
+      name: "{{ item.split(':')[1] }}"
+    register: createdb_out
+    #with_items: ["autopass:autopassdb", "bo_db_user:bo_ats", "bo_db_user:bo_config", "bo_db_user:bo_license", "bo_db_user:bo_user", "cdfidm:cdfidm", "maas_admin:maas_admin", "maas_admin:maas_template", "maas_admin:xservices_ems", "maas_admin:xservices_rms", "maas_admin:xservices_mng", "smarta:smartadb", "cdfapiserver:cdfapiserverdb", "dnd:dnd", "sam:sam"]
+    with_items: ["cdfapiserver:cdfapiserverdb", "cdfidm:cdfidm" ]
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    #when: smax_version == "2020.05"
+
+  - name: "Check Configured postgresql DB"
+    postgresql_query:
+      login_host: "{{ db_host }}"
+      port: "{{ db_port }}"
+      db: "cdfapiserverdb"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      query: select * from information_schema.schemata where schema_name='public' ;
+    register: checking_out
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+
+  - name: "Run Script configure postgresql DB"
+    postgresql_query:
+      login_host: "{{ db_host }}"
+      port: "{{ db_port }}"
+      db: "cdfapiserverdb"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      path_to_script: "{{ byok_source_location }}/{{ pg_script }}"
+    register: pgquery_out
+    when: checking_out.rowcount != 0
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+
+  - name: "Configured Already postgresql DB"
+    debug:
+      msg: "configure postgresql DB already executed"
+    when: checking_out.rowcount == 0
+    tags: [ create_db ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+
+  - name: "Run Script genImageSet"
+    command:  "{{ utils_location }}/scripts/genImageSet.sh -o hpeswitom -m {{ byok_source_location }}/{{ sma_metadata_zip_filename }} -v {{ smax_version }}"
+    register: gen_image_set_output
+
+  - name: "Extract Cloud Deployment utils to /opt/smax/{{ smax_version }}"
+    unarchive:
+      src: "{{ byok_source_location }}/{{ sma_cloud_deploy_zip_filename }}"
+      dest: "{{ tmp_location }}"
+      remote_src: yes
+    tags: [ find_file ]
+
+  - name: "Find File {{ sma_metadata_zip_filename }}"
+    find:
+      recurse: true
+      paths: "{{ byok_source_location }}/"
+      file_type: file
+      patterns: "{{ sma_metadata_zip_filename }}"
+    register: create_meta_file
+    tags: [ find_file ]
+
+  - name: "File Found {{ create_meta_file.matched }} files that matched 'sma_metadata_zip_filename: {{ create_meta_file.files }}'"
+    debug:
+      msg: "we found {{ create_meta_file.matched }} files that matched 'sma_metadata_zip_filename: {{ create_meta_file.files }}'"
+    tags: [ find_file ]
+
+  - name: "Copy File {{ sma_metadata_zip_filename }} to {{ utils_location }}"
+    copy:
+      remote_src: true
+      src: "{{ item.path }}"
+      dest: "{{ utils_location }}/"
+    with_items:
+      - "{{ create_meta_file.files }}"
+    tags: [ find_file ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+
+  - name: "Find File {{ create_repo_script }}"
+    find:
+      recurse: true
+      paths: "{{ tmp_location }}/"
+      file_type: file
+      patterns: "{{ create_repo_script }}"
+    register: create_repo_file_out
+    tags: [ find_file ]
+    when: deployment_cloud == "aws"
+
+  - name: "File Found {{ create_repo_file_out.matched }} files that matched '{{ create_repo_script }}: {{ create_repo_file_out.files }}'"
+    debug:
+      msg: "we found {{ create_repo_file_out.matched }} files that matched '{{ create_repo_script }}: {{ create_repo_file_out.files }}'"
+    tags: [ find_file ]
+
+
+  - name: "Copy File {{ create_repo_script }} to {{ utils_location }}/scripts"
+    copy:
+      remote_src: true
+      src: "{{ item.path }}"
+      dest: "{{ utils_location }}/scripts/"
+    with_items:
+      - "{{ create_repo_file_out.files }}"
+    tags: [ find_file ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+
+  - name: "Ensure we have our PATH set properly"
+    lineinfile:
+      path: "{{ utils_location }}/scripts/{{ create_repo_script }}"
+      regexp: '\/usr\/local\/bin'
+      insertbefore: '^def sh.*'
+      line: 'os.environ["PATH"] = os.environ["PATH"] + ":/usr/local/bin"'
+    when: deployment_cloud == "aws"
+    tags: [ find_file ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+
+  - name: "get ecr login-password information"
+    command:  "/usr/local/bin/aws ecr get-login-password"
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+    register: ecr_login_password
+    when: deployment_cloud == "aws"
+    tags: [ "download_images" ]
+
+  - name: "get docker login information"
+    command:  "/usr/local/bin/aws ecr get-authorization-token"
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+    register: full_ecr_login_info
+    when: deployment_cloud == "aws"
+    tags: [ "download_images" ]
+
+
+  - name: "convert full_ecr_login_info to json"
+    set_fact:
+      ecr_login_info_json: "{{ full_ecr_login_info.stdout | from_json }}"
+    when: deployment_cloud == "aws"
+    tags: [ "download_images" ]
+
+
+  - name: "get authorizationToken from full_ecr_login_info"
+    set_fact:
+      ecr_login_authToken: "{{ ecr_login_password.stdout }}"
+      ecr_login_authUser: "AWS"
+      ecr_login_registry: "{{ item.proxyEndpoint }}"
+    loop: "{{ecr_login_info_json.authorizationData}}"
+    when: deployment_cloud == "aws"
+    tags: [ "download_images" ]
+
+
+  - name: "output ecr_login_authToken"
+    debug:
+      msg: "we have the following ecr_login_info: {{ ecr_login_authToken }}"
+    tags: [ "download_images" ]
+
+
+  - name: "find smax-image-transfer.py"
+    find:
+      recurse: true
+      paths: "{{ tmp_location }}/"
+      file_type: file
+      patterns: 'smax-image-transfer.py'
+    register: image_transfer_file_out
+    tags: [ find_file ]
+
+  - name: "run AWS Create Repositories"
+    command:  "python {{ utils_location }}/scripts/create_aws_repositories.py -r {{ region }} -o hpeswitom -i  {{ utils_location }}/scripts/image-set.json"
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+    register: gen_image_set_output
+    when: deployment_cloud == "aws"
+    tags: [ create_repo ]
+
+  - name: "copy smax-image-transfer.py to {{ utils_location }}/scripts"
+    copy:
+      remote_src: true
+      src: "{{ item.path }}"
+      dest: "{{ utils_location }}/scripts/"
+    with_items:
+      - "{{ image_transfer_file_out.files }}"
+    tags: [ find_file ]
+    vars:
+      ansible_python_interpreter: /usr/bin/python
+
+  - name: "download AND upload images from public docker repository... this will take some time to complete!"
+    #command:  "python {{ utils_location }}/scripts/smax-image-transfer.py --threads 50  -su {{ docker_hub_username }} -sp {{ docker_hub_password }} -sr {{ docker_hub_registry }} -so {{ docker_hub_registry_orgname }} -tu {{ ecr_login_info.stdout.split(' ')[3] }}  -tp {{ ecr_login_info.stdout.split(' ')[5] }} -tr {{ ecr_login_info.stdout.split(' ')[6].split('/')[2] }} -to {{ docker_hub_registry_orgname }}"
+    command:  "python {{ utils_location }}/scripts/smax-image-transfer.py --threads 50  -su {{ docker_hub_username }} -sp {{ docker_hub_password }} -sr {{ docker_hub_registry }} -so {{ docker_hub_registry_orgname }} -tu {{ ecr_login_authUser }}  -tp {{ ecr_login_authToken }} -tr {{ ecr_login_registry.split('/')[2] }} -to {{ docker_hub_registry_orgname }}"
+    args:
+      chdir: "{{ utils_location }}/scripts"
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+    register: dl_output
+    when: deployment_cloud == "aws"
+    tags: [ "download_images", "upload_images" ]
+
+#python smax-image-transfer.py -su <source-username> -sp <source-password> -sr <source-registry> -so <source-orgname> -tu $ecrUserName -tp $ecrUserPassword -tr $ecrURL -to <target-orgname>
+#ecrUserName=$(echo $dockerLogin | awk '{print $4}')
+#ecrUserPassword=$(echo $dockerLogin | awk '{print $6}')
+#ecrURL=$(echo $dockerLogin | awk '{print $7}' | awk -F/ '{print $3}')
+  - name: "fix {{ cluster_fqdn }} to not have a trailing ."
+    set_fact:
+      cluster_fqdn: "{{ cluster_fqdn | regex_replace('\\.$', '')}}"
+      cluster_domain: "{{ cluster_domain | regex_replace('\\.$', '')}}"
+        #{{ variable_name | regex_replace('\\/$', '') }}
+
+  - name: "output cluster_fqdn and cluster_domain"
+    debug:
+      msg: "we have the following FQDN being used for silent install: {{ cluster_fqdn }} and cluster_domain of {{ cluster_domain }}"
+
+#
+
+  - name: "Set HOST Facts using complex arguments"
+    set_fact:
+      boadmin_password: "{{ db_password }}"
+      dbHost: "{{ db_host }}"
+      db_login: "{{ db_user }}"
+      db_login_user: "{{ db_user }}"
+      dbName: "cdfidm"
+      database_name: "cdfidm"
+      dbUser: "cdfidm"
+      dbPassword: "{{ db_password }}"
+      db_login_password: "{{ db_password }}"
+      dbowner_password: "{{ db_password }}"
+      db_password: "{{ db_password }}"
+      db_port: "{{ db_port }}"
+      db_host_port: "{{ db_port }}"
+      dbPort: "{{ db_port }}"
+      db_server: "{{ db_host }}"
+      db_host_name: "{{ db_host }}"
+      externalHostname: "{{ cluster_fqdn }}"
+      external_host_name: "{{ cluster_fqdn }}"
+      host: "{{ nfs_host }}"
+      nfs_server_host_name: "{{ nfs_host }}"
+      integrationadmin_password: "{{ db_password }}"
+      internal_dbaowner_password: "{{ db_password }}"
+      itom_suite_size: "small"
+      suite_size: "small"
+      sysadmin_password: "{{ db_password }}"
+      version: "{{ smax_version }}"
+      suite_version: "{{ smax_version }}"
+      default_admin_password: "{{ db_password }}"
+    tags: [ "build_silent_install_config" ]
+
+  - name: build silent install configuration file
+    template:
+      src: "{{ byok_source_location }}/{{ silent_install_config_file }}"
+      dest: "{{ utils_location }}/{{ silent_install_config_file.split('.')[0] }}.json"
+      owner: root
+      group: root
+      mode: '0755'
+    tags: [ "build_silent_install_config" ]
+
+  - name: "recursively remove {{ tmp_location }}"
+    file:
+      path: "{{ tmp_location }}"
+      state: absent
+
+  - name: Setting host facts using complex arguments
+    set_fact:
+      silent_install_cmd: "{{ utils_location }}/install --config {{ utils_location }}/{{ silent_install_config_file.split('.')[0] }}.json --cloud-provider {{ deployment_cloud }} --registry-orgname {{ docker_hub_registry_orgname }} --registry-url {{ ecr_login_registry.split('/')[2] }} --registry-password {{ ecr_login_authToken }} --registry-username {{ ecr_login_authUser }} --skip-warning -t 200 --metadata {{ utils_location }}/{{ sma_metadata_zip_filename }} --external-access-host {{ cluster_fqdn }} -P {{ rds_db_password }} --nfs-server {{ nfs_server_host_name }} --nfs-folder {{ nfs_fileshare_name }} --db-user cdfapiserver --db-password {{ rds_db_password }} --db-url jdbc:postgresql://{{ db_host }}:5432/cdfapiserverdb"
+    when: deployment_cloud == "aws"
+
+  - name: "output silent install command"
+    debug:
+      var: silent_install_cmd
+
+  - name: "execute silent install"
+    command:  "{{ silent_install_cmd }}"
+    args:
+      chdir: "{{ utils_location }}/scripts"
+    environment:
+      PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+    register: install_output
+    when: deployment_cloud == "aws"
