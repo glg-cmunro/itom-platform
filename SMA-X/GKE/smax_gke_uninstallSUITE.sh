@@ -1,11 +1,7 @@
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
-#PSQL_DB_HOST=10.4.176.5
-PSQL_DB_HOST=10.161.224.2
+PSQL_DB_HOST=10.241.160.2
 JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
 SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
-#SUITE_VERSION='2019.05.00131'
-#SUITE_VERSION='2019.08.00134'
-#SUITE_VERSION='2020.02.00119'
 
 ## Uninstall SMAX SUITE:
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
@@ -102,9 +98,9 @@ drop role smarta;
 drop role idm;
 drop role autopass;
 
-#drop database cdfidmdb;
-#drop database cdfapiserverdb;
-#drop role cdfidm;
+drop database cdfidmdb;
+drop database cdfapiserverdb;
+drop role cdfidm;
 
 
 ### Delete the GKE Cluster
