@@ -130,6 +130,7 @@ GLG Employee Termination:
     Move Account to Disabled Users
 
 4. CenturyLink VOIP
+    Q: Do we redirect number for X time before removing?
     Remove User from VOIP
         RPA Recording - Web UI - Remove User
             Inputs:
@@ -159,3 +160,6 @@ Sonitrol (??)
     Email Sonitrol request user code removed
     
 Verizon (??)
+
+SmartSheet (??)
+    Email to Matt requesting access be removed?

@@ -1,5 +1,4 @@
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
-#PSQL_DB_HOST=10.4.176.5
 PSQL_DB_HOST=10.161.224.2
 JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
 SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
@@ -102,9 +101,9 @@ drop role smarta;
 drop role idm;
 drop role autopass;
 
-#drop database cdfidmdb;
-#drop database cdfapiserverdb;
-#drop role cdfidm;
+drop database cdfidmdb;
+drop database cdfapiserverdb;
+drop role cdfidm;
 
 
 ### Delete the GKE Cluster

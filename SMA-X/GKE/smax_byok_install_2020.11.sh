@@ -111,6 +111,10 @@ sudo chown 1999:1999 /mnt/nfs/var/vols/itom/itsma/itsma-smarta*
 sudo mkdir /mnt/nfs/var/vols/itom/itsma/db-backup-vol
 sudo chown 1999:1999 /mnt/nfs/var/vols/itom/itsma/db-backup-vol
 
+## SET Default access to NFS Directories by SUITE user
+sudo setfacl -R -m u:1999:wrx /mnt/nfs/var/vols/itom
+sudo setfacl -R -m g:1999:wrx /mnt/nfs/var/vols/itom
+
 ### SSH Session #1
 #sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
 #sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"

@@ -1,0 +1,29 @@
+#itom-nginx-ingress-LB.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: suite-install-ingress
+  namespace: itsma-tyf1h
+  labels:
+    itsmaRelease: "2020.11"
+    itsmaService: itom-ingress
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.global-static-ip-name: "gcp6133-p-extip02"
+    ingress.kubernetes.io/secure-backends: "true"
+spec:
+  tls:
+  - secretName: nginx-default-secret
+    hosts:
+    - ccc.greenlightgroup.com
+  rules:
+  - host: ccc.greenlightgroup.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: itom-nginx-ingress-svc
+          servicePort: 443
+  backend:
+    serviceName: itom-nginx-ingress-svc
+    servicePort: 443

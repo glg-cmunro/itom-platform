@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: itom-nginx-ingress-svc
+  namespace: itsma-tyf1h
+  labels:
+    itsmaService: itom-ingress
+    itsmaRelease: "2020.11"
+  annotations:
+    cloud.google.com/app-protocols: '{"https-port":"HTTPS"}'
+spec:
+  selector:
+    app: itom-nginx-ingress
+  type: NodePort
+  ports:
+  - name: "https-port"
+    protocol: TCP
+    port: 443
+    targetPort: 443
