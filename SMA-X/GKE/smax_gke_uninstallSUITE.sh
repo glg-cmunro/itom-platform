@@ -1,9 +1,5 @@
 NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
-<<<<<<< HEAD
-PSQL_DB_HOST=10.161.224.2
-=======
 PSQL_DB_HOST=10.241.160.2
->>>>>>> 9ba4032c9de37afa608c063d07be0834689f395b
 JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
 SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
 
