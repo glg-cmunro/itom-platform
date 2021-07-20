@@ -1,0 +1,21 @@
+## Engineer / On Call cluster access and ongoing maintenance
+
+1. Login to AWS Console
+2. Create API Key/Secret
+3. Login to Control Node
+4. Setup AWS CLI (aws configure)
+5. Playbook to setup Profile
+6. Setup kube-config
+7. Test access to cluster
+8. Test/Validate access to playbooks
+
+
+
+GLG Prod Engineer Role:
+arn:aws:iam::658787151672:role/GLG_ProdEngineer
+
+RBAC - Role:
+    - groups:
+      - system:masters
+      rolearn: arn:aws:iam::658787151672:role/GLG_ProdEngineer
+      username: engineer
