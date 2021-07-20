@@ -6,6 +6,7 @@ REGISTRY_ORG=us107795-np-sis-bsys-6133
 LB_EXT_IP=104.155.40.90
 SUITE_VERSION=2020.11
 PSQL_DB_HOST=10.241.160.2
+EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 
 ## Delete ITSMA Namespace
 echo "Deleting ITSMA Namespace"
@@ -20,7 +21,6 @@ kubectl get pv | grep itsma | awk '{print $1}'|xargs sudo kubectl delete pv
 ### Uninstall CDF - GKE
 echo "Removing RBAC Configuration"
 #sudo kubectl delete -f /opt/smax/$SUITE_VERSION/objectdefs/rbac-config.yaml
-EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 
 ## Delete ITSMA Namespace
 echo "Deleting ITSMA Namespace"
