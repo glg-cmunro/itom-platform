@@ -10,10 +10,10 @@
 sudo dnf install -y vim git unzip nfs-utils tmux jq
 sudo dnf install -y python3
 #sudo dnf install -y epel-release docker
-python3 -m pip install --upgrade pip
-python3 -m pip install -U setuptools
-python3 -m pip install openshift --ignore-installed PyYAML
-python3 -m pip install ansible kubernetes boto3 psycopg2-binary wheel
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install -U setuptools
+sudo python3 -m pip install openshift --ignore-installed PyYAML
+sudo python3 -m pip install ansible kubernetes boto3 psycopg2-binary wheel
 
 #Install AWS CLI
 curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o '/tmp/awscliv2.zip'

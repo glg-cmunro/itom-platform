@@ -3,22 +3,37 @@
 # AUTHOR : chris@greenlightgroup.com
 # 
 # Disaster Recovery for SMA-X Suite on ITOM Platform for Schlumberger
+# Backup SUITE from Source
 #
+
+
+##### 2020.11 ############
+
+
+curl -k 
+python3 /opt/smax/2020.11/tools/disaster-recovery/sma_dr_executors/dr_preaction.py
+
+
+
+
+
+
+##### END 2020.11 ########
 
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
-PG_VERSION='9.6'
-DB_BACKUP_DIR='/opt/sma/db'
+PG_VERSION='10.17'
+DB_BACKUP_DIR='/data/dr/db'
 
-DR_TMP_DIR='/opt/sma/tmp'
-DR_OUTPUT_DIR='/opt/sma/tmp'
-DR_NFS_DIR='/opt/sma/nfs'
-DR_SMARTA_DIR='/opt/sma/smarta-nfs'
+DR_TMP_DIR='/data/dr/tmp'
+DR_OUTPUT_DIR='/data/dr/output'
+DR_NFS_DIR='/data/dr/nfs'
+DR_SMARTA_DIR='/data/dr/smarta-nfs'
 
-SRC_DB_HOST='slcvd-sma-d01.dev.glg.lcl'
-SRC_MASTER_HOST='azr6133prdapp01.earaa6133.azr.slb.com'
-SRC_NFS_HOST='10.192.236.147'
+SRC_DB_HOST=10.198.0.2
+SRC_MASTER_HOST='gcp6133prdapp01'
+SRC_NFS_HOST=10.145.240.146
 
 TGT_DB_HOST=
 TGT_MASTER_HOST=

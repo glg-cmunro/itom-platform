@@ -22,7 +22,8 @@ sudo gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUS
 gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
 
 ### Get Bits used for Install - Setup folder structure
-sudo yum install docker python3 unzip -y
+sudo yum install -y docker python3 unzip
+sudo yum install -y nfs-utils
 sudo mkdir -p /opt/smax
 sudo chmod a+w /opt/smax
 sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/ZlKtmvFpH5K1n6t/download > /opt/smax/CDF2011-00134-15001-BYOK.zip
@@ -46,7 +47,7 @@ sudo /opt/smax/2020.11/scripts/genImageSet.sh -o hpeswitom -m /opt/smax/2020.11/
 gcrpwd=$(gcloud auth print-access-token)
 sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/cdf-image-set.json
 sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/image-set.json
-
+sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /home/jjr109_slb_com/migration/offline-download/image-set.json
 
 #sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
 #sudo docker login -u oauth2accesstoken -p `gcloud auth print-access-token` gcr.io
@@ -56,12 +57,12 @@ sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg
 
 ### CDF INSTALL
 ## SLB GKE NonProd
-PSQL_DB_HOST=10.198.0.5
+PSQL_DB_HOST=10.198.0.2
 NFS_SERVER=10.145.240.146
 NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
-REGISTRY_ORG=us102173-np-sis-bsys-6133
-LB_EXT_IP=34.77.69.152
-SUITE_VERSION=2019.05
+REGISTRY_ORG=us107795-np-sis-bsys-6133
+LB_EXT_IP=104.155.40.90
+SUITE_VERSION=2020.11
 EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 
 ## SLB GKE Prod
