@@ -1,10 +1,9 @@
-NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
-PSQL_DB_HOST=10.241.160.2
-JQ=`sudo ls /opt/smax/*/bin/jq | head -n 1`
-SUITE_VERSION=`sudo kubectl get cm -n core base-configmap -o json | sudo $JQ -r .data."PLATFORM_VERSION"`
-
-## Uninstall SMAX SUITE:
-NFS_BASE_PATH='/mnt/nfs/var/vols/itom'
+## SLB GKE NonProd
+PSQL_DB_HOST=10.198.0.2
+NFS_SERVER=10.145.240.146
+NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
+REGISTRY_ORG=us107795-np-sis-bsys-6133
+LB_EXT_IP=104.155.40.90
 SUITE_VERSION=2020.11
 PSQL_DB_HOST=10.241.160.2
 
@@ -21,6 +20,18 @@ kubectl get pv | grep itsma | awk '{print $1}'|xargs sudo kubectl delete pv
 ### Uninstall CDF - GKE
 echo "Removing RBAC Configuration"
 #sudo kubectl delete -f /opt/smax/$SUITE_VERSION/objectdefs/rbac-config.yaml
+EXT_ACCESS_FQDN=ccc.greenlightgroup.com
+
+## Delete ITSMA Namespace
+echo "Deleting ITSMA Namespace"
+kubectl get namespaces|grep itsma|head -n 1|awk '{print $1}'| xargs kubectl delete ns
+
+## Delete ITSMA Persistent Volumes
+echo "Deleting ITSMA Persisten Volumes"
+kubectl get pv | grep itsma | awk '{print $1}'|xargs sudo delete pv
+
+### Uninstall CDF - GKE
+echo "Removing RBAC Configuration"
 kubectl delete -f /opt/smax/$SUITE_VERSION/objectdefs/rbac-config.yaml
 
 ## Delete Core Namespace
@@ -30,8 +41,7 @@ kubectl delete ns core --grace-period=0 --force
 
 ## Delete ITSMA Persistent Volumes
 echo "Deleting ITOM Persisten Volumes"
-#sudo kubectl get pv | grep itom | awk '{print $1}'|xargs sudo kubectl delete pv
-kubectl get pv | grep itom | awk '{print $1}'|xargs sudo kubectl delete pv
+kubectl get pv | grep itom | awk '{print $1}'|xargs kubectl delete pv
 
 ## Clear out NFS Directories
 echo "Clearing NFS Directories"
