@@ -1,16 +1,31 @@
-##List configurations
+################################################################################
+#####                       GCloud SDK Commands List                       #####
+################################################################################
 
+#LOGIN to GCloud environment
+gcloud init
+gcloud auth login
+
+## List configurations
+gcloud config configurations list
+
+## Get Compute Instances from current config
+gcloud compute instances list
+
+## Set the active project
+gcloud config configurations activate slb-gke-np
+gcloud config configurations activate slb-gke-p
 
 
 ## Production
 gcloud config configurations activate slb-gke-p
-gcloud compute start-iap-tunnel gcp6133prdapp01 22 --local-host-port=localhost:22001
-
+gcloud compute start-iap-tunnel gcp6133prdapp01 22 --local-host-port=localhost:22001 --zone=europe-west1-b --project=us102173-p-sis-bsys-6133
+gcloud compute start-iap-tunnel gcp6133prdapp02 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us102173-p-sis-bsys-6133
 
 ## Non-Prod
 gcloud config configurations activate slb-gke-np
-gcloud compute start-iap-tunnel gcp6133tstapp04 22 --local-host-port=localhost:22002
-
+gcloud compute start-iap-tunnel gcp6133tstapp04 22 --local-host-port=localhost:22004 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
+gcloud compute start-iap-tunnel gcp6133tstapp02 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
 
 
 
@@ -26,3 +41,8 @@ tar -zxvf SMA-disaster-recovery-2020.11.tar.gz
 /opt/smax/2020.11/smax_2020.11_dr_restoreSUITE.sh
 
 python3 dr_preaction.py
+
+
+
+
+
