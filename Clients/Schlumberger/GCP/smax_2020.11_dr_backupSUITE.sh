@@ -71,10 +71,10 @@ function backup_suite() {
     ##Backup Config with NFS
     sudo mkdir -p $DR_TMP_DIR/netapp
     sudo chmod 777 $DR_TMP_DIR/netapp
-    sudo mkdir -p /var/vols/itom/itsma/global-volume; sudo chown -R 1999:1999 /var/vols/itom/itsma/global-volume
-    sudo mount -t nfs $SRC_NFS_HOST:$SRC_NFS_GLOBAL_VOL /var/vols/itom/itsma/global-volume
+    sudo mkdir -p $SRC_NFS_GLOBAL_VOL; sudo chown -R 1999:1999 $SRC_NFS_GLOBAL_VOL
+    sudo mount -t nfs $SRC_NFS_HOST:$SRC_NFS_GLOBAL_VOL $SRC_NFS_GLOBAL_VOL
     python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m backup --disable-idol
-    sudo umount /var/vols/itom/itsma/global-volume
+    #sudo umount $SRC_NFS_GLOBAL_VOL
 
     ##Compress Backup to Datafile
     python3 $DR_BIN_DIR/disaster-recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUTPUT_DIR -m backup
