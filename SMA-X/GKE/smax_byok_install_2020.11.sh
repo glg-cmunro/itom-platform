@@ -22,8 +22,10 @@ sudo gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUS
 gcloud container clusters get-credentials --region "$GKE_REGION" "$GKE_CLUSTER"
 
 ### Get Bits used for Install - Setup folder structure
-sudo yum install docker python3 unzip -y
-sudo yum install nfs-utils -y
+sudo yum install -y docker python3 unzip
+sudo yum install -y nfs-utils
+sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo yum install postgresql10 -y
 sudo mkdir -p /opt/smax
 sudo chmod a+w /opt/smax
 sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/ZlKtmvFpH5K1n6t/download > /opt/smax/CDF2011-00134-15001-BYOK.zip
@@ -47,7 +49,7 @@ sudo /opt/smax/2020.11/scripts/genImageSet.sh -o hpeswitom -m /opt/smax/2020.11/
 gcrpwd=$(gcloud auth print-access-token)
 sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/cdf-image-set.json
 sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /opt/smax/2020.11/scripts/image-set.json
-
+sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us102173-p-sis-bsys-6133 -p /home/jjr109_slb_com/migration/offline-download/image-set.json
 
 #sudo curl -k -g https://owncloud.greenlightgroup.com/index.php/s/yxSK4SjiF7UYtd8/download > /tmp/itom-cdf-deployer_1.1.0-00131b.tar
 #sudo docker login -u oauth2accesstoken -p `gcloud auth print-access-token` gcr.io
@@ -59,7 +61,8 @@ sudo python3 smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg
 ## SLB GKE NonProd
 PSQL_DB_HOST=10.198.0.2
 NFS_SERVER=10.145.240.146
-NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
+NFS_FOLDER=/gcp6133_np_nfs04
+NFS_PATH_CORE=$NFS_FOLDER/var/vols/itom/core
 REGISTRY_ORG=us107795-np-sis-bsys-6133
 LB_EXT_IP=104.155.40.90
 SUITE_VERSION=2020.11
@@ -68,12 +71,15 @@ EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 ## SLB GKE Prod
 PSQL_DB_HOST=10.241.160.2
 NFS_SERVER=10.12.81.138
-NFS_PATH_CORE=/gcp6133_p_nfs01/var/vols/itom/core
+NFS_FOLDER=/gcp6133_p_nfs01
+NFS_PATH_CORE=$NFS_FOLDER/var/vols/itom/core
 REGISTRY_ORG=us102173-p-sis-bsys-6133
 LB_EXT_IP=34.77.69.152
 SUITE_VERSION=2020.11
 EXT_ACCESS_FQDN=ccc.greenlightgroup.com
 
+sudo mkdir /mnt/nfs
+mount -t nfs $NFS_SERVER:$NFS_FOLDER /mnt/nfs
 
 ### Setup CDF Database
 CREATE USER cdfapiserver login PASSWORD '0f5546d03a520e627f17719865aa53cd';
@@ -120,11 +126,7 @@ sudo setfacl -R -m g:1999:wrx /mnt/nfs/var/vols/itom
 #sudo /opt/smax/2019.05.00131/install --nfs-server "10.19.253.90"  --nfs-folder "/smaxdev_nfs/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "gke-smax"  --registry-password-file /opt/smax/2019.05.00131/key.json  --external-access-host "smaxdev-gke.gitops.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.82.232.8"
 #sudo /opt/smax/2019.05/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2019.05/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
 #sudo /opt/smax/2020.11/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "$REGISTRY_ORG"  --registry-password-file /opt/smax/2020.11/key.json  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP"
-#sudo /opt/smax/2020.11/install --nfs-server "10.12.81.138"  --nfs-folder "/gcp6133_p_nfs01/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "us102173-p-sis-bsys-6133"  --registry-password-file /opt/smax/2020.11/key.json  --external-access-host "ccc.greenlightgroup.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.77.69.152" --db-url "jdbc:postgresql://10.241.160.2:5432/cdfapiserverdb" --db-user "cdfapiserver" --db-password "0f5546d03a520e627f17719865aa53cd" --db-crt "./db_cert.pem"
-
-gcrpwd=$(gcloud auth print-access-token)
-##SMAX 2020.11 install string
-/opt/smax/2020.11/install --nfs-server "$NFS_SERVER"  --nfs-folder "$NFS_PATH_CORE"  --registry-url "gcr.io"  --registry-username "oauth2accesstoken"  --registry-orgname "$REGISTRY_ORG"  --registry-password "$gcrpwd"  --external-access-host "$EXT_ACCESS_FQDN"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=$LB_EXT_IP" --db-url "jdbc:postgresql://$PSQL_DB_HOST:5432/cdfapiserverdb" --db-user "cdfapiserver" --db-password "0f5546d03a520e627f17719865aa53cd"
+sudo /opt/smax/2020.11/install --nfs-server "10.12.81.138"  --nfs-folder "/gcp6133_p_nfs01/var/vols/itom/core"  --registry-url "gcr.io"  --registry-username "_json_key"  --registry-orgname "us102173-p-sis-bsys-6133"  --registry-password-file /opt/smax/2020.11/key.json  --external-access-host "ccc.greenlightgroup.com"  --cloud-provider gcp --loadbalancer-info "LOADBALANCERIP=34.77.69.152" --db-url "jdbc:postgresql://10.241.160.2:5432/cdfapiserverdb" --db-user "cdfapiserver" --db-password "0f5546d03a520e627f17719865aa53cd" --db-crt "./db_cert.pem"
 
 ### SSH Session #2
 CDF_OUTPUT_DIR=/mnt/nfs/var/vols/itom/core/yaml/yaml_template/output
