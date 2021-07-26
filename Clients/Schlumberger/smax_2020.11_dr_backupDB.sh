@@ -8,8 +8,6 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
-USE_SUDO=1
-PG_VERSION='10.17'
 DB_BACKUP_DIR='/data/dr/db'
 DB_PASS_FILE='~/.pgpass'
 
@@ -19,22 +17,6 @@ DR_OUTPUT_DIR='/data/dr/output'
 
 SRC_DB_HOST='10.241.160.2'
 
-TGT_DB_HOST=
-TGT_MASTER_HOST=
-TGT_NFS_HOST=
-
-##Process arguments
-#while getopts ":pg_sql:p:" opt; do
-#    case $opt in
-#        pg_sql) PG_VERSION="$OPTARG"; echo $PG_VERSION
-#        ;;
-#        p) echo "ARG p=$name"
-#        ;;
-#        \?) echo "Invalid Option: -$OPTARG"
-#        ;;
-#    esac
-#done
-
 ################################################################################
 #####                         SOURCE SERVER BACKUP                         #####
 ################################################################################
@@ -43,9 +25,6 @@ TGT_NFS_HOST=
 ##On the Database Host:
 function backup_db() {
     DB_BACKUP_DIR=$1
-    PG_VERSION=$2
-
-    #PG_DUMP=/usr/pgsql-$PG_VERSION/bin/pg_dump
     PG_DUMP=/usr/bin/pg_dump
 
     cd /tmp
@@ -91,10 +70,7 @@ function backup_db() {
 
         echo DR Backup DB: Backing up $DB_NAME to File $DB_FILENAME ...
         $PG_DUMP -Fc -c --inserts $DB_NAME -U $DB_USER -h $SRC_DB_HOST -w -f $DB_FILENAME
-        ##If using PostgreSQL 9.5 -f is not an option instead output command to a file
-        #sudo -u postgres $PG_DUMP -Fc -c --inserts -d $DB_NAME -w -U $DB_USER > $DB_FILENAME
-        #sudo -u postgres $PG_DUMP -Fc -c --inserts -d $DB_NAME -w -U $DB_USER > $DB_FILENAME
     done
 }
 
-backup_db $DB_BACKUP_DIR $PG_VERSION
+backup_db $DB_BACKUP_DIR
