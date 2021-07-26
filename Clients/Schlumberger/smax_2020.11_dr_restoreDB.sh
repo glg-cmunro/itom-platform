@@ -1,10 +1,82 @@
 #!/bin/bash
+################################################################################
 #
 # AUTHOR : chris@greenlightgroup.com
 # 
 # Disaster Recovery / Data Load for SMA-X Suite on ITOM Platform
 #
+# Pre-requisite: PGPASS file must exist for the user executing this script
+#   echo "$DB_TGT_HOST:$DB_TGT_PORT:*:$DBA:$DBA_PW" | tee -a $DB_PASS_FILE
+################################################################################
 
+
+################################################################################
+#####                           GLOBAL VARIABLES                           #####
+################################################################################
+DATE=`date +%d%m%y%H%M%S`
+PG_BIN_DIR="/usr/bin"
+DB_BACKUP_DIR="/data/dr/db"
+DB_PASS_FILE="~/.pgpass"
+TGT_DB_PORT=5432
+
+## Database Host for psql connection - RESTORE TO
+#TGT_DB_HOST=$(hostname -f) # On-Prem (localhost) postgreSQL instance
+
+##GITOpS - smax-west
+#DBA="dbadmin"
+#TGT_DB_HOST="smax-west-rds.gitops.com"
+
+##SLB GKE Prod
+#DBA="postgres"
+#TGT_DB_HOST="10.241.160.2"
+
+##SLB GKE NP
+DBA="postgres"
+TGT_DB_HOST="10.198.0.2"
+
+## Location of the backup logfile.
+LOGFILE="$DB_BACKUP_DIR/log_$DATE"
+
+## FUNCTIONS ##
+log() {
+  if [ -n "$LOGFILE" ]; then
+    printf "%s\n" "$@" >> "$LOGFILE"
+  else
+    printf "%s\n" "$@"
+  fi
+}
+
+
+## Make sure you have rights to the databases
+## Grant the rights if you need to
+#$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "GRANT maas_admin TO $DBA;"
+#$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "ALTER DATABASE maas_template WITH CONNECTION LIMIT -1;"
+
+START_TIME=$(date +%Y%m%d_%H%M%S)
+
+DBs=$(ls $DB_BACKUP_DIR)
+
+for db in $DBs
+do
+  DB_FILE=$db
+  DB_NAME=$(echo $db | awk -F '.' '{print $2}' | awk -F '-' '{print $1}')
+
+  echo "cat $DB_FILE | gunzip | $PG_BIN_DIR/psql -U $DBA -d $DB_NAME -h $TGT_DB_HOST"
+done
+
+END_TIME=$(date +%Y%m%d_%H%M%S)
+
+echo "Database Restore Complete! $START_TIME - $END_TIME"
+
+
+
+
+
+
+
+
+
+"""
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
@@ -75,37 +147,37 @@ function restore_db() {
     #suiteDBs[sxdb]=postgres
 
     ##Create .pgpass file to hold db login
-    #echo "#$DB_PASS_FILE" | $SUDO_ tee $DB_PASS_FILE
-    #for db in "${!suiteDBs[@]}"
+    #echo '#$DB_PASS_FILE' | $SUDO_ tee $DB_PASS_FILE
+    #for db in '${!suiteDBs[@]}'
     #do
     #    DB_NAME=$db
     #    IFS=';' read -ra dbARR <<< ${suiteDBs[$db]}
     #    DB_USER=${dbARR[0]}
     #    DB_PASS=${dbARR[1]}
     # 
-    #    echo "$TGT_DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS" | $SUDO_ tee -a $DB_PASS_FILE
+    #    echo '$TGT_DB_HOST:5432:$DB_NAME:$DB_USER:$DB_PASS' | $SUDO_ tee -a $DB_PASS_FILE
     #done
     #$SUDO_ chmod 600 $DB_PASS_FILE
 
     ## Create DB Users and blank Databases if needed
-    #echo "$TGT_DB_HOST:5432:postgres:postgres:Gr33nl1ght_" | $SUDO_ tee -a $DB_PASS_FILE
+    #echo '$TGT_DB_HOST:5432:postgres:postgres:Gr33nl1ght_' | $SUDO_ tee -a $DB_PASS_FILE
     #echo $SUDO_ $PG_BIN_DIR/psql -U postgres -h $TGT_DB_HOST
-    #for db in "${!suiteDBs[@]}"
+    #for db in '${!suiteDBs[@]}'
     #do
     #    DB_NAME=$db
     #    IFS=';' read -ra dbARR <<< ${suiteDBs[$db]}
     #    DB_USER=${dbARR[0]}
     #    DB_PASS=${dbARR[1]}
     #
-    #    echo "CREATE DATABASE $DB_NAME;"
-    #    echo "CREATE USER $DB_USER with password $DB_PASS;"
-    #    echo "GRANT ALL PRIVILEGES ON $DB_NAME TO $DB_USER;"
+    #    echo 'CREATE DATABASE $DB_NAME;'
+    #    echo 'CREATE USER $DB_USER with password $DB_PASS;'
+    #    echo 'GRANT ALL PRIVILEGES ON $DB_NAME TO $DB_USER;'
     #done
-    #echo "\q"
+    #echo '\q'
 
     START_TIME=$(date +%Y%m%d_%H%M%S)
     DR_DATE=$(date +%Y%m%d_%H%M%S)
-    for db in "${!suiteDBs[@]}"
+    for db in '${!suiteDBs[@]}'
     do
         DB_NAME=$db
         IFS=';' read -ra dbARR <<< ${suiteDBs[$db]}
@@ -119,12 +191,12 @@ function restore_db() {
         #sudo $PG_RESTORE -Fc -c -d xservices_rms -U maas_admin -h $TGT_DB_HOST < 20200824_213626.xservices_rms-maas_admin.dmp
     done
     COMPLETE_TIME=$(date +%Y%m%d_%H%M%S)
-    echo "Completed RESTORE: $START_TIME - $COMPLETE_TIME"
+    echo 'Completed RESTORE: $START_TIME - $COMPLETE_TIME'
     
 }
 
 restore_db $DB_RESTORE_DIR
-
+"""
 
 ### Create DB Users if needed (Blank Database Instance)
 """
