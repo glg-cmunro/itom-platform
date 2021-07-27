@@ -6,7 +6,7 @@ NFS_PATH_CORE=/gcp6133_np_nfs04/var/vols/itom/core
 REGISTRY_ORG=us107795-np-sis-bsys-6133
 LB_EXT_IP=104.155.40.90
 SUITE_VERSION=2020.11
-EXT_ACCESS_FQDN=ccc.greenlightgroup.com
+EXT_ACCESS_FQDN=ccc-evd.greenlightgroup.com
 
 ## Delete ITSMA Namespace
 echo "Deleting ITSMA Namespace"

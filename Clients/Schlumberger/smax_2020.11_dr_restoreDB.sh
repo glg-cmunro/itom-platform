@@ -49,19 +49,19 @@ log() {
 
 ## Make sure you have rights to the databases
 ## Grant the rights if you need to
-#$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "GRANT maas_admin TO $DBA;"
-#$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "ALTER DATABASE maas_template WITH CONNECTION LIMIT -1;"
+$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "GRANT maas_admin TO $DBA;"
+$PG_BIN_DIR/psql -U $DBA -d maas_admin -h $TGT_DB_HOST -c "ALTER DATABASE maas_template WITH CONNECTION LIMIT -1;"
 
 START_TIME=$(date +%Y%m%d_%H%M%S)
 
-DBs=$(ls $DB_BACKUP_DIR)
+DBs=$(ls $DB_BACKUP_DIR/*-database.gz)
 
 for db in $DBs
 do
   DB_FILE=$db
   DB_NAME=$(echo $db | awk -F '.' '{print $2}' | awk -F '-' '{print $1}')
 
-  echo "cat $DB_FILE | gunzip | $PG_BIN_DIR/psql -U $DBA -d $DB_NAME -h $TGT_DB_HOST"
+  cat $DB_FILE | gunzip | $PG_BIN_DIR/psql -U $DBA -d $DB_NAME -h $TGT_DB_HOST
 done
 
 END_TIME=$(date +%Y%m%d_%H%M%S)

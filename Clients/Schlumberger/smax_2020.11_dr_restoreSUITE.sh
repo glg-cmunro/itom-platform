@@ -59,7 +59,7 @@ function restore_suite() {
     CDFCTL='/opt/smax/2020.11/scripts/cdfctl.sh'
     NS=`kubectl get ns | grep itsma | awk '{print $1}'`
     $CDFCTL runlevel set -l DOWN -n $NS
-
+    
     ##Pause to execute ConfigMap updates
     read -p '''
     EXTERNAL STEP: Verify the SUITE is shutdown ... 
@@ -68,11 +68,11 @@ function restore_suite() {
     then Press [ENTER] to continue
     '''
     ##Uncompress the backup file to restorable content
-    python $DR_BIN_DIR/disaster-recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUTPUT_DIR -m restore -f `ls $DR_OUTPUT_DIR/sma-*`
-
+    python3 $DR_BIN_DIR/disaster-recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUTPUT_DIR -m restore -f `ls $DR_OUTPUT_DIR/sma-*`
+    
     ##Restore SUITE Configuration content only
-    #sudo python $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol --disable-nfs --disable-attachment
-
+    sudo python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol --disable-nfs --disable-attachment
+    
     ##Pause to execute ConfigMap updates
     read -p '''
     MANUAL STEP: Update default config map after import ... 
@@ -81,32 +81,27 @@ function restore_suite() {
     Update the DB information to point back to restored DB Host
     Save the updates, then Press [ENTER] to continue
     '''
-
-    sudo python $DR_BIN_DIR/disaster_recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol --disable-config-map --disable-attachment -nfs $DR_NFS_DIR
-
-
-    ##Pause to execute ConfigMap updates
+    
+    ##Restore SUITE NFS content only
+    sudo mkdir -p $TGT_NFS_GLOBAL_VOL; sudo chown -R 1999:1999 $TGT_NFS_GLOBAL_VOL
+    sudo mount -t nfs $TGT_NFS_HOST:$TGT_NFS_GLOBAL_VOL $TGT_NFS_GLOBAL_VOL
+    
+    sudo python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol --disable-config-map --disable-attachment
+    
+    ##Restore Attachments
+    sudo python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-nfs --disable-config-map --disable-idol
+    
+    sudo umount $TGT_NFS_GLOBAL_VOL
+    
+    ##Pause to bring SUITE back up
     read -p '''
     MANUAL STEP: Restart the SUITE and wait for it to be ready ... 
     In a seperate terminal execute the following:
-    /opt/kubernetes/scripts/cdfctl.sh runlevel set -l UP -n $ns
+    /opt/kubernetes/scripts/cdfctl.sh runlevel set -l UP -n $NS
     
     Once the SUITE is ready, Press [ENTER] to finish the restore ...
     '''
-    ##Backup Config Only
-    #python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m backup --disable-nfs --disable-idol
     
-    ##Backup Config with NFS
-    #sudo mkdir -p $DR_TMP_DIR/netapp
-    #sudo chmod 777 $DR_TMP_DIR/netapp
-    #sudo mkdir -p $TGT_NFS_GLOBAL_VOL; sudo chown -R 1999:1999 $TGT_NFS_GLOBAL_VOL
-    #sudo mount -t nfs $TGT_NFS_HOST:$SRC_NFS_GLOBAL_VOL $TGT_NFS_GLOBAL_VOL
-    #python3 $DR_BIN_DIR/disaster-recovery/sma_dr_executors/dr_dispatcher.py -t $DR_TMP_DIR -m restore --disable-idol
-    #sudo umount /var/vols/itom/itsma/global-volume
-
-    ##Compress Backup to Datafile
-    #python3 $DR_BIN_DIR/disaster-recovery/sma_dr_storage/storage_dispatcher.py -t $DR_TMP_DIR -b $DR_OUTPUT_DIR -m backup
-
 }
 
 #Cleanup all file more than 7 days
