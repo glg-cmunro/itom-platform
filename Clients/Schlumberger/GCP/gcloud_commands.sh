@@ -25,7 +25,7 @@ gcloud compute start-iap-tunnel gcp6133prdapp02 3389 --local-host-port=localhost
 ## Non-Prod
 gcloud config configurations activate slb-gke-np
 gcloud compute start-iap-tunnel gcp6133tstapp04 22 --local-host-port=localhost:22004 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
-gcloud compute start-iap-tunnel gcp6133tstapp02 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
+gcloud compute start-iap-tunnel gcp6133tstapp05 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
 
 
 
