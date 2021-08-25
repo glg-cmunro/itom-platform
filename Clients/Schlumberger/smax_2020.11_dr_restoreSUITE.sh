@@ -101,6 +101,7 @@ function restore_suite() {
     
     Once the SUITE is ready, Press [ENTER] to finish the restore ...
     '''
+    $CDFCTL runlevel set -l UP -n $NS
     
 }
 
