@@ -25,14 +25,14 @@
 ################################################################################
 #####                           GLOBAL VARIABLES                           #####
 ################################################################################
-PG_VERSION='10.17'
-DB_BACKUP_DIR='/data/dr/db'
-
 DR_BIN_DIR='/opt/smax/2020.11/tools'
-DR_TMP_DIR='/data/dr/tmp'
-DR_OUTPUT_DIR='/data/dr/output'
-#DR_NFS_DIR='/data/dr/nfs'
-#DR_SMARTA_DIR='/data/dr/smarta-nfs'
+DR_TMP_DIR='/opt/glg/fe_dr/tmp'
+DR_OUTPUT_DIR='/opt/glg/fe_dr/output'
+
+##AUTOMATION
+TGT_NFS_HOST=`kubectl get pv $(kubectl get pv | grep global-volume | awk '{print $1}') -o json | jq -r .spec.nfs.server`
+TGT_NFS_GLOBAL_VOL=`kubectl get pv $(kubectl get pv | grep global-volume | awk '{print $1}') -o json | jq -r .spec.nfs.path`
+DR_DB_HOST=`kubectl get cm -n $(kubectl get ns | grep itsma | awk '{print $1}') database-configmap -o json | jq -r .data.xruntime_db_host`
 
 ##GLG optic-dev
 #TGT_NFS_HOST='fs-339aec87.efs.us-east-1.amazonaws.com'
@@ -43,8 +43,8 @@ DR_OUTPUT_DIR='/data/dr/output'
 #TGT_NFS_GLOBAL_VOL='/gcp6133_p_nfs01/var/vols/itom/itsma/global-volume'
 
 ##SLB GKE Non-Prod
-TGT_NFS_HOST='10.145.240.146'
-TGT_NFS_GLOBAL_VOL='/gcp6133_np_nfs04/var/vols/itom/itsma/global-volume'
+#TGT_NFS_HOST='10.145.240.146'
+#TGT_NFS_GLOBAL_VOL='/gcp6133_np_nfs04/var/vols/itom/itsma/global-volume'
 
 ################################################################################
 #####                         TARGET SERVER RESTORE                        #####
@@ -56,7 +56,7 @@ function restore_suite() {
     #python /opt/sma/bin/disaster-recovery/sma_dr_executors/dr_preaction.py
     
     ##Shutdown the SUITE before proceeding
-    CDFCTL='/opt/smax/2020.11/scripts/cdfctl.sh'
+    CDFCTL='/opt/smax/2020.05/scripts/cdfctl.sh'
     NS=`kubectl get ns | grep itsma | awk '{print $1}'`
     $CDFCTL runlevel set -l DOWN -n $NS
     
