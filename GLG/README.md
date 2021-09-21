@@ -15,3 +15,6 @@ System Requirements to execute these playbooks include:
  -e region=us-east-2 \
 aws-create-all.yaml
 ```
+- [ ] Install required software packages
+- [ ] Configure Users and Groups (Docker)
+- [ ] Configure AWS CLI Profile
