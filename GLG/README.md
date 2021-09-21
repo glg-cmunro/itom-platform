@@ -16,5 +16,5 @@ System Requirements to execute these playbooks include:
 aws-create-all.yaml
 ```
 - [ ] https://github.com/glg-cmunro/itom-platform/issues/1#issue-1001883552
-- [ ] Configure Users and Groups (Docker)
+- [X] Configure Users and Groups (Docker)
 - [ ] Configure AWS CLI Profile
