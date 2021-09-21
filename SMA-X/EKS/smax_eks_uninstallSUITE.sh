@@ -1,8 +1,9 @@
 ## FireEye - GITOpS
-#PSQL_DB_HOST=kubectl get cm 
+PGPASSWORD=Gr33nl1ght_
 #NFS_SERVER=10.145.240.146
-NFS_BASE_PATH=/mnt/efs/var/vols/itom
-SUITE_VERSION=2020.05
+export PSQL_DB_HOST=$(kubectl get cm -n $NS database-configmap -o yaml | grep idm_db_host | head -n 1 | awk '{print $2}')
+export NFS_BASE_PATH=/mnt/efs/var/vols/itom
+export SUITE_VERSION=2020.05
 #REGISTRY_ORG=us107795-np-sis-bsys-6133
 #LB_EXT_IP=104.155.40.90
 #EXT_ACCESS_FQDN=fireeye.gitops.com
@@ -78,6 +79,7 @@ smartanalytics-volume
 ### Database Cleanup (Note replace postgres with the dbadmin user)
 #psql -U postgres -h 10.4.176.5 "sslmode=require sslrootcert=/home/jjr109_slb_com/server-ca.pem sslcert=/home/jjr109_slb_com/controlNodeDBCert.pem sslkey=/home/jjr109_slb_com/controlNodeDBKey.pem"
 psql -U postgres -h $PSQL_DB_HOST
+psql -U dbadmin -h $PSQL_DB_HOST
 
 ##If you drop the databases and roles, you need to recreate them before installing
 GRANT maas_admin TO dbadmin;
