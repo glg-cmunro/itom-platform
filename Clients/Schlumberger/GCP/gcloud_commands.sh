@@ -20,19 +20,20 @@ gcloud config configurations activate slb-gke-p
 ## Production
 gcloud config configurations activate slb-gke-p
 gcloud compute start-iap-tunnel gcp6133prdapp01 22 --local-host-port=localhost:22001 --zone=europe-west1-b --project=us102173-p-sis-bsys-6133
-gcloud compute start-iap-tunnel gcp6133prdapp02 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us102173-p-sis-bsys-6133
+gcloud compute start-iap-tunnel gcp6133prdapp02 3389 --local-host-port=localhost:23389 --zone=europe-west1-b --project=us102173-p-sis-bsys-6133
 
 ## Non-Prod
 gcloud config configurations activate slb-gke-np
 gcloud compute start-iap-tunnel gcp6133tstapp04 22 --local-host-port=localhost:22004 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
-gcloud compute start-iap-tunnel gcp6133tstapp05 3389 --local-host-port=localhost:33389 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
+gcloud compute start-iap-tunnel gcp6133tstapp05 3389 --local-host-port=localhost:53389 --zone=europe-west1-b --project=us107795-np-sis-bsys-6133
 
 
 
 ##DR
-curl -k https://owncloud.greenlightgroup.com/index.php/s/9DotY6EJsYcovlY/download -output SMA_Operation_Toolkit_2020.11.zip
+# EVT: 
+curl -k https://owncloud.greenlightgroup.com/index.php/s/9DotY6EJsYcovlY/download -o SMA_Operation_Toolkit_2020.11.zip
 unzip SMA_Operation_Toolkit_2020.11.zip
-mkdir /opt/smax/2020.11/tools/disaster-recovery
+mkdir -p /opt/smax/2020.11/tools/disaster-recovery
 
 mv SMA-disaster-recovery-2020.11.tar.gz /opt/smax/2020.11/tools/disaster-recovery/
 cd /opt/smax/2020.11/tools/disaster-recovery
