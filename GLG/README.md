@@ -1,4 +1,4 @@
-This is a folder level README
+![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)
 
 System Requirements to execute these playbooks include:
 1. Software Installation
@@ -13,3 +13,10 @@ System Requirements to execute these playbooks include:
  -e region=us-east-2 \
 aws-create-all.yaml
 ```
+- [ ] [Issue #1](https://github.com/glg-cmunro/itom-platform/issues/1#issue-1001883552)
+- [X] Configure Users and Groups (Docker)
+- [ ] Configure AWS CLI Profile
+
+
+
+![GITOpS Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed5437092c32b4b714ab581_GLG_GITOPS_logo.png)
