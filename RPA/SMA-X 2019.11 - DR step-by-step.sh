@@ -112,7 +112,7 @@ sudo -u postgres /usr/pgsql-9.6/bin/pg_restore -U postgres -w -c -v -h `hostname
 ##Copy Suite Backup to Target Master
 ##Verify pre-requisites with preaction script to ensure all mount points are accessible
 python /opt/sma/bin/disaster_recovery/sma_dr_executors/dr_preaction.py
-
+:shell_quote:
 ##Extract Suite backup to be restored
 python /opt/sma/bin/disaster_recovery/sma_dr_storage/storage_dispatcher.py -t /opt/sma/tmp -b /opt/sma/output -m restore -f `ls /opt/sma/output/*`
 
