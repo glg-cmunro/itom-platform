@@ -44,7 +44,3 @@ tar -zxvf SMA-disaster-recovery-2020.11.tar.gz
 
 python3 dr_preaction.py
 
-
-
-
-
