@@ -8,9 +8,11 @@
 #####                           SERVICE ACCOUNTS                           #####
 ################################################################################
 # Create Service Accounts
-gcloud iam service-accounts create schedulerunner \
+export SCHEDRUNNER_NAME='gcp-6133-p-schedulerunner'
+export BACKUPAGENT_NAME='gcp-6133-p-backupagent'
+gcloud iam service-accounts create $SCHEDRUNNER_NAME \
  --display-name="Service Account for FS Backups-Scheduler"
-gcloud iam service-accounts create backupagent \
+gcloud iam service-accounts create $BACKUPAGENT_NAME \
  --display-name="Service Account for FS Backups-GCF"
 gcloud iam service-accounts list
 
@@ -18,8 +20,8 @@ gcloud iam service-accounts list
 export PROJECT_ID=`gcloud config get-value core/project`
 export PROJECT_NUMBER=`gcloud projects describe $PROJECT_ID --format='value(projectNumber)'`
 export SCHEDULER_SA=service-$PROJECT_NUMBER@gcp-sa-cloudscheduler.iam.gserviceaccount.com
-export SCHEDULER_CLIENT_SA=schedulerunner@$PROJECT_ID.iam.gserviceaccount.com
-export GCF_CLIENT_SA=backupagent@$PROJECT_ID.iam.gserviceaccount.com
+export SCHEDULER_CLIENT_SA=$SCHEDRUNNER_NAME@$PROJECT_ID.iam.gserviceaccount.com
+export GCF_CLIENT_SA=$BACKUPAGENT_NAME@$PROJECT_ID.iam.gserviceaccount.com
 export FS_ZONE=europe-west1-b
 export INSTANCE_NAME=gcp6133-p-file01
 export SHARE_NAME=gcp6133_p_nfs01
@@ -76,9 +78,9 @@ def create_backup(request):
 gcloud beta scheduler jobs create http fsbackupschedule \
     --schedule "15 23 * * *" \
     --http-method=GET \
-    --uri=https://$BACKUP_REGION-$PROJECT_ID.cloudfunctions.net/fsbackup \
+    --uri=https://$FS_BACKUP_LOCATION-$PROJECT_ID.cloudfunctions.net/fsbackup \
     --oidc-service-account-email=$SCHEDULER_CLIENT_SA    \
-    --oidc-token-audience=https://$BACKUP_REGION-$PROJECT_ID.cloudfunctions.net/fsbackup
+    --oidc-token-audience=https://$FS_BACKUP_LOCATION-$PROJECT_ID.cloudfunctions.net/fsbackup
 
 
 gcloud iam service-accounts add-iam-policy-binding $SCHEDULER_CLIENT_SA \

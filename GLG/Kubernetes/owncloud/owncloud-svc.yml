@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: owncloud-redis-svc
+  namespace: gitops
+spec:
+  selector:
+    app: owncloud-redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: owncloud-db-svc
+spec:
+  selector:
+    app: owncloud-db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: owncloud-server-svc
+spec:
+  selector:
+    app: owncloud-server
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

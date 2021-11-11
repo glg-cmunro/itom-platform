@@ -1,0 +1,149 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: owncloud-redis
+  name: owncloud-redis
+  namespace: gitops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owncloud-redis
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: owncloud-redis
+      namespace: gitops
+    spec:
+      containers:
+      - name: redis
+        image: redis:6
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /data
+          name: gitops-owncloud-pvc
+          subPath: _redis/_data
+      volumes:
+      - name: gitops-owncloud-pvc
+        persistentVolumeClaim:
+          claimName: gitops-owncloud-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: owncloud-db
+  name: owncloud-db
+  namespace: gitops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owncloud-db
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: owncloud-db
+      namespace: gitops
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:10.5
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "owncloud"
+        - name: MYSQL_USER
+          value: "owncloud"
+        - name: MYSQL_PASSWORD
+          value: "owncloud"
+        - name: MYSQL_DATABASE
+          value: "owncloud"
+        readinessProbe: 
+          tcpSocket: 
+            port: 3306 
+          initialDelaySeconds: 15 
+          periodSeconds: 10 
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: gitops-owncloud-pvc
+          subPath: _mysql/_data
+      volumes:
+      - name: gitops-owncloud-pvc
+        persistentVolumeClaim:
+          claimName: gitops-owncloud-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: owncloud-server
+  name: owncloud-server
+  namespace: gitops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: owncloud-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: owncloud-server
+      namespace: gitops
+    spec:
+      containers:
+      - name: owncloud
+        image: owncloud/server:10.8
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OWNCLOUD_DOMAIN
+          value: "owncloud.gitops.com"
+        - name: OWNCLOUD_DB_TYPE
+          value: "mysql"
+        - name: OWNCLOUD_DB_NAME
+          value: "owncloud"
+        - name: OWNCLOUD_DB_USERNAME
+          value: "owncloud"
+        - name: OWNCLOUD_DB_PASSWORD
+          value: "owncloud"
+        - name: OWNCLOUD_DB_HOST
+          value: "mariadb"
+        - name: OWNCLOUD_ADMIN_USERNAME
+          value: "glgadmin"
+        - name: OWNCLOUD_ADMIN_PASSWORD
+          value: "Gr33nl1ght_"
+        - name: OWNCLOUD_MYSQL_UTF8MB4
+          value: "true"
+        - name: OWNCLOUD_REDIS_ENABLED
+          value: "true"
+        - name: OWNCLOUD_REDIS_HOST
+          value: "redis"
+        volumeMounts:
+        - mountPath: /mnt/data
+          name: gitops-owncloud-pvc
+          subPath: _files/_data
+      volumes:
+      - name: gitops-owncloud-pvc
+        persistentVolumeClaim:
+          claimName: gitops-owncloud-pvc
