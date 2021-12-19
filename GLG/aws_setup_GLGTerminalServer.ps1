@@ -1,13 +1,11 @@
 ### GLG Terminal Server Users Setup
 
-New-LocalGroup -Name GLG_Engineers
-New-LocalGroup -Name GLG_ExecTeam
-
-$PASS = Read-Host -AsSecureString
-
 New-LocalGroup -Name GLG_Sales
+New-LocalGroup -Name GLG_ExecTeam
 New-LocalGroup -Name GLG_Engineers
 New-LocalGroup -Name GLG_QuoteWerks
+
+$PASS = Read-Host -AsSecureString
 
 $uNAME="alukan"
 $uFULL="Allison Lukan"
