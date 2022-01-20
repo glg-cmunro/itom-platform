@@ -23,7 +23,12 @@
 sudo yum install dnf -y
 sudo dnf install git python3 epel-release -y #Add the EPEL Release repo if needed
 sudo python3 -m pip install --upgrade pip
-sudo python3 -m pip install awscli boto3
+sudo python3 -m pip install boto3
+
+#Install AWS CLI v2
+curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o '/tmp/awscliv2.zip'
+unzip -d /tmp/awscliv2 /tmp/awscliv2.zip
+sudo /tmp/awscliv2/aws/install
 
 #Add AWS Credentials to root for ansible to use
 sudo /usr/local/bin/aws configure
