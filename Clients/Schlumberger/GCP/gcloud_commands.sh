@@ -50,3 +50,6 @@ sudo python3 /opt/smax/2020.11/scripts/smax-image-transfer.py -sr registry.hub.d
 
 
 
+Change FQDN:
+./fqdn-replace.sh -nf www.ccc3.evt.slb.com -of ccc.greenlightgroup.com -nd slb.com -od greenlightgroup.com -u admin -p GbGeRv2oozgZv0Ei71a! -c ../../../resource/cccevt.cer -k ../../../resource/cccevtNew.key -t ../../../resource/cccevt_inter.cer -y -o
+/var/toolkit/config/toolkit/toolkit/change_fqdn/
