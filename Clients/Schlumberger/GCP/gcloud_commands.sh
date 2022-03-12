@@ -49,12 +49,9 @@ gcrpwd=$(gcloud auth print-access-token)
 sudo python3 /opt/smax/2020.11/scripts/smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us107795-np-sis-bsys-6133 -p /opt/smax/offline-download/image-set.json
 
 
-<<<<<<< HEAD
 # Add Kubeconfig for access to Cluster
 gcloud container clusters get-credentials --region us-west1 smaxgke1905
-=======
 
 Change FQDN:
 ./fqdn-replace.sh -nf www.ccc3.evt.slb.com -of ccc.greenlightgroup.com -nd slb.com -od greenlightgroup.com -u admin -p GbGeRv2oozgZv0Ei71a! -c ../../../resource/cccevt.cer -k ../../../resource/cccevtNew.key -t ../../../resource/cccevt_inter.cer -y -o
 /var/toolkit/config/toolkit/toolkit/change_fqdn/
->>>>>>> 507661d62d3cfceae125885db477f4cedbcb00a4
