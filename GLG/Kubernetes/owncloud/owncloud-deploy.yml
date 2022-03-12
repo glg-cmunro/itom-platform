@@ -66,13 +66,13 @@ spec:
         - containerPort: 3306
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "owncloud"
+          value: "glgowncloud"
         - name: MYSQL_USER
-          value: "owncloud"
+          value: "glgowncloud"
         - name: MYSQL_PASSWORD
-          value: "owncloud"
+          value: "glgowncloud"
         - name: MYSQL_DATABASE
-          value: "owncloud"
+          value: "glgowncloud"
         readinessProbe: 
           tcpSocket: 
             port: 3306 
@@ -122,13 +122,13 @@ spec:
         - name: OWNCLOUD_DB_TYPE
           value: "mysql"
         - name: OWNCLOUD_DB_NAME
-          value: "owncloud"
+          value: "glgowncloud"
         - name: OWNCLOUD_DB_USERNAME
-          value: "owncloud"
+          value: "glgowncloud"
         - name: OWNCLOUD_DB_PASSWORD
-          value: "owncloud"
+          value: "glgowncloud"
         - name: OWNCLOUD_DB_HOST
-          value: "mariadb"
+          value: "owncloud-db-svc"
         - name: OWNCLOUD_ADMIN_USERNAME
           value: "glgadmin"
         - name: OWNCLOUD_ADMIN_PASSWORD
@@ -138,7 +138,7 @@ spec:
         - name: OWNCLOUD_REDIS_ENABLED
           value: "true"
         - name: OWNCLOUD_REDIS_HOST
-          value: "redis"
+          value: "owncloud-redis-svc"
         volumeMounts:
         - mountPath: /mnt/data
           name: gitops-owncloud-pvc
