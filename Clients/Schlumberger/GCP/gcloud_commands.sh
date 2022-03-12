@@ -49,4 +49,5 @@ gcrpwd=$(gcloud auth print-access-token)
 sudo python3 /opt/smax/2020.11/scripts/smax-image-transfer.py -sr registry.hub.docker.com -su dockerhubglg -sp Gr33nl1ght_ -so hpeswitom -tr 'gcr.io' -tu oauth2accesstoken -tp $gcrpwd -to us107795-np-sis-bsys-6133 -p /opt/smax/offline-download/image-set.json
 
 
-
+# Add Kubeconfig for access to Cluster
+gcloud container clusters get-credentials --region us-west1 smaxgke1905
