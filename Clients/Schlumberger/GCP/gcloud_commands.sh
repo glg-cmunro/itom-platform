@@ -55,3 +55,8 @@ gcloud container clusters get-credentials --region us-west1 smaxgke1905
 Change FQDN:
 ./fqdn-replace.sh -nf www.ccc3.evt.slb.com -of ccc.greenlightgroup.com -nd slb.com -od greenlightgroup.com -u admin -p GbGeRv2oozgZv0Ei71a! -c ../../../resource/cccevt.cer -k ../../../resource/cccevtNew.key -t ../../../resource/cccevt_inter.cer -y -o
 /var/toolkit/config/toolkit/toolkit/change_fqdn/
+
+
+#Reset Windows RDP user password
+gcloud beta compute --project "us102173-p-sis-bsys-6133" reset-windows-password "gcp6133prdapp02" --zone "europe-west1-b" --user bbowden2
+gcloud beta compute --project "us107795-np-sis-bsys-6133" reset-windows-password "gcp6133tstapp05" --zone "europe-west1-b" --user bbowden2
