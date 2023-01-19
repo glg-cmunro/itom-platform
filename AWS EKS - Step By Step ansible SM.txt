@@ -30,8 +30,8 @@ curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o '/tmp/awscliv2.
 unzip -d /tmp/awscliv2 /tmp/awscliv2.zip
 sudo /tmp/awscliv2/aws/install
 
-#Add AWS Credentials to root for ansible to use
-sudo /usr/local/bin/aws configure
+#Add AWS Credentials for ansible to use
+/usr/local/bin/aws configure
 
 #Update ansible-vault with AWS credentials (AWS API Key and Secret)
 /usr/local/bin/ansible-vault edit aws-smax/files/aws_cred_vars.yaml

@@ -50,13 +50,16 @@ sudo python3 /opt/smax/2020.11/scripts/smax-image-transfer.py -sr registry.hub.d
 
 
 # Add Kubeconfig for access to Cluster
-gcloud container clusters get-credentials --region us-west1 smaxgke1905
+gcloud container clusters get-credentials --region europe-west1 smaxgke1905
+gcloud container clusters get-credentials --region europe-west1 gcp6133-p-k8s01
+gcloud container clusters get-credentials --region europe-west1 gcp6133-p-k8s02
 
 Change FQDN:
 ./fqdn-replace.sh -nf www.ccc3.evt.slb.com -of ccc.greenlightgroup.com -nd slb.com -od greenlightgroup.com -u admin -p GbGeRv2oozgZv0Ei71a! -c ../../../resource/cccevt.cer -k ../../../resource/cccevtNew.key -t ../../../resource/cccevt_inter.cer -y -o
 /var/toolkit/config/toolkit/toolkit/change_fqdn/
 
+fqdn-replace.sh was trying to use helm and SLB cluster does not have apphub deployed - have to comment out the lines that include a call to the helm update commands
 
 #Reset Windows RDP user password
-gcloud beta compute --project "us102173-p-sis-bsys-6133" reset-windows-password "gcp6133prdapp02" --zone "europe-west1-b" --user bbowden2
-gcloud beta compute --project "us107795-np-sis-bsys-6133" reset-windows-password "gcp6133tstapp05" --zone "europe-west1-b" --user bbowden2
+gcloud beta compute --project "us102173-p-sis-bsys-6133" reset-windows-password "gcp6133prdapp02" --zone "europe-west1-b" --user jjr109
+gcloud beta compute --project "us107795-np-sis-bsys-6133" reset-windows-password "gcp6133tstapp05" --zone "europe-west1-b" --user jjr109
