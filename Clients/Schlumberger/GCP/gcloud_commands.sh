@@ -6,6 +6,9 @@
 gcloud init
 gcloud auth login
 
+## For Activation in MobaXTerm
+gcloud auth login --no-launch-browser
+
 ## List configurations
 gcloud config configurations list
 
