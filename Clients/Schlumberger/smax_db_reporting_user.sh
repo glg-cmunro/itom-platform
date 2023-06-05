@@ -1,12 +1,15 @@
 ##### GET DB Connection Information #####
 export NS=$(kubectl get ns | grep itsma | awk '{print $1}')
 export IDM_POD=$(kubectl get pod -n $NS | grep idm | head -n 1 | awk '{print $1}')
-export ITSMA_DBHOST=$(kubectl get cm -n $NS database-configmap -o yaml | grep idm_db_host | head -n 1 | awk '{print $2}')
-export ITSMA_DBPORT=$(kubectl get cm -n $NS database-configmap -o yaml | grep idm_db_port | head -n 1 | awk 'gsub(/"/,"")' | awk '{print $2}')
 export PGPASSWORD=$(kubectl exec -n $NS $IDM_POD -c idm -- get_secret itom_itsma_db_password_secret_key | awk -F= '{print $2}')
+export PGHOST=$(kubectl get cm -n $NS database-configmap -o yaml | grep idm_db_host | head -n 1 | awk '{print $2}')
+export PGUSER='maas_admin'
+export PGDATABASE='xservices_ems'
 
 ##### CONNECT TO DB #####
-psql -d xservices_ems -h $ITSMA_DBHOST -U maas_admin
+## IMPORTANT!! You must connect as the user maas_admin for access to the views within the schema
+#psql -d $PGDATABASE -h $PGHOST -U $PGUSER
+psql
 
 ##### VIEW PRIVELEGES ASSIGNED #####
 SELECT table_catalog, table_schema, table_name, privilege_type
