@@ -1,0 +1,117 @@
+# Step by Step - Deploy ITOM Cluster w/ SMAX|HCMX|DnD|CGRO|OO|CMS
+
+1. Ansible Playbook - aws-infra-cf-create-all.yaml
+ > - Create VPC
+ > - Create Subnets (3x Public, 3x Private, 2x Database)
+ > - Create EKS Cluster
+ > - Create EKS Nodes
+ > - Create EFS
+ > - Create RDS
+ > - Create Bastion Host
+ > - - Configure Bastion Host
+ > - Create Control Node
+ >   - Configure Control Node
+ > - Silent Install OMT / SMAX
+ > - Post Install - Deploy tools
+ > - Configure GLG Profile on Control Node
+
+
+# Install OO Containerized - 2022.11
+
+> Backup Cluster and SUITE before making any changes
+> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=optic.dev.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass
+> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=smax-west.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass -e prod=true
+    
+    #Download and extract OO Charts
+    #-OO_2022.11
+    curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo-1.0.3-20221101.8.zip
+    #-OO_2022.11.P3 curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo-helm-charts-1.0.3-20221101P3.1.zip
+    unzip ~/oo-1.0.3-20221101.8.zip -d ~/oo_chart
+    
+    #Prepare EFS for OO
+    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
+    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
+    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_logs_vol
+    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_export_vol
+    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_ras_logs_vol
+    sudo chmod -R 755 /mnt/efs/var/vols/itom/oo
+    sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/oo
+    
+    #Create OO Deployment
+    /opt/cdf/scripts/cdfctl.sh deployment create -d oo -n oo
+    
+    #Prepare PV / PVC for OO
+    #Edit oo-pv.yaml with proper EFS_Host information
+    cp ~/oo_chart/oo-1.0.3-20221101.8/oo-helm-charts/samples/persistent_storage/oo-pv.yaml ~/oo-pv.optic.yaml
+    cp ~/oo_chart/oo-1.0.3-20221101.8/oo-helm-charts/samples/persistent_storage/oo-pv.yaml ~/oo-pv.smax-west.yaml
+    cp ~/oo_chart/oo-1.0.3-20221101.8/oo-helm-charts/samples/persistent_storage/oo-pvc.yaml ~/oo-pvc.yaml
+    vi ~/oo-pv.optic.yaml
+    kubectl delete -f ~/oo-pv.optic.yaml
+    kubectl create -f ~/oo-pv.optic.yaml
+    kubectl create -f ~/oo-pv.smax-west.yaml
+    kubectl create -f ~/oo-pvc.yaml
+    #Create OO DBs
+    kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST
+    psql -h recovery2rds.c9y7wv2ugz7q.us-east-1.rds.amazonaws.com -U dbadmin -d maas_admin -W
+    psql -h opticrds.c9y7wv2ugz7q.us-east-1.rds.amazonaws.com -U dbadmin -d maas_admin -W
+    psql -h smax-west-rds.gitops.com -U dbadmin -d maas_admin -W
+    
+    <CREATE DB SCRIPT>
+    
+    CREATE ROLE "oocentraldbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
+    CREATE DATABASE "oocentraldb"; 
+    ALTER DATABASE "oocentraldb" OWNER TO "oocentraldbuser";
+    CREATE ROLE "oouidbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
+    CREATE DATABASE "oouidb"; 
+    ALTER DATABASE "oouidb" OWNER TO "oouidbuser";
+    CREATE ROLE "oocontrollerdbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
+    CREATE DATABASE "oocontrollerdb"; 
+    ALTER DATABASE "oocontrollerdb" OWNER TO "oocontrollerdbuser";
+    CREATE ROLE "ooscheduler" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
+    CREATE DATABASE "ooschedulerdb"; 
+    ALTER DATABASE "ooschedulerdb" OWNER TO "ooscheduler";
+    CREATE ROLE "aplsdbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
+    CREATE DATABASE "aplsdb"; 
+    ALTER DATABASE "aplsdb" OWNER TO "aplsdbuser";
+
+    #Add the SCHEMA for oo_sch_core (Must be the ooscheduler user)
+    psql -h testingrds.c9y7wv2ugz7q.us-east-1.rds.amazonaws.com -U ooschedulerdbuser -d ooschedulerdb -W
+    psql -h recovery2rds.c9y7wv2ugz7q.us-east-1.rds.amazonaws.com -U ooscheduler -d ooschedulerdb -W
+    psql -h opticrds.c9y7wv2ugz7q.us-east-1.rds.amazonaws.com -U ooscheduler -d ooschedulerdb -W
+    psql -h smax-west-rds.gitops.com -U ooscheduler -d ooschedulerdb -W
+
+    CREATE SCHEMA IF NOT EXISTS oo_sch_core AUTHORIZATION ooscheduler;
+
+    export SMAX_IDM_POD=$(echo `kubectl get pods -n $NS | grep -m1 idm- | head -1 | awk '{print $1}'`) && echo $SMAX_IDM_POD
+    export IDM_SIGNING_KEY=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_token_signingkey_secret_key itom-bo" | awk -F= '{print$2}') && echo $IDM_SIGNING_KEY
+    export TRANSPORT_PASS=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_transport_admin_password_secret_key" | awk -F= '{print$2}') && echo $TRANSPORT_PASS
+    
+    #Create OO IDM Admin account
+    https://recovery2.dev.gitops.com/idm-admin
+    https://optic.dev.gitops.com/idm-admin
+    https://smax-west.gitops.com/idm-admin
+    https://testing.dev.gitops.com/idm-admin
+    Username: oo-integration-admin
+    Pass: <Keep track of this for the oo-secrets>
+    #Add OO IDM Admin account to administrators group
+    #Generate OO secrets
+    /opt/cdf/scripts/gen_secrets.sh -n oo -c ~/oo_chart/oo-1.0.2+20220501.8/oo-helm-charts/charts/oo-1.0.2+20220501.8.tgz
+    #Create OO Values
+    #Install OO
+    helm install oo oo_chart/oo-1.0.2+20220501.8/oo-helm-charts/charts/oo-1.0.2+20220501.8.tgz --namespace oo -f oo_values.optic.yaml -f oo_size_values.yaml
+    helm install oo oo_chart/oo-1.0.2+20220501.8/oo-helm-charts/charts/oo-1.0.2+20220501.8.tgz --namespace oo -f oo_values.smax-west.yaml -f oo_size_values.yaml
+    helm upgrade oo ~/oo_chart/oo-1.0.2+20220501.8/oo-helm-charts/charts/oo-1.0.2+20220501.8.tgz --reuse-values --namespace oo -f ~/oo_values.optic.yaml -f ~/oo_size_values.yaml
+    helm upgrade oo ~/oo_chart/oo-1.0.2+20220501.8/oo-helm-charts/charts/oo-1.0.2+20220501.8.tgz --reuse-values --namespace oo -f ~/oo_values.smax-west.yaml -f ~/oo_size_values.yaml
+    
+    #Add oo-ingress for LoadBalancer
+    kubectl create -f ~/oo-ingress.yaml
+    
+    ##Install OO 2022.05.P1
+    curl -k https://owncloud.gitops.com/index.php/s/Bbo8xNuDHQtWim6/download -o ~/oo-helm-charts-1.0.2+20220501P1-1.zip
+    unzip ~/oo-helm-charts-1.0.2+20220501P1-1.zip -d ~/oo_2022.05.P1
+    APLSDBNAME=$(echo `/opt/cdf/bin/yq e '.autopass.deployment.database.dbName' ~/oo_values.smax-west.yaml`) && echo $APLSDBNAME
+    APLSDBUSER=$(echo `/opt/cdf/bin/yq e '.autopass.deployment.database.user' ~/oo_values.smax-west.yaml`) && echo $APLSDBUSER
+    /opt/cdf/bin/yq e '.autopass-migration.deployment.database.dbName = "'${APLSDBNAME}'"' -i ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml
+    /opt/cdf/bin/yq e '.autopass-migration.deployment.database.user = "'${APLSDBUSER}'"' -i ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml
+    /opt/cdf/bin/yq e '.global.idm.idmServiceUrl = "https://smax-west.gitops.com:443/idm-service"' -i ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml
+    helm upgrade oo -n oo --reuse-values -f ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/charts/oo-1.0.2+20220501P1.1.tgz --timeout 30m
