@@ -2,6 +2,14 @@
 #####                       GCloud SDK Commands List                       #####
 ################################################################################
 
+#Install gcloud sdk
+curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-423.0.0-linux-x86_64.tar.gz
+tar -xf google-cloud-cli-423.0.0-linux-x86_64.tar.gz
+./google-cloud-sdk/install.sh --quiet --additional-components gke-gcloud-auth-plugin --path-update true
+
+#kubectl exec -ti -n gitops $(kubectl get pods -n gitops --no-headers | awk {'print $1'}) -c monitoring -- bash
+
+
 #LOGIN to GCloud environment
 gcloud init
 gcloud auth login
@@ -53,6 +61,10 @@ sudo python3 /opt/smax/2020.11/scripts/smax-image-transfer.py -sr registry.hub.d
 gcloud container clusters get-credentials --region europe-west1 smaxgke1905
 gcloud container clusters get-credentials --region europe-west1 gcp6133-p-k8s01
 gcloud container clusters get-credentials --region europe-west1 gcp6133-p-k8s02
+gcloud container clusters get-credentials --region europe-west1 gcp6133-dr-k8s01
+
+gcloud container clusters get-credentials --region $REGION $SMAX_CLUSTER
+
 
 Change FQDN:
 ./fqdn-replace.sh -nf www.ccc3.evt.slb.com -of ccc.greenlightgroup.com -nd slb.com -od greenlightgroup.com -u admin -p GbGeRv2oozgZv0Ei71a! -c ../../../resource/cccevt.cer -k ../../../resource/cccevtNew.key -t ../../../resource/cccevt_inter.cer -y -o
@@ -63,3 +75,5 @@ fqdn-replace.sh was trying to use helm and SLB cluster does not have apphub depl
 #Reset Windows RDP user password
 gcloud beta compute --project "us102173-p-sis-bsys-6133" reset-windows-password "gcp6133prdapp02" --zone "europe-west1-b" --user jjr109
 gcloud beta compute --project "us107795-np-sis-bsys-6133" reset-windows-password "gcp6133tstapp05" --zone "europe-west1-b" --user jjr109
+
+gcloud beta compute --project "us107795-np-sis-bsys-6133" reset-windows-password "gcp6133tstapp05" --zone "europe-west1-b" --user bbowden2
