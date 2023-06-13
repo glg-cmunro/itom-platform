@@ -84,7 +84,7 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
   ```
   /opt/smax/2022.11/scripts/gen_secrets.sh -n cms -c ~/cms/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz -o ~/cms/testing_cms-secrets.yaml
   ```
-  > `ITOM_BO_UI_POD=$(kubectl get pods -n $NS | grep -m1 itom-bo-login | awk '{print $1}')`
+  > `export ITOM_BO_UI_POD=$(kubectl get pods -n $NS | grep -m1 itom-bo-login | awk '{print $1}')`
   > Get IDM Signing Key from /BO
     ```
     IDM_SIGNING=$(kubectl exec -it ${ITOM_BO_UI_POD} -n $NS -c itom-bo-login -- bash -c "/bin/get_secret idm_token_signingkey_secret_key itom-bo")
