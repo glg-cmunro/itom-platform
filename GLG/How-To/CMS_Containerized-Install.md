@@ -36,7 +36,7 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
 4. Create RDS PostgreSQL Databases for CMS
     ```
     export PGHOST=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST)
-    export PGUSER=dbadmin
+    export PGUSER=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_USERNAME)
     export PGPASSWORD=Gr33nl1ght_
 
     psql -d postgres
@@ -111,3 +111,27 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
   ```
 
 10. Create CMS Ingress (Internal & External)
+
+11. Create CMS Security Group
+  ```
+  aws ec2 create-security-group \
+  --description "Base Security Group for End User Access to CMS" \
+  --group-name "testing-SG-CMS-Base" \
+  --vpc-id "vpc-0f354cb1c802be330" \
+  --tag-specifications "ResourceType=security-group,Tags=[{Key=Name,Value=testing-SG-CMS-Base},{Key=Environment,Value=Development},{Key=Customer,Value=GITOpS},{Key=Application,Value=CMS}]" \
+  --profile automation
+  ```
+
+  Get the Security Group ID output from the command above
+  ```
+  aws ec2 authorize-security-group-ingress \
+  --group-name testing-SG-CMS-Base \
+  #--group-id sg-0e1398eae02a74c5b \
+  --tag-specifications "ResourceType=security-group-rule,Tags=[{Key=Environment,Value=Development},{Key=Customer,Value=GITOpS},{Key=Application,Value=CMS}]" \
+  --protocol tcp \
+  --port 443 \
+  --cidr 0.0.0.0/0 \
+  --color on \
+  --profile automation
+  ```
+

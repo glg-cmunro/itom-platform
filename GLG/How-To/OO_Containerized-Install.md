@@ -115,3 +115,32 @@
     /opt/cdf/bin/yq e '.autopass-migration.deployment.database.user = "'${APLSDBUSER}'"' -i ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml
     /opt/cdf/bin/yq e '.global.idm.idmServiceUrl = "https://smax-west.gitops.com:443/idm-service"' -i ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml
     helm upgrade oo -n oo --reuse-values -f ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/values/202205_P1.yaml ~/oo_2022.05.P1/oo-1.0.2+20220501P1-1/oo-helm-charts/charts/oo-1.0.2+20220501P1.1.tgz --timeout 30m
+
+
+    ## Upgrade OO 2022.11.P3
+    curl -gkLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
+    unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/oo_2022.11.P3
+    /opt/smax/2022.11/bin/helm get values -n oo oo > ~/oo/oo_2022.11-values.yaml
+    cp ~/oo/oo_2022.11-values.yaml ~/oo/oo_2022.11.P3-values.yaml
+    
+    /opt/smax/2022.11/bin/yq eval 'del(.global.busybox)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.global.opensuse)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.global.vaultRenew)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.global.vaultInit)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.. | select(has("image")).image)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.. | select(has("imageTag")).imageTag)' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval 'del(.ootenants-sync.version)' -i ~/oo/oo_2022.11.P3-values.yaml
+
+    /opt/smax/2022.11/bin/yq eval '.global.idm.idmServiceUrl = "https://testing-int.dev.gitops.com:2443/idm-service"' -i ~/oo/oo_2022.11.P3-values.yaml
+
+    APLSDBNAME=$(echo `/opt/smax/2022.11/bin/yq eval '.autopass.deployment.database.dbName' ~/oo/oo_2022.11.P3-values.yaml`) && echo $APLSDBNAME
+    APLSDBUSER=$(echo `/opt/smax/2022.11/bin/yq eval '.autopass.deployment.database.user' ~/oo/oo_2022.11.P3-values.yaml`) && echo $APLSDBUSER
+    APLSMIGRATIONDBNAME=$(echo `/opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.dbName' ~/oo/oo_2022.11.P3-values.yaml`) && echo $APLSMIGRATIONDBNAME 
+    APLSMIGRATIONDBUSER=$(echo `/opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.user' ~/oo/oo_2022.11.P3-values.yaml`) && echo $APLSMIGRATIONDBUSER
+    [[ $APLSDBNAME == $APLSMIGRATIONDBNAME ]] && echo "Values of autopass db name and autopass migration db name is same. "
+    [[ $APLSDBUSER == $APLSMIGRATIONDBUSER ]] && echo "Values of autopass db user and autopass migration db user is same. "
+
+    /opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.dbName = "'${APLSDBNAME}'"' -i ~/oo/oo_2022.11.P3-values.yaml
+    /opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.user = "'${APLSDBUSER}'"' -i ~/oo/oo_2022.11.P3-values.yaml
+
+    helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="upgrade" --timeout 30m
