@@ -21,6 +21,7 @@
 # Install OO Containerized - 2022.11
 
 > Backup Cluster and SUITE before making any changes
+> [AWS Backup Cluster](./AWS_BackupCluster.md)
 > ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=testing.dev.gitops.com -e backup_name=basesmaxdeploy -e snap_string=basesmaxdeploy --ask-vault-pass
 > ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=optic.dev.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass
 > ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=smax-west.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass -e prod=true
