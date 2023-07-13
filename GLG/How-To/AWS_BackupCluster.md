@@ -15,7 +15,7 @@
 
 ##### Steps to perform Cluster Backup
 
-1. SSH Login to **Control Node** for the Cluster to be backed up
+1. SSH Login to the **Control Node** for the Cluster to be backed up
 2. Execute Ansible playbook
 
 > To execute the playbook update the command below with the following values depending on your environment
@@ -44,3 +44,9 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all
 --ask-vault-pass \
 -e prod=true
 ```
+
+##### Steps to verify backup is complete
+
+1. Verify Velero backup
+2. Verify EFS backup
+3. Verify RDS backup

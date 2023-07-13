@@ -9,7 +9,7 @@
 2. Download / Extract CMS Helm chart package  
     ```
     curl -kLs https://owncloud.gitops.com/index.php/s/ipLquypHVdCsaii/download -o ~/cms/CMS_Helm_Chart-2022.11.zip
-    unzip CMS_Helm_Chart-2022.11.zip -d ~/cms
+    unzip ~/cms/CMS_Helm_Chart-2022.11.zip -d ~/cms
     tar -zxvf ~/cms/CMS_Helm_Chart-2022.11/cms-helm-charts-2022.11.tgz -C ~/cms
     ```
 cp ~/cms/cms-helm-charts/samples/values-with-smax.yaml ~/cms/testing_cms-values-with-smax.yaml
@@ -32,6 +32,10 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
     sudo chmod -R 775 /mnt/efs/var/vols/itom/cms
     sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/cms
     ```
+    
+    ```
+    kubectl create -f ~/cms/testing_cms-pv.yaml
+    ```
 
 4. Create RDS PostgreSQL Databases for CMS
     ```
@@ -49,6 +53,10 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
     GRANT cms_autopass to dbadmin;
     CREATE DATABASE cms_autopass_db OWNER cms_autopass; 
     
+    CREATE USER cms_probe PASSWORD 'Gr33nl1ght_';
+    GRANT cms_probe to dbadmin;
+    CREATE DATABASE cms_probe_db OWNER cms_probe;
+
     \c cms_ucmdb_db
     CREATE SCHEMA ucmdb AUTHORIZATION cms_ucmdb;
     ALTER USER cms_ucmdb SET search_path TO ucmdb;
@@ -56,6 +64,10 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
     \c cms_autopass_db
     CREATE SCHEMA autopass AUTHORIZATION cms_autopass;
     ALTER USER cms_autopass SET search_path TO autopass;
+
+    \c cms_probe_db
+    CREATE SCHEMA probe AUTHORIZATION cms_probe;
+    ALTER USER cms_probe SET search_path TO probe;
 
     \q
     ```

@@ -1,4 +1,7 @@
 # Step by Step - Deploy ITOM Cluster w/ SMAX|HCMX|DnD|CGRO|OO|CMS
+![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)
+
+---
 
 1. Ansible Playbook - aws-infra-cf-create-all.yaml
  > - Create VPC
@@ -14,17 +17,13 @@
  > - Silent Install OMT / SMAX
  > - Setup ALB Controller
  > - Add ingress for UIs 3000,5443,443
- > - Post Install - Deploy tools
+ > - Post Install - Deploy to
  > - Configure GLG Profile on Control Node
-
 
 # Install OO Containerized - 2022.11
 
-> Backup Cluster and SUITE before making any changes
+> Backup Cluster and SUITE before making any changes  
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
-> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=testing.dev.gitops.com -e backup_name=basesmaxdeploy -e snap_string=basesmaxdeploy --ask-vault-pass
-> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=optic.dev.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass
-> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all.yaml -e full_name=smax-west.gitops.com -e backup_name=postomt202205 -e snap_string=postomt202205 --ask-vault-pass -e prod=true
     
     #Download and extract OO Charts
     #-OO_2022.11
@@ -166,6 +165,18 @@
     /opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.dbName = "'${APLSDBNAME}'"' -i ~/oo/oo_2022.11.P3-values.yaml
     /opt/smax/2022.11/bin/yq eval '.autopass-migration.deployment.database.user = "'${APLSDBUSER}'"' -i ~/oo/oo_2022.11.P3-values.yaml
 
-    helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="upgrade" --timeout 30m
+    helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="upgrade" --set global.secretStorageType="null" --timeout 30m
 
-    helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="install" --timeout 30m
+    helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="install" --set global.secretStorageType="null" --timeout 30m
+
+
+##### Enable OO RAS and Designer downloads from Endpoint Manager
+[OpenText DOC: Customize OO Download Link](https://docs.microfocus.com/doc/SMAX/2022.11/CustomizeOODownloadLinks)
+> NOTE: Requires SMA Toolkit
+Example used for testing.dev.gitops.com
+```
+python3 ~/toolkit/enable_download/enable_download.py testing.dev.gitops.com 462039570 bo-integration@dummy.com Gr33nl1ght_ https://testing-oo.dev.gitpps.com:443/oo/downloader OO_DOWNLOAD_SERVICE
+```
+
+##### Install OO RAS Server (External RAS)
+- NOTE: CMS Gateway (RAS Server) needs xorg-x11-auth, bzip2, gtk2 packages installed for OO RAS Installer
