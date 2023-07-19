@@ -172,7 +172,7 @@
 
 ##### Enable OO RAS and Designer downloads from Endpoint Manager
 [OpenText DOC: Customize OO Download Link](https://docs.microfocus.com/doc/SMAX/2022.11/CustomizeOODownloadLinks)
-> NOTE: Requires SMA Toolkit
+> NOTE: Requires SMA Toolkit  
 Example used for testing.dev.gitops.com
 ```
 python3 ~/toolkit/enable_download/enable_download.py testing.dev.gitops.com 462039570 bo-integration@dummy.com Gr33nl1ght_ https://testing-oo.dev.gitpps.com:443/oo/downloader OO_DOWNLOAD_SERVICE
