@@ -26,7 +26,9 @@
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
     
 ### Download and extract OO Charts  
-`mkdir ~/oo`
+```
+mkdir ~/oo
+```
 
 > OO_2022.11
 ```
@@ -39,15 +41,17 @@ curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/
 unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/oo_chart
 ```
 
-    #Prepare EFS for OO
-    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
-    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
-    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_logs_vol
-    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_export_vol
-    sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_ras_logs_vol
-    sudo chmod -R 755 /mnt/efs/var/vols/itom/oo
-    sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/oo
-    
+### Prepare EFS for OO  
+```
+sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
+sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
+sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_logs_vol
+sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_export_vol
+sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_ras_logs_vol
+sudo chmod -R 775 /mnt/efs/var/vols/itom/oo
+sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/oo
+```
+
     #Create OO Deployment
     /opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
     
