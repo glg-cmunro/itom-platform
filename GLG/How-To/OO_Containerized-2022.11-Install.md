@@ -1,12 +1,12 @@
-# Step by Step - Deploy ITOM Cluster w/ SMAX|HCMX|DnD|CGRO|OO|CMS
+# Step by Step - Deploy ITOM Cluster capability - OO Containerized - 2022.11
 ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)
 
 ---
 
-1. Ansible Playbook - aws-infra-cf-create-all.yaml
- > - Create VPC
- > - Create Subnets (3x Public, 3x Private, 2x Database)
- > - Create EKS Cluster
+### Deployment Steps
+ > - Backup Cluster before making ANY changes
+ > - Download and Extract OO helm charts
+ > - Create NFS/EFS directories for OO PVs
  > - Create EKS Nodes
  > - Create EFS
  > - Create RDS
@@ -20,19 +20,25 @@
  > - Post Install - Deploy to
  > - Configure GLG Profile on Control Node
 
-# Install OO Containerized - 2022.11
+## Install OO Containerized - 2022.11
 
-> Backup Cluster and SUITE before making any changes  
+### Backup Cluster and SUITE before making any changes  
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
     
-    #Download and extract OO Charts
-    #-OO_2022.11
-    curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo/oo-1.0.3-20221101.8.zip
-    unzip ~/oo/oo-1.0.3-20221101.8.zip -d ~/oo/oo_chart
-    #-OO_2022.11.P3
-    curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
-    unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/oo_chart
-    
+### Download and extract OO Charts  
+`mkdir ~/oo`
+
+> OO_2022.11
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo/oo-1.0.3-20221101.8.zip
+unzip ~/oo/oo-1.0.3-20221101.8.zip -d ~/oo/oo_chart
+```
+> OO_2022.11.P3
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
+unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/oo_chart
+```
+
     #Prepare EFS for OO
     sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
     sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
