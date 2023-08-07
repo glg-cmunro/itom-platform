@@ -1,13 +1,29 @@
-# Step by Step - Deploy ITOM Cluster capability - OO Containerized - 2022.11
+# Step by Step - Deploy AUDIT 'feature' on SMAX Cluster 2022.11 in AWS EKS
 ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)
 
 ---
 
-## Deployment Steps
- > - Backup Cluster before making ANY changes
- > - Download and Extract OO helm charts
- > - Create NFS/EFS directories for OO PVs
+OpenText doc steps: [Install Audit Service]
+1. Download the Audit Helm chart (EKS)
+2. Download and Upload images for Audit service (EKS)
+3. Configure EFS for Audit service
+4. Prepare persistent volumes for Audit service
+5. Launch RDS for Audit service
+6. Create new deployment for Audig service
+7. Configure load balancer for Audit service
+8. Create application load balancer for Audit service
+9. Configure values.yaml for Audit service (EKS)
+10. Deploy Audit on AWS (EKS)
 
+[Enable Audit]
+
+[Install Audit Collector (EKS)]
+1. PRE-REQ: Completed installation of SMAX 2022.11 on EKS
+2. Download AUDIT helm chart for EKS
+
+ > - Backup cluster before making ANY changes
+ > - Download and Extract AUDIT Service helm chart for EKS
+ > - Download and Extract AUDIT Collector helm chart for EKS
  > - Create EKS Nodes
  > - Create EFS
  > - Create RDS
@@ -21,133 +37,123 @@
  > - Post Install - Deploy to
  > - Configure GLG Profile on Control Node
 
-## Install OO Containerized - 2022.11
+# Install AUDIT - 2022.11
 
-### Backup Cluster and SUITE before making any changes  
+> Backup Cluster and SUITE before making any changes  
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
     
-### Download and extract OO Charts  
-```
-mkdir ~/oo
-```
+    #Download and extract AUDIT Charts
+    ```
+    mkdir -p ~/audit/2022.11
+    ```
+    #-AUDIT_Service_2022.11
+    curl -kLs https://owncloud.gitops.com/index.php/s/3qqilJPGGPvur9j/download -o ~/audit/audit-2022.11.zip
+    unzip ~/audit/audit-2022.11.zip -d ~/audit/2022.11
+    tar -xvf ~/audit/2022.11/auditpkg-1.0.0+202211008.1.tgz -C ~/audit/2022.11/
+    cp ~/audit/2022.11/audit-helm-chart/audit/samples/itom-audit-pv.yaml ~/audit/
 
-> OO_2022.11
-```
-curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo/oo-1.0.3-20221101.8.zip
-unzip ~/oo/oo-1.0.3-20221101.8.zip -d ~/oo/2022.11
-```
-> OO_2022.11.P3
-```
-curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
-unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
-```
+    #-AUDIT_Collector_2022.11
+    curl -kLs https://owncloud.gitops.com/index.php/s/QKczOElXkZCB86P/download -o ~/audit/audit-collector-2022.11.zip
+    unzip ~/audit/audit-collector-2022.11.zip -d ~/audit/2022.11/
+    tar -xvf ~/audit/2022.11/auditcollectorpkg-1.0.0+202211008.2.tgz -C ~/audit/2022.11/
 
-### Create NFS/EFS directories for OO PVs
-```
-sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
-sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
-sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_logs_vol
-sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_export_vol
-sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_ras_logs_vol
-sudo chmod -R 775 /mnt/efs/var/vols/itom/oo
-sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/oo
-```
+    #DOWNLOAD Images if not already downloaded
 
-### Create OO Deployment in OMT
-```
-/opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
-```
-
-### Prepare PV / PVC for OO  
-> Edit oo-pv.yaml with proper cluster specific EFS_Host, EFS_Path, StorageClassName information
-> - EFS_Host = NFS server used by cluster
-> - EFS_Path = /var/vols/itom/oo/<volume>
-> - StorageClassName = "itom-oo"
-
-```
-export CLUSTER_NAME=qa
-cp ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/samples/persistent_storage/eks/volumes.yaml ~/oo/${CLUSTER_NAME}_oo-pv.yaml
-vi ~/oo/${CLUSTER_NAME}_oo-pv.yaml
-```
-
-```
-kubectl create -f ~/oo/${CLUSTER_NAME}_oo-pv.yaml
-```
-
-> Edit oo-pvc (one for all environments) with proper StorageClassName "itom-oo"
-> - StorageClassName = "itom-oo"
-```
-cp ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/samples/persistent_storage/eks/claims.yaml ~/oo/oo-pvc.yaml
-vi ~/oo/oo-pvc.yaml
-```
-
-```
-kubectl create -f ~/oo/oo-pvc.yaml
-```
-
-### Create Databases for OO
-```
-export PGHOST=`kubectl get cm -n core default-database-configmap -ojson | jq -r .data.DEFAULT_DB_HOST`
-export PGUSER=`kubectl get cm -n core default-database-configmap -ojson | jq -r .data.DEFAULT_DB_USERNAME`
-export PGDATABASE=postgres
-psql -W
-```
-
-> <CREATE DB SCRIPT>
-```    
-CREATE ROLE "oocentraldbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
-CREATE DATABASE "oocentraldb"; 
-ALTER DATABASE "oocentraldb" OWNER TO "oocentraldbuser";
-CREATE ROLE "oouidbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
-CREATE DATABASE "oouidb"; 
-ALTER DATABASE "oouidb" OWNER TO "oouidbuser";
-CREATE ROLE "oocontrollerdbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
-CREATE DATABASE "oocontrollerdb"; 
-ALTER DATABASE "oocontrollerdb" OWNER TO "oocontrollerdbuser";
-CREATE ROLE "ooscheduler" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
-CREATE DATABASE "ooschedulerdb"; 
-ALTER DATABASE "ooschedulerdb" OWNER TO "ooscheduler";
-CREATE ROLE "aplsdbuser" LOGIN ENCRYPTED PASSWORD 'Gr33nl1ght_' NOSUPERUSER INHERIT;
-CREATE DATABASE "aplsdb"; 
-ALTER DATABASE "aplsdb" OWNER TO "aplsdbuser";
-\q
-```
-
-> Add the SCHEMA for oo_sch_core (Must be the ooscheduler user)
-```
-psql -U ooscheduler -d ooschedulerdb -W
-```
-
-```
-CREATE SCHEMA IF NOT EXISTS oo_sch_core AUTHORIZATION ooscheduler;
-\q
-```
+    #Prepare EFS for AUDIT
+    sudo mkdir -p /mnt/efs/var/vols/itom/audit/vault
+    sudo mkdir -p /mnt/efs/var/vols/itom/audit/log
+    sudo chmod -R g+ws /mnt/efs/var/vols/itom/audit
+    sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/audit
     
-### Create IDM Admin account for OO
-> Login to the SUITE IDM Admin service
-> https://<Cluster FQDN>:443/idm-admin
-> > https://smax-west.gitops.com/idm-admin
-> > https://testing.dev.gitops.com/idm-admin
-
-Username: oo-integration-admin
-Display Name: OO Integration Admin
-Pass: <Keep track of this for the oo-secrets>
-
-> Add IDM Admin account for OO to administrators group
+    #Prepare PV / PVC for AUDIT
+    #Edit itom-audit-pv.yaml with proper EFS_Host, EFS_Path, Namespace information
+    cp ~/audit/2022.11/audit-helm-chart/audit/samples/itom-audit-pv.yaml ~/audit/testing_audit-pv.yaml
+    vi ~/audit/testing_audit-pv.yaml
+    kubectl create -f ~/audit/testing_audit-pv.yaml
     
-    #Prepare oo-secrets
-    export SMAX_IDM_POD=$(echo `kubectl get pods -n $NS | grep -m1 idm- | head -1 | awk '{print $1}'`) && echo $SMAX_IDM_POD
-    export IDM_SIGNING_KEY=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_token_signingkey_secret_key itom-bo" | awk -F= '{print$2}') 
-    export TRANSPORT_PASS=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_transport_admin_password_secret_key" | awk -F= '{print$2}')
-    echo $IDM_SIGNING_KEY
-    echo $TRANSPORT_PASS
+    
+    #Create AUDIT DB
+    export PGHOST=`kubectl get cm -n core default-database-configmap -ojson | jq -r .data.DEFAULT_DB_HOST`
+    export PGUSER=`kubectl get cm -n core default-database-configmap -ojson | jq -r .data.DEFAULT_DB_USERNAME`
+    psql -d maas_admin -W
+    
+    <CREATE DB SCRIPT>
+    
+    CREATE USER auditdbuser ENCRYPTED PASSWORD 'Gr33nl1ght_';
+    GRANT auditdbuser TO dbadmin;
+    CREATE DATABASE "auditdb" OWNER auditdbuser; 
+    \q
+
+    #Create AUDIT Deployment
+    /opt/smax/2022.11/scripts/cdfctl.sh deployment create -d audit -n audit -t helm
+    
+    #Create AUDIT public ingress
+    vi ~/audit/testing_audit_ingress.yaml
+    kubectl create -f ~/audit/testing_audit_ingress.yaml
+
+    #Create AUDIT internal ingress
+    vi ../oo/testing_int-ingress.yaml
+    kubectl create -f ../oo/testing_int-ingress.yaml
+
+    #Create AUDIT Values
+    cp ~/audit/2022.11/audit-helm-chart/audit/samples/values.yaml ~/audit/audit_values.yaml
+    vi ~/audit/audit_values.yaml
+        global.isDemo: false
+        ADD :: global.persistence.enabled: true
+        ADD :: global.persistence.logVolumeClaim: as-log-vol-claim
+        global.externalAccessHost: <audit FQDN>
+        global.externalAccessPort: 443
+        global.nginx.httpsPort: 443
+        global.docker.registry: <ECR Repo URL>
+        global.idm.idmSvcHost: <SMAX FQDN>
+        global.vaultInit.certname: <audit FQDN>
+        auditService.database.user: auditdbuser
+        auditService.databsae.jdbcUrl: jdbc:postgresql://<RDSDBInstance>:5432/auditdb?ssl=false
+        auditService.idm.superUser: suite-admin
+        auditService.idm.superUserOrgName: sysbo
+        auditService.idm.internalIdmHost: <SMAX Integration FQDN>
+        auditService.idm.internalIdmPort: 2443
+        auditService.idm.publicIdmHost: <SMAX FQDN>
+        auditGateway.deployment.internalIdmHost: <SMAX Integration FQDN>
+        auditGateway.deployment.internalIdmPort: 2443
+        auditGateway.deployment.publicIdmHost: <SMAX FQDN>
+        auditGateway.deployment.auditTransportUser: 
+        auditGateway.deployment.auditEndPoint: https://<SMAX Integration FQDN>:31050
+
+    #Create AUDIT Secret
+    /opt/smax/2022.11/scripts/gen_secrets.sh -n audit -c ~/audit/2022.11/audit-helm-chart/audit/charts/audit-1.0.0+202211008.1.tgz -o ~/audit/audit_secret.yaml
+
+
+    #Deploy AUDIT
+    helm install audit ~/audit/2022.11/audit-helm-chart/audit/charts/audit-1.0.0+202211008.1.tgz -n audit -f ~/audit/audit_values.yaml -f ~/audit/audit_secret.yaml --set-file "caCertificates.RE_ca_intAlb"=~/testing.dev.gitops.com.cer --set-file "caCertificates.RE_ca_idmcrt"=~/testing.dev.gitops.com.cer
+    
+    helm upgrade audit ~/audit/2022.11/audit-helm-chart/audit/charts/audit-1.0.0+202211008.1.tgz -n audit --reuse-values --set-file "caCertificates.RE_ca_intAlb"=/home/cmunro/testing.dev.gitops.com.cer --set-file "caCertificates.RE_ca_idmcrt"=/home/cmunro/testing.dev.gitops.com.cer
+    
+    #Create AUDIT IDM Admin account
+    https://recovery2.dev.gitops.com/idm-admin
+    https://optic.dev.gitops.com/idm-admin
+    https://smax-west.gitops.com/idm-admin
+    https://testing.dev.gitops.com/idm-admin
+    Username: audit-integration-admin
+    Pass: <Keep track of this for the audit-engine-secret>
+    #Add ADMIN IDM Admin account to audit-management role
+    
+    #Prepare audit_engine_-_secret
+    vi ~/audit/audit_engine_secret.yaml
+    kubectl create -f ~/audit/audit_engine_secret.yaml
+
+    
+    #Restart ITOM Platform and IDM pods
+    kubectl rollout restart deployment -n $NS itom-xruntime-platform
+    kubectl rollout restart deployment -n $NS idm
+
+    #Setup audit-client-cfg.properties
+    kubectl exec -ti -n $NS $(kubectl get pods -n $NS | grep platform | head -n1 | awk {'print $1'}) -c itom-xruntime-platform -- bash
+    
     
     #Generate OO secrets
     /opt/smax/2022.11/scripts/gen_secrets.sh -n oo -c ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz
     
-    #Create OO Values
-    cp ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/samples/sizing/oo_default_sizing.yaml ~/oo/oo_size_values.yaml
-    #vi ~/oo/oo_size_values.yaml
 
     cd ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/
     tar -xvf oo-1.0.3+20221101.8.tgz
