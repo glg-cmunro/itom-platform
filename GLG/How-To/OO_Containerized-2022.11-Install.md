@@ -124,10 +124,10 @@ CREATE SCHEMA IF NOT EXISTS oo_sch_core AUTHORIZATION ooscheduler;
 ```
     
 ### Create IDM Admin account for OO
-> Login to the SUITE IDM Admin service
-> https://<Cluster FQDN>:443/idm-admin
-> > https://smax-west.gitops.com/idm-admin
-> > https://testing.dev.gitops.com/idm-admin
+> Login to the SUITE IDM Admin service  
+> https://<Cluster FQDN>:443/idm-admin  
+> > https://smax-west.gitops.com/idm-admin  
+> > https://testing.dev.gitops.com/idm-admin  
 
 Username: oo-integration-admin
 Display Name: OO Integration Admin
@@ -135,13 +135,21 @@ Pass: <Keep track of this for the oo-secrets>
 
 > Add IDM Admin account for OO to administrators group
     
-    #Prepare oo-secrets
-    export SMAX_IDM_POD=$(echo `kubectl get pods -n $NS | grep -m1 idm- | head -1 | awk '{print $1}'`) && echo $SMAX_IDM_POD
-    export IDM_SIGNING_KEY=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_token_signingkey_secret_key itom-bo" | awk -F= '{print$2}') 
-    export TRANSPORT_PASS=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_transport_admin_password_secret_key" | awk -F= '{print$2}')
-    echo $IDM_SIGNING_KEY
-    echo $TRANSPORT_PASS
-    
+### Prepare oo-secrets
+> You will need to gather the current values from the system for the Signing Key and Transpot Pass  
+```
+export SMAX_IDM_POD=$(echo `kubectl get pods -n $NS | grep -m1 idm- | head -1 | awk '{print $1}'`) && echo $SMAX_IDM_POD
+```
+```
+export IDM_SIGNING_KEY=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_token_signingkey_secret_key itom-bo" | awk -F= '{print$2}') 
+```
+```
+export TRANSPORT_PASS=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c "/bin/get_secret idm_transport_admin_password_secret_key" | awk -F= '{print$2}')
+```
+```
+echo $IDM_SIGNING_KEY; echo $TRANSPORT_PASS;
+```    
+
     #Generate OO secrets
     /opt/smax/2022.11/scripts/gen_secrets.sh -n oo -c ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz
     
