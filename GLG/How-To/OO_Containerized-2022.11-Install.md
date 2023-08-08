@@ -6,21 +6,12 @@
 ## Deployment Steps
  > - Backup Cluster before making ANY changes
  > - Download and Extract OO helm charts
- > - Create NFS/EFS directories for OO PVs
-
- > - Create EKS Nodes
- > - Create EFS
- > - Create RDS
- > - Create Bastion Host
- > - - Configure Bastion Host
- > - Create Control Node
- > - - Configure Control Node
- > - Silent Install OMT / SMAX
- > - Setup ALB Controller
- > - Add ingress for UIs 3000,5443,443
- > - Post Install - Deploy to
- > - Configure GLG Profile on Control Node
-
+ > - Create OO Deployment in OMT
+ > - Prepare NFS/EFS directories for OO PVs
+ >   - Prepare PV / PVC for OO
+ > - Create Databases for OO
+ > - 
+ 
 ## Install OO Containerized - 2022.11
 
 ### Backup Cluster and SUITE before making any changes  
@@ -42,6 +33,11 @@ curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/
 unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
 ```
 
+### Create OO Deployment in OMT
+```
+/opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
+```
+
 ### Create NFS/EFS directories for OO PVs
 ```
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
@@ -51,11 +47,6 @@ sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_export_vol
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_ras_logs_vol
 sudo chmod -R 775 /mnt/efs/var/vols/itom/oo
 sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/oo
-```
-
-### Create OO Deployment in OMT
-```
-/opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
 ```
 
 ### Prepare PV / PVC for OO  
@@ -129,9 +120,9 @@ CREATE SCHEMA IF NOT EXISTS oo_sch_core AUTHORIZATION ooscheduler;
 > > https://smax-west.gitops.com/idm-admin  
 > > https://testing.dev.gitops.com/idm-admin  
 
-Username: oo-integration-admin
-Display Name: OO Integration Admin
-Pass: <Keep track of this for the oo-secrets>
+Username: oo-integration-admin  
+Display Name: OO Integration Admin  
+Pass: <Keep track of this for the oo-secrets>  
 
 > Add IDM Admin account for OO to administrators group
     
@@ -150,21 +141,54 @@ export TRANSPORT_PASS=$(kubectl exec -it $SMAX_IDM_POD -n $NS -c idm -- bash -c 
 echo $IDM_SIGNING_KEY; echo $TRANSPORT_PASS;
 ```    
 
-    #Generate OO secrets
-    /opt/smax/2022.11/scripts/gen_secrets.sh -n oo -c ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz
-    
-    #Create OO Values
-    cp ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/samples/sizing/oo_default_sizing.yaml ~/oo/oo_size_values.yaml
-    #vi ~/oo/oo_size_values.yaml
+> You will need the IDM_SIGNING_KEY and TRANSPORT_PASS for this next step
+- Generate OO secrets
+```
+/opt/smax/2022.11/scripts/gen_secrets.sh -n oo -c ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz -o ~/oo/oo_secrets.yaml
+```    
 
-    cd ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/
-    tar -xvf oo-1.0.3+20221101.8.tgz
-    cp ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo/values.yaml  ~/oo/testing_oo-values.yaml
-    cd ~/oo
-    vi ~/oo/testing_oo-values.yaml
+- Create OO Values
+```
+cp ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/samples/sizing/oo_default_sizing.yaml ~/oo/oo_size_values.yaml
+#vi ~/oo/oo_size_values.yaml
+```
 
-    #Install OO
-    helm install oo ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --namespace oo -f ~/oo/testing_oo-values.yaml -f ~/oo/oo_size_values.yaml
+```
+cd ~/oo
+tar -zxvf ./2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --directory=./2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/
+cp ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo/values.yaml  ~/oo/${CLUSTER_NAME}_oo-values.yaml
+vi ~/oo/${CLUSTER_NAME}_oo-values.yaml
+```
+> - global.acceptEula: true
+> - global.isDemo: false
+> - global.externalAccessHost: <CLUSTER_NAME>-oo.<DOMAIN>
+> - global.externalAccessPort: 443
+> - global.nginx.httpsPort: 443
+> - global.cluster.k8sProvider: aws
+> - global.persistence.enabled: true
+> - global.persistence.configVolumeClaim: oo-config-pvc
+> - global.persistence.dataVolumeClaim: oo-data-pvc
+> - global.persistence.logVolumeClaim: oo-logs-pvc
+> - global.persistence.rasLogVolumeClaim: oo-ras-logs-pvc
+> - global.persistence.dataExportVolumeClaim: oo-data-export-pvc
+> - global.persistence.storageClasses.ooGlobalStorageClassName: "itom-oo" 
+> - global.docker.registry: <ECR REPO URL>
+> - global.database.type: postgresql
+> - global.database.host: <RDS Instance FQDN>
+> - global.database.port: 5432
+> - global.idm.idmAuthUrl: <SMAX Integration FQDN>:2443/idm-service
+> - global.idm.idmServiceUrl: <SMAX FQDN>:443/idm-service
+> - global.smaxFqdn: <SMAX FQDN>
+
+### Install OO
+```
+/opt/smax/2022.11/bin/helm install oo ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --namespace oo -f ~/oo/qa_oo-values.yaml -f ~/oo/oo_size_values.yaml -f ~/oo/oo_secrets.yaml
+```
+
+```
+/opt/smax/2022.11/bin/helm upgrade oo ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --namespace oo --reuse-values -f ~/oo/qa_oo-values.yaml
+```
+    helm install oo ~/oo/2022.11/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --namespace oo -f ~/oo/testing_oo-values.yaml -f ~/oo/oo_size_values.yaml
     helm install oo ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --namespace oo -f oo_values.smax-west.yaml -f oo_size_values.yaml
     helm upgrade oo ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --reuse-values --namespace oo -f ~/oo_values.optic.yaml -f ~/oo_size_values.yaml
     helm upgrade oo ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz --reuse-values --namespace oo -f ~/oo_values.smax-west.yaml -f ~/oo_size_values.yaml
