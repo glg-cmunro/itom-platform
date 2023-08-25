@@ -1,16 +1,23 @@
 1. Check local environment executables
 
- - AWS CLI Client version
-   - `aws --version`
+- AWS CLI Client version
+```
+aws --version
+```
 
- - Kubernetes Client
-   - `kubectl version`
+- Kubernetes Client
+```
+kubectl version
+```
    > - 1.19: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.19.6/2021-01-05/bin/linux/amd64/kubectl
    > - 1.20: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.20.15/2022-10-31/bin/linux/amd64/kubectl
    > - 1.21: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.14/2023-01-11/bin/linux/amd64/kubectl
    > - 1.22: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.17/2023-01-11/bin/linux/amd64/kubectl
    > - 1.23: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.15/2023-01-11/bin/linux/amd64/kubectl
    > - 1.24: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.24.9/2023-01-11/bin/linux/amd64/kubectl
+   > - 1.24: curl -O 
+   > - 1.25: curl -O 
+   > - 1.26: curl -O 
 
  - Kubernetes Client for Rocky Linux
    > - Latest: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"

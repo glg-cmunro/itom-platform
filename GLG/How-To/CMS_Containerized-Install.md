@@ -1,87 +1,156 @@
-# Installation instructions for CMS Containerized in SMAX cluster
+# Step by Step - Deploy ITOM Cluster capability - CMS Containerized - 2022.11
+![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)
 
-1. CMS install working directory
-    ```
-    mkdir ~/cms
-    cd ~/cms
-    ```
+---
 
-2. Download / Extract CMS Helm chart package  
-    ```
-    curl -kLs https://owncloud.gitops.com/index.php/s/ipLquypHVdCsaii/download -o ~/cms/CMS_Helm_Chart-2022.11.zip
-    unzip ~/cms/CMS_Helm_Chart-2022.11.zip -d ~/cms
-    tar -zxvf ~/cms/CMS_Helm_Chart-2022.11/cms-helm-charts-2022.11.tgz -C ~/cms
-    ```
-cp ~/cms/cms-helm-charts/samples/values-with-smax.yaml ~/cms/testing_cms-values-with-smax.yaml
-cp ~/cms/cms-helm-charts/samples/cms-pv.yaml ~/cms/testing_cms-pv.yaml
-cp ~/cms/cms-helm-charts/samples/values-probe.yaml ~/cms/testing_cms-values-probe.yaml
+## Deployment Steps
+> - Create CMS Install Working Directory
+> - Download / Extract CMS helm chart package
+> - Prepare EFS / NFS directories for CMS
+> - Prepare CMS helm chart values
+> - Create CMS Databases in RDS Instance
+> - Create CMS Integration Admin user in SMAX IdM
+> - Create OMT Deployment for CMS
+> - Generate CMS vault secrets
+> - Install CMS
+> - Associate CMS SuperAdmin role
 
-##### one-time get required cms images
-$CDF_HOME/scripts/refresh-ecr-secret.sh -r us-east-1
-$CDF_HOME/tools/generate-download/generate_download_bundle.sh --chart ~/cms/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz -o hpeswitom -d ~/cms/cms_images
-unzip ~/cms/cms_images/offline-download.zip -d ~/cms/cms_images
- > copy image-set.json to BYOK folder for Ansible
+## Installation instructions for CMS Containerized in SMAX cluster
 
-ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml --ask-vault-pass -e image_set_file=/opt/glg/aws-smax/BYOK/2022.11/2022.11_cms-image-set.json -e region=us-east-1
+> Environment Variables to assist with installation
+```
+export CLUSTER_NAME=qa
+export CDF_HOME=/opt/cdf
+export CDF_NAMESPACE=core
+export ECR_REPO=`kubectl get deployment -n $NS idm -o json | jq -r .spec.template.spec.containers[0].image | awk -F/ {'print $1'}`
+```
 
-3. Create EFS directories for CMS  
-    ```
-    sudo mkdir -p /mnt/efs/var/vols/itom/cms/data
-    sudo mkdir -p /mnt/efs/var/vols/itom/cms/conf
-    sudo mkdir -p /mnt/efs/var/vols/itom/cms/log
-    sudo chmod -R 775 /mnt/efs/var/vols/itom/cms
-    sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/cms
-    ```
+1. Create CMS Install Working Directory
+```
+mkdir -p ~/cms/2022.11
+cd ~/cms
+```
+
+2. Download / Extract CMS helm chart package  
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/ipLquypHVdCsaii/download -o ~/cms/CMS_Helm_Chart-2022.11.zip
+unzip ~/cms/CMS_Helm_Chart-2022.11.zip -d ~/cms
+tar -zxvf ~/cms/CMS_Helm_Chart-2022.11/cms-helm-charts-2022.11.tgz -C ~/cms/2022.11
+```
+
+- Edit Environment Specific PV YAML
+```
+cp ~/cms/2022.11/cms-helm-charts/samples/cms-pv.yaml ~/cms/${CLUSTER_NAME}_cms-pv.yaml
+vi ~/cms/${CLUSTER_NAME}_cms-pv.yaml
+```
+> - cms-config-volume.nfs.path: /var/vols/itom/cms/conf
+> - cms-config-volume.nfs.server: <EFS Resource FQDN>
+> - cms-config-volume.storageClassName: "itom-cms"
+> - cms-data-volume.nfs.path: /var/vols/itom/cms/data
+> - cms-data-volume.nfs.server: <EFS Resource FQDN>
+> - cms-data-volume.storageClassName: "itom-cms"
+> - cms-log-volume.nfs.path: /var/vols/itom/cms/log
+> - cms-log-volume.nfs.server: <EFS Resource FQDN>
+> - cms-log-volume.storageClassName: "itom-cms"
+
+##FUTURE_STATE cp ~/cms/2022.11/cms-helm-charts/samples/values-probe.yaml ~/cms/${CLUSTER_NAME}_cms-values-probe.yaml
+
+3. Prepare EFS / NFS directories for CMS
+```
+sudo mkdir -p /mnt/efs/var/vols/itom/cms/data
+sudo mkdir -p /mnt/efs/var/vols/itom/cms/conf
+sudo mkdir -p /mnt/efs/var/vols/itom/cms/log
+sudo chmod -R 775 /mnt/efs/var/vols/itom/cms
+sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/cms
+```
     
-    ```
-    kubectl create -f ~/cms/testing_cms-pv.yaml
-    ```
+```
+kubectl create -f ~/cms/${CLUSTER_NAME}_cms-pv.yaml
+```
 
 4. Create RDS PostgreSQL Databases for CMS
-    ```
-    export PGHOST=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST)
-    export PGUSER=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_USERNAME)
-    export PGPASSWORD=Gr33nl1ght_
+```
+export PGHOST=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST);
+export PGUSER=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_USERNAME);
+export PGPASSWORD=Gr33nl1ght_
 
-    psql -d postgres
-    
-    CREATE USER cms_ucmdb PASSWORD 'Gr33nl1ght_';
-    GRANT cms_ucmdb to dbadmin;
-    CREATE DATABASE cms_ucmdb_db OWNER cms_ucmdb;
-    
-    CREATE USER cms_autopass PASSWORD 'Gr33nl1ght_';
-    GRANT cms_autopass to dbadmin;
-    CREATE DATABASE cms_autopass_db OWNER cms_autopass; 
-    
-    CREATE USER cms_probe PASSWORD 'Gr33nl1ght_';
-    GRANT cms_probe to dbadmin;
-    CREATE DATABASE cms_probe_db OWNER cms_probe;
+psql -d postgres
+```
 
-    \c cms_ucmdb_db
-    CREATE SCHEMA ucmdb AUTHORIZATION cms_ucmdb;
-    ALTER USER cms_ucmdb SET search_path TO ucmdb;
+```
+CREATE USER cms_ucmdb PASSWORD 'Gr33nl1ght_';
+GRANT cms_ucmdb to dbadmin;
+CREATE DATABASE cms_ucmdb_db OWNER cms_ucmdb;
 
-    \c cms_autopass_db
-    CREATE SCHEMA autopass AUTHORIZATION cms_autopass;
-    ALTER USER cms_autopass SET search_path TO autopass;
+CREATE USER cms_autopass PASSWORD 'Gr33nl1ght_';
+GRANT cms_autopass to dbadmin;
+CREATE DATABASE cms_autopass_db OWNER cms_autopass; 
 
-    \c cms_probe_db
-    CREATE SCHEMA probe AUTHORIZATION cms_probe;
-    ALTER USER cms_probe SET search_path TO probe;
+CREATE USER cms_probe PASSWORD 'Gr33nl1ght_';
+GRANT cms_probe to dbadmin;
+CREATE DATABASE cms_probe_db OWNER cms_probe;
 
-    \q
-    ```
+\c cms_ucmdb_db
+CREATE SCHEMA ucmdb AUTHORIZATION cms_ucmdb;
+ALTER USER cms_ucmdb SET search_path TO ucmdb;
+
+\c cms_autopass_db
+CREATE SCHEMA autopass AUTHORIZATION cms_autopass;
+ALTER USER cms_autopass SET search_path TO autopass;
+
+\c cms_probe_db
+CREATE SCHEMA probe AUTHORIZATION cms_probe;
+ALTER USER cms_probe SET search_path TO probe;
+
+\q
+```
 
 5. Create CMS Integration Admin
-  > Login to IDM-Admin service for SYSBO Organization
-  > Create SYSTEM user = cms-integration-admin
-  > Add cms-integration-admin to Administrators Group
+> Login to IDM-Admin service for SYSBO Organization
+> Create SYSTEM user = cms-integration-admin
+> Add cms-integration-admin to Administrators Group
 
 6. Set values in cms-values.yaml
   > global.externalAccessHost: <cluster>-cms.<domain> (testing-cms.dev.gitops.com)
   > global.externalAccessPort: 443
   > ADD :: global.k8sProvider: aws
   > 
+```
+cp ~/cms/2022.11/cms-helm-charts/samples/values-with-smax.yaml ~/cms/${CLUSTER_NAME}_cms-values.yaml
+vi ~/cms/${CLUSTER_NAME}_cms-values.yaml
+```
+> - global.acceptEula: true
+> - global.externalAccessHost: <CLUSTER_NAME>-oo.<DOMAIN>
+> - global.externalAccessPort: 443
+> - ADD:: global.k8sProvider: aws
+> - global.docker.registry: <AWS ECR Repository for CLUSTER>
+> - global.idm.idmAuthUrl: <CLUSTER_NAME>.<DOMAIN>:443/idm-service
+> - global.idm.idmServiceUrl: <CLUSTER_NAME>-int.<DOMAIN>:2443/idm-service
+> - global.idm.idmIntegrationAdmin: cms-integration-admin
+> - global.database.host: <CLUSTER RDS Instance FQDN>
+> - global.database.port: 5432
+> - global.database.type: postgresql
+> - global.database.tlsEnabled: false
+> - global.persistence.dataVolumeStorageClassName: itom-cms
+> - global.persistence.configVolumeStorageClassName: itom-cms
+> - global.persistence.logVolumeStorageClassName: itom-cms
+> - ucmdbserver.deployment.database.user: cms_ucmdb
+> - ucmdbserver.deployment.database.dbName: cms_ucmdb_db
+> - ucmdbserver.deployment.database.schema: ucmdb
+> - autopass.deployment.database.user: cms_autopass
+> - autopass.deployment.database.dbName: cms_autopass_db
+> - autopass.deployment.database.schema: autopass
+> - ucmdbprobe.deployment.database.user: cms_probe
+> - ucmdbprobe.deployment.database.dbName: cms_probe_db
+> - ucmdbprobe.deployment.database.schema: probe
+> - ucmdbprobe.deployment.discoverCloud: true
+> - itom-ingress-controller.nginx.service.httpsPort: 30443
+> - ADD:: itom-ingress-controller.nginx.service.external.type: NodePort
+> - cmsGateway.deployment.smax.host: <CLUSTER_NAME>-int.<DOMAIN>
+> - cmsGateway.deployment.smax.port: 2443
+> - cmsGateway.deployment.sam.host: <CLUSTER_NAME>-int.<DOMAIN>
+> - cmsGateway.deployment.sam.port: 2443
+> - cmsGateway.deployment.sam.context: <CLUSTER_NAME>-int.<DOMAIN>
 
 7. Create OMT Deployment for CMS
   ```
@@ -94,7 +163,7 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
 
 8. Generate CMS vault secrets
   ```
-  /opt/smax/2022.11/scripts/gen_secrets.sh -n cms -c ~/cms/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz -o ~/cms/testing_cms-secrets.yaml
+  /opt/smax/2022.11/scripts/gen_secrets.sh -n cms -c ~/cms/2022.11/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz -o ~/cms/testing_cms-secrets.yaml
   ```
   > `export ITOM_BO_UI_POD=$(kubectl get pods -n $NS | grep -m1 itom-bo-login | awk '{print $1}')`
   > Get IDM Signing Key from /BO
@@ -115,11 +184,16 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-smax-images.yaml
     IDM_TRANSPORT_USER_PASSWORD_KEY=$(echo -n $IDM_TRANSPORT_USER_PASSWORD|base64)
     echo $IDM_TRANSPORT_USER_PASSWORD
     ```
-  > CMS Master Key = Gr33nL1ghtGroupMasterKey_CMSPass
+  > CMS Master Key = Gr33nL1ghtGroupMasterKey_202211
+
+*IMPORTANT* After createing secrets file you need to update it for the shared idm - MF script and steps found @ https://docs.microfocus.com/doc/SMAX/2022.11/CmsGenerateVaultEks
+
+ADD kubernetes resource detail and kubectl create secret
+
 
 9. HELM Install CMS
   ```
-  /opt/smax/2022.11/bin/helm install cms ~/cms/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz --namespace cms -f ~/cms/testing_cms-secrets.yaml -f ~/cms/testing_cms-values-with-smax.yaml
+  /opt/smax/2022.11/bin/helm install cms ~/cms/2022.11/cms-helm-charts/charts/cms-1.7.0+20221100.256.tgz --namespace cms -f ~/cms/${CLUSTER_NAME}_cms-secrets.yaml -f ~/cms/${CLUSTER_NAME}_cms-values.yaml
   ```
 
 10. Create CMS Ingress (Internal & External)

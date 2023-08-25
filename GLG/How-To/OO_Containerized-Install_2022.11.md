@@ -4,22 +4,22 @@
 ---
 
 ## Deployment Steps
- > - Backup Cluster before making ANY changes
- > - Download and Extract OO helm charts
- > - Create OO Deployment in OMT
- > - Prepare NFS/EFS directories for OO PVs
- >   - Prepare PV / PVC for OO
- > - Create Databases for OO
- > - 
+> - Backup Cluster before making ANY changes
+> - Download and Extract OO helm charts
+> - Create OO Deployment in OMT
+> - Prepare NFS/EFS directories for OO PVs
+>   - Prepare PV / PVC for OO
+> - Create Databases for OO
+> - 
  
 ## Install OO Containerized - 2022.11
 
-### Backup Cluster and SUITE before making any changes  
+### Backup Cluster and SUITE before making any changes
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
     
 ### Download and extract OO Charts  
 ```
-mkdir ~/oo
+mkdir -p ~/oo
 ```
 
 > OO_2022.11
@@ -178,6 +178,7 @@ vi ~/oo/${CLUSTER_NAME}_oo-values.yaml
 > - global.database.port: 5432
 > - global.idm.idmAuthUrl: <SMAX Integration FQDN>:2443/idm-service
 > - global.idm.idmServiceUrl: <SMAX FQDN>:443/idm-service
+> - global.idm.tenant: sysbo
 > - global.smaxFqdn: <SMAX FQDN>
 
 ### Install OO

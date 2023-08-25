@@ -36,7 +36,7 @@
         ns_info: "{{ ns_list | to_json | from_json | json_query(jq) | first }}"
       debug:
         msg: "ITSMA Namespace = {{ ns_info }}"
-
+    
     - name: 'Output: Cluster Config'
       vars:
         #jq: "resources[?contains(metadata.name, 'itsma')].metadata.name"
@@ -45,11 +45,11 @@
         msg: |
           " CLUSTER FQDN = {{ cm_info.EXTERNAL_ACCESS_HOST }}"
           "SUITE VERSION = {{ cm_info.PLATFORM_VERSION }}"
-
+    
     - set_fact:
         env_ns: "{{ ns_list | to_json | from_json | json_query(\"resources[?contains(metadata.name, 'itsma')].metadata.name\") | first }}"
         env_cluster: "{{ cm_list.resources[0].data }}"
-
+    
     - name: 'Setup /etc/motd'
       blockinfile:
         path: /etc/motd
