@@ -29,13 +29,13 @@ These steps should be performed using the Cluster Control Node you want the back
 1. SSH Login to the **Control Node** for the Cluster to be backed up
 2. Execute Ansible playbook
 
-> To execute the playbook update the command below with the following values depending on your environment
-> - full_name (FQDN of the cluster)
-> - backup_name (Name used in Velero to identify the backup. **This must be unique**)
-> - snap_string (Name used in AWS RDS to identify the backup/snapshot. **This must be unique**)
-> > If this backup is to be taken in Production include the following additional input
+> The playbook uses an Ansible vault to retrieve AWS credentials and will require the use of a Vault Password  
+> To execute the playbook update the command below with the following values depending on your environment  
+> - full_name (FQDN of the cluster)  
+> - backup_name (Name used in Velero to identify the backup. **This must be unique**)  
+> - snap_string (Name used in AWS RDS to identify the backup/snapshot. **This must be unique**)  
+> > If this backup is to be taken in Production include the following additional input  
 > > - prod=true  
-> The playbook uses an Ansible vault to retrieve AWS credentials and will require the use of a Vault Password
 
 *Example Command for testing.dev.gitops.com*  
 ```
