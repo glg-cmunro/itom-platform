@@ -34,7 +34,7 @@ These steps should be performed using the Cluster Control Node you want the back
 > - backup_name (Name used in Velero to identify the backup. **This must be unique**)
 > - snap_string (Name used in AWS RDS to identify the backup/snapshot. **This must be unique**)
 > > If this backup is to be taken in Production include the following additional input
-> > - prod=true
+> > - prod=true  
 > The playbook uses an Ansible vault to retrieve AWS credentials and will require the use of a Vault Password
 
 *Example Command for testing.dev.gitops.com*  
