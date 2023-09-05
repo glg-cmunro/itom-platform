@@ -57,5 +57,11 @@ ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-smax-upgrade-backup-all
 ##### Steps to verify backup is complete
 
 1. Verify Velero backup
+```
+velero get backup -n velero
+```
+Check for your backup and look for the STATUS 'Completed'  
+![Velero Backups](./images/AWS_BackupCluster-veleroBackup.png)
+
 2. Verify EFS backup
 3. Verify RDS backup
