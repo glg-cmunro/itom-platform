@@ -13,10 +13,10 @@ These steps should be performed using the Cluster Control Node you want the back
 
 ##### NOTES:
 > Velero Backup Name must be unique with each execution or the playbook will fail  
-> Ansible modules required:  
-> > community.aws
+> Ansible modules required:
+> > community.aws  
 > > ```ansible-galaxy collection install community.aws```  
-> > kubernetes.core
+> > kubernetes.core  
 > > ```ansible-galaxy collection install kubernetes.core```  
 
 - Playbook: aws-smax-upgrade-backup-all.yaml
