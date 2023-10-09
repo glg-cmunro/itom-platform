@@ -117,3 +117,61 @@ ls -l /usr/local/itom-di-pulsarudx/conf
 sudo /usr/local/itom-di-pulsarudx/bin/dbinit.sh genconfig
 sudo /usr/local/itom-di-pulsarudx/bin/dbinit.sh -w AFCUp@\$\$w0rd2020 -v
 AFCUp@$$w0rd2020
+
+
+### Upgrade Helm chart for Storage Provisioner
+sudo helm get values -n core lpv > hvalues-lpv.yaml
+sudo helm upgrade lpv /opt/cdf/charts/itom-kubernetes-local-storage-provisioner-2.3.3-230.tgz -n core
+
+### Update PVs
+> storageclassname  
+sudo kubectl edit pv opsbvol5
+sudo kubectl edit pv opsbvol6
+
+
+### Create ArtemisPV
+vi artemispv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: opsbvol7
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  nfs:
+    path: /var/vols/itom/opsbvol7
+    server: lxot-optic-nfs.afcucorp.test
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+#On the NFS server
+---
+sudo mkdir -p /var/vols/itom/opsbvol7
+sudo chown -R 1999:1999 /var/vols/itom/opsbvol7
+sudo vi /etc/exports
+sudo exportfs -ra
+sudo exportfs
+---
+
+sudo kubectl -f artemispv.yaml
+
+### Download container images
+sudo /opt/cdf/tools/generate-download/generate_download_bundle.sh --chart /opt/glg/2022.11/OBM/opsbridge-suite-chart/charts/opsbridge-suite-2.4.0+20221100.457.tgz -d /opt/glg/2022.11/
+sudo /opt/cdf/tools/generate-download/generate_download_bundle.sh --chart /opt/glg/2022.11.P3/opsbridge-suite-chart/charts/opsbridge-suite-2.4.3+20221103.100.tgz -d /opt/glg/2022.11.P3/
+
+sudo unzip /opt/glg/2022.11/offline-download.zip -d /opt/glg/2022.11/
+sudo unzip /opt/glg/2022.11.P3/offline-download.zip -d /opt/glg/2022.11.P3/
+
+cd /opt/glg/2022.11/offline-download
+sudo ./downloadimages.sh -o hpeswitom -u dockerhubglg -d /opt/glg/2022.11/images
+sudo /opt/glg/2022.11.P3/offline-download/downloadimages.sh -o hpeswitom -u dockerhubglg -d /opt/glg/2022.11.P3/images
+sudo ./uploadimages.sh -d /opt/glg/2022.11/images -u registry-admin
+sudo /opt/glg/2022.11.P3/offline-download/uploadimages.sh -d /opt/glg/2022.11.P3/images -u registry-admin
+
+sudo /opt/cdf/tools/generate-download/generate_download_bundle.sh --chart /opt/glg/2021.11.P2/opsbridge-suite-chart/charts/opsbridge-suite-2.2.5+20211105.39.tgz -d /opt/glg/2021.11.P2/
+sudo unzip /opt/glg/2021.11.P2/offline-download.zip -d /opt/glg/2021.11.P2/
+sudo /opt/glg/2021.11.P2/offline-download/downloadimages.sh -o hpeswitom -u dockerhubglg -d /opt/glg/2021.11.P2/images
+sudo /opt/glg/2021.11.P2/offline-download/uploadimages.sh -d /opt/glg/2021.11.P2/images -u registry-admin
