@@ -37,25 +37,29 @@ OpenText doc steps: [Install Audit Service]
  > - Post Install - Deploy to
  > - Configure GLG Profile on Control Node
 
-# Install AUDIT - 2022.11
+## Install AUDIT - 2022.11
 
 > Backup Cluster and SUITE before making any changes  
 > [AWS Backup Cluster](./AWS_BackupCluster.md)
     
-    #Download and extract AUDIT Charts
-    ```
-    mkdir -p ~/audit/2022.11
-    ```
-    #-AUDIT_Service_2022.11
-    curl -kLs https://owncloud.gitops.com/index.php/s/3qqilJPGGPvur9j/download -o ~/audit/audit-2022.11.zip
-    unzip ~/audit/audit-2022.11.zip -d ~/audit/2022.11
-    tar -xvf ~/audit/2022.11/auditpkg-1.0.0+202211008.1.tgz -C ~/audit/2022.11/
-    cp ~/audit/2022.11/audit-helm-chart/audit/samples/itom-audit-pv.yaml ~/audit/
+### Download and extract AUDIT Charts
+```
+mkdir -p ~/audit/2022.11
+```
+> AUDIT_Engine_2022.11
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/3qqilJPGGPvur9j/download -o ~/audit/audit-2022.11.zip
+unzip ~/audit/audit-2022.11.zip -d ~/audit/2022.11
+tar -xvf ~/audit/2022.11/auditpkg-1.0.0+202211008.1.tgz -C ~/audit/2022.11/
+cp ~/audit/2022.11/audit-helm-chart/audit/samples/itom-audit-pv.yaml ~/audit/
+```
 
-    #-AUDIT_Collector_2022.11
-    curl -kLs https://owncloud.gitops.com/index.php/s/QKczOElXkZCB86P/download -o ~/audit/audit-collector-2022.11.zip
-    unzip ~/audit/audit-collector-2022.11.zip -d ~/audit/2022.11/
-    tar -xvf ~/audit/2022.11/auditcollectorpkg-1.0.0+202211008.2.tgz -C ~/audit/2022.11/
+> AUDIT_Collector_2022.11
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/QKczOElXkZCB86P/download -o ~/audit/audit-collector-2022.11.zip
+unzip ~/audit/audit-collector-2022.11.zip -d ~/audit/2022.11/
+tar -xvf ~/audit/2022.11/auditcollectorpkg-1.0.0+202211008.2.tgz -C ~/audit/2022.11/
+```
 
     #DOWNLOAD Images if not already downloaded
 
@@ -130,9 +134,8 @@ OpenText doc steps: [Install Audit Service]
     helm upgrade audit ~/audit/2022.11/audit-helm-chart/audit/charts/audit-1.0.0+202211008.1.tgz -n audit --reuse-values --set-file "caCertificates.RE_ca_intAlb"=/home/cmunro/testing.dev.gitops.com.cer --set-file "caCertificates.RE_ca_idmcrt"=/home/cmunro/testing.dev.gitops.com.cer
     
     #Create AUDIT IDM Admin account
-    https://recovery2.dev.gitops.com/idm-admin
-    https://optic.dev.gitops.com/idm-admin
     https://smax-west.gitops.com/idm-admin
+    https://qa.dev.gitops.com/idm-admin
     https://testing.dev.gitops.com/idm-admin
     Username: audit-integration-admin
     Pass: <Keep track of this for the audit-engine-secret>
@@ -148,9 +151,27 @@ OpenText doc steps: [Install Audit Service]
     kubectl rollout restart deployment -n $NS idm
 
     #Setup audit-client-cfg.properties
-    kubectl exec -ti -n $NS $(kubectl get pods -n $NS | grep platform | head -n1 | awk {'print $1'}) -c itom-xruntime-platform -- bash
+
+    #Verify audit-client-cfg.properties
+    kubectl exec -ti -n $NS deployment/itom-xruntime-platform -c itom-xruntime-platform -- bash
+    cat $AUDIT_CONFIG_PATH/audit-client-cfg.properties
     
-    
+    kubectl exec -ti -n $NS deployment/idm -c idm -- cat /var/audit/audit-client-cfg.properties
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     #Generate OO secrets
     /opt/smax/2022.11/scripts/gen_secrets.sh -n oo -c ~/oo/oo_chart/oo-1.0.3+20221101.8/oo-helm-charts/charts/oo-1.0.3+20221101.8.tgz
     

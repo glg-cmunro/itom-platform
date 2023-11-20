@@ -1,4 +1,10 @@
 1. Check local environment executables
+2. Check Images Repository for correct images
+
+POST Upgrade Checks:
+1. Check Alertmanager config
+2. Check Promethues config
+3. Check Prometheus metrics collected (Gitops Metrics)
 
 - AWS CLI Client version
 ```
@@ -15,15 +21,19 @@ kubectl version
    > - 1.22: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.17/2023-01-11/bin/linux/amd64/kubectl
    > - 1.23: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.15/2023-01-11/bin/linux/amd64/kubectl
    > - 1.24: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.24.9/2023-01-11/bin/linux/amd64/kubectl
-   > - 1.24: curl -O 
-   > - 1.25: curl -O 
-   > - 1.26: curl -O 
+   > - 1.24: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.24.17/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.25: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.25.13/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.26: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.26.8/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.27: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.5/2023-09-14/bin/linux/amd64/kubectl
 
  - Kubernetes Client for Rocky Linux
    > - Latest: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
    
- - Helm Client
-   - `helm version`
+- Helm Client
+```
+helm version
+which helm
+```
 
 # Control Node vinaries upgrade steps
 1. AWS CLI
