@@ -1,5 +1,5 @@
-# GreenLight Group - How To  
-## GITOpS Deployment Documentation: SMAX 2023.05 Patch 7 
+# GreenLight Group - How To
+## GITOpS Deployment Documentation: SMAX 2023.05 Patch
 ![alt text](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png "GreenLight Logo")
 #### Apply Patches to both OMT 2023.05 and SMAX 2023.05(.P1)
 ###### Upgrade OMT to 2023.05.P3 and SMAX to 2023.05.P7  
