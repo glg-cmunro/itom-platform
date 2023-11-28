@@ -9,7 +9,7 @@
 > - Create OMT upgrade working directory
 > - Download and Extract OMT patch
 > - Apply the OMT Patch
-> - Download and Extract SMAX patch metadata
+> - Download SMAX patch metadata
 > - Upload SMAX patch metadata
 > - Apply SMAX Patch
 
@@ -39,13 +39,43 @@ cd ~/omt/2023.05.P3/OMT_2023.05.P3-30/
 ~/omt/2023.05.P3/OMT_2023.05.P3-30/patch.sh --apply
 ```
 
-ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml -e full_name=testing.dev.gitops.com -e image_set_file=/opt/glg/aws-smax/BYOK/2023.05/2023.05_suite.P7-image-set.json
+> #OneTimeOnly - Upload Images
+> ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml -e full_name=testing.dev.gitops.com -e image_set_file=/opt/glg/aws-smax/BYOK/2023.05/2023.05_suite.P7-image-set.json
 
 
-![Add Metadata](./images/smax-2023.05.P7/addMetadata.png "Add Metadata")
-![Suite ToUpdate](./images/smax-2023.05.P7/suiteToUpdate.png "Suite ToUpdate")
-![Suite Patches](./images/smax-2023.05.P7/suitePatches.png "Suite Patches")
-![Patch 01 - Current Version](./images/smax-2023.05.P7/patch01-currentVersion.png "Patch 01 - Current Version")
-![Patch 02 - Images](./images/smax-2023.05.P7/patch02-images.png "Patch 02 - Images")
-![Patch 04 - Storage](./images/smax-2023.05.P7/patch04-storage.png "Patch 04 - Storage")
-![Patch 05 - Apply](./images/smax-2023.05.P7/patch05-apply.png "Patch 05 - Apply")
+### Refresh ECR registry secret prior to patching
+```
+ansible-playbook aws-refresh-secrets.yaml -e full_name=smax-west.gitops.com -e prod=true --ask-vault-pass
+```
+
+### Download SMAX patch metadata
+Download the SMAX patch metadata to load in OMT Management Portal  
+> SMAX 2023.05.P7 - itsma-suite-metadata-2023.05.P7-b4.tgz 
+- https://owncloud.gitops.com/index.php/s/14kd2rvajtlW5YV
+
+#### Upload SMAX Patch metadata  
+Login to the OMT Management Portal
+- https://smax-west.gitops.com:5443
+
+Navigate to the Metadata section
+- Deployment --> Metadata  
+
+Click 'ADD' and select the metadata file (downloaded in the previous step)  
+- Ensure you check 'Overwrite' checkbox  
+![Add Metadata](./images/smax-2023.05.P7/addMetadata.png "Add Metadata")  
+
+Once uploaded the deployments will show updates available  
+![Suite ToUpdate](./images/smax-2023.05.P7/suiteToUpdate.png "Suite ToUpdate")  
+
+Apply Patch  
+- Follow the steps in the UI
+![Suite Patches](./images/smax-2023.05.P7/suitePatches.png "Suite Patches")  
+![Patch 01 - Current Version](./images/smax-2023.05.P7/patch01-currentVersion.png "Patch 01 - Current Version")  
+
+> IMPORTANT: If you do not refresh the registrypull secret you will not be able to see the images in the OMT Management Portal  
+
+![Patch 02 - Images](./images/smax-2023.05.P7/patch02-images.png "Patch 02 - Images")  
+
+![Patch 04 - Storage](./images/smax-2023.05.P7/patch04-storage.png "Patch 04 - Storage")  
+
+![Patch 05 - Apply](./images/smax-2023.05.P7/patch05-apply.png "Patch 05 - Apply")  
