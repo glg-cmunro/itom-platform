@@ -62,13 +62,15 @@ Navigate to the Metadata section
 
 Click 'ADD' and select the metadata file (downloaded in the previous step)  
 - Ensure you check 'Overwrite' checkbox  
+
 ![Add Metadata](./images/smax-2023.05.P7/addMetadata.png "Add Metadata")  
 
 Once uploaded the deployments will show updates available  
 ![Suite ToUpdate](./images/smax-2023.05.P7/suiteToUpdate.png "Suite ToUpdate")  
 
 Apply Patch  
-- Follow the steps in the UI
+- Follow the steps in the UI  
+
 ![Suite Patches](./images/smax-2023.05.P7/suitePatches.png "Suite Patches")  
 ![Patch 01 - Current Version](./images/smax-2023.05.P7/patch01-currentVersion.png "Patch 01 - Current Version")  
 
