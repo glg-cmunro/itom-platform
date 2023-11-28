@@ -20,6 +20,7 @@
 > [AWS Backup Cluster](./AWS_Cluster-Backup.md)
 
 ### Create OMT upgrade working directory
+Execute theses steps on the Control Node for the cluster  
 ```
 mkdir -p ~/omt/2023.05.P3
 ```
