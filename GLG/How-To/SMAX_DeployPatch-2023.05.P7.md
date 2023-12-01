@@ -83,3 +83,35 @@ Apply Patch
 ![Patch 04 - Storage](./images/smax-2023.05.P7/patch04-storage.png "Patch 04 - Storage")  
 
 ![Patch 05 - Apply](./images/smax-2023.05.P7/patch05-apply.png "Patch 05 - Apply")  
+
+
+### Download and Extract CMS Patch
+```
+mkdir -p ~/cms/2023.05.P5
+curl -kiL https://owncloud.gitops.com/index.php/s/eDpfauYAWG4xelD/download -o ~/cms/2023.05.P5/PH_212452_CMS_2023.05.P5_Containerized.zip
+unzip ~/cms/2023.05.P5/PH_212452_CMS_2023.05.P5_Containerized.zip -d ~/cms/2023.05.P5/
+tar -zxvf ~/cms/2023.05.P5/cms-helm-charts-1.8.5+20230505.452.tgz -C ~/cms/2023.05.P5/
+```
+
+> #OneTimeOnly - Upload Images  
+> This only needs to be done once per AWS Environment, not per cluster 
+```
+/opt/cdf/tools/generate-download/generate_download_bundle.sh --chart ~/cms/2023.05.P5/cms-helm-charts/charts/cms-1.8.5+20230505.452.tgz -o hpeswitom -d ~/cms/2023.05.P5/
+```
+```
+unzip ~/cms/2023.05.P5/offline-download.zip -d ~/cms/2023.05.P5/
+cp ~/cms/2023.05.P5/offline-download/image-set.json /opt/glg/aws-smax/BYOK/2023.05/2023.05_cms.P5-image-set.json
+```
+> For Non-Prod AWS environments  
+```
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml -e full_name=testing.dev.gitops.com -e image_set_file=/opt/glg/aws-smax/BYOK/2023.05/2023.05_cms.P5-image-set.json
+```
+> For Production AWS environment
+```
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml -e full_name=smax-west.gitops.com -e prod=true -e aws_region=us-west-2 -e image_set_file=/opt/glg/aws-smax/BYOK/2023.05/2023.05_cms.P5-image-set.json
+```
+
+### Deploy CMS Patch
+```
+helm upgrade -n cms cms ~/cms/2023.05.P5/cms-helm-charts/charts/cms-1.8.5+20230505.452.tgz --reuse-values
+```
