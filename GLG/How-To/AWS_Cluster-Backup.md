@@ -17,9 +17,7 @@ These steps should be performed using the Cluster Control Node you want the back
 > > community.aws  
 > > ```ansible-galaxy collection install community.aws```  
 > > kubernetes.core  
-> > ```
-ansible-galaxy collection install kubernetes.core
-```  
+> > ```ansible-galaxy collection install kubernetes.core```  
 
 - Playbook: aws-smax-upgrade-backup-all.yaml
 - Required inputs: Cluster FQDN, Backup Name, RDS Snapshot Name
