@@ -49,14 +49,6 @@ sudo /opt/cdf/bin/cdfctl node add --node lxot-optic-wrk5.afcucorp.test --node-ty
 sudo /opt/cdf/bin/cdfctl node add --node lxot-optic-wrk5.afcucorp.test --node-type worker --node-user=jmunro.admin --skip-warning=true
 ```
 
-### Download the NOM Helm chart (embedded)
-
-```
-mkdir -p /opt/glg/nom/2022.11
-#Upload nom-helm-chart to /opt/glg/nom/2022.11
-tar -zxvf /opt/glg/nom/2022.11/nom-helm-charts-1.8.0.20221100.353.tgz -C /opt/glg/nom/2022.11/
-```
-
 ################################################################################
 #####                   INSTALLATION - REQUIRED PACKAGES                   #####
 ################################################################################
@@ -68,6 +60,8 @@ sudo dnf install -y postgresql14-server
 ## Setup PostgreSQL DB
 sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
 
+> AFCU SIT  
+```
 cat >> /var/lib/pgsql/14/data/pg_hba.conf << EOF
 #OpenText OPTIC Connections:
 host    all             all             10.30.224.0/23            trust
@@ -103,37 +97,121 @@ autovacuum = on
 #timezone = 'UTC'
 ## OPTIC Edits - NOM 2022.11
 EOT
+```
+
+> AFCU PROD  
+```
+cat >> /pgdata/14/data/pg_hba.conf << EOF
+#OpenText OPTIC Connections:
+host    all             all             10.6.9.0/23            trust
+host    all             all             17.16.0.0/20           trust
+host    all             all             172.17.17.0/24          trust
+EOF
+
+sed -e "/max_connections/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
+sed -e "/shared_buffers/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
+
+cat <<EOT >> /pgdata/14/data/postgresql.conf
+## OPTIC Edits - NOM 2022.11
+listen_addresses = '*'
+max_connections = 450
+shared_buffers = 6GB
+effective_cache_size = 18GB
+maintenance_work_mem = 1536MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100
+random_page_cost = 4
+effective_io_concurrency = 2
+work_mem = 15728kB
+min_wal_size = 1GB
+max_wal_size = 4GB
+max_worker_processes = 8
+max_parallel_workers_per_gather = 4
+max_parallel_workers = 8
+max_parallel_maintenance_workers = 4
+
+track_counts = on
+autovacuum = on
+#timezone = 'UTC'
+## OPTIC Edits - NOM 2022.11
+EOT
+```
 
 systemctl restart postgresql-14.service
+
+
+### Download the NOM Helm chart (embedded)
+
+```
+mkdir -p /opt/glg/nom/2022.11
+#Upload nom-helm-chart to /opt/glg/nom/2022.11
+curl -kLs https://owncloud.gitops.com/index.php/s/Eal9Gy7Aq3wvOwh/download -o /opt/glg/nom/2022.11/nom-helm-charts-1.8.0-20221100.353.tgz
+tar -zxvf /opt/glg/nom/2022.11/nom-helm-charts-1.8.0-20221100.353.tgz -C /opt/glg/nom/2022.11/
+```
+
 
 ### Create PostgreSQL Databases
 > On Control Plane Master  
 ```
 /opt/glg/nom/2022.11/nom-helm-charts/scripts/DBSQLGenerator.sh
 ```
+> - Do you want to deploy containerized NNMi and/or NA? - false
+> - Do you want to use OPTIC Reporting and/or Performance Troubleshooter and Incident Troubleshooting capabilities? - true
+> - Do you have an existing OPTIC Reporting instance to connect to? - true
+> - Do you want to use default database and user names, and a common password for all database users? - true
+> - #Enter Password for all databases
+> - #Confirm Password
+> - Enter the ADMIN username used to connect to the PostgreSQL database : postgres
 
+
+> Environment: SIT
 ```
 psql -h lxot-optic-pg.afcucorp.test -U postgres -f CreateSQL.sql
+```
+
+> Environment: PROD
+```
+psql -h lxo-optic-pg.afcucorp.local -U postgres -f CreateSQL.sql
 ```
 
 
 ### Create Storage Folders / PVs
 > On NFS Server  
 ```
-mkdir /var/vols/itom/nom
-chown 1999:1999 /var/vols/itom/nom
+sudo mkdir /var/vols/itom/nom
+sudo chown 1999:1999 /var/vols/itom/nom
 
 for i in {1..4}; do
-    mkdir "/var/vols/itom/nom/vol$i"
-    chown 1999:1999 "/var/vols/itom/nom/vol$i"
-    chmod g+w+s "/var/vols/itom/nom/vol$i"
+    sudo mkdir "/var/vols/itom/nom/vol$i"
+    sudo chown 1999:1999 "/var/vols/itom/nom/vol$i"
+    sudo chmod g+w+s "/var/vols/itom/nom/vol$i"
 done
 ```
 
+```
+echo -e "#OpenText NOM" | sudo tee -a /etc/exports
+for i in {1..4}; do
+    echo -e "/var/vols/itom/nom/vol$i *(rw,sync,anonuid=1999,anongid=1999,root_squash)" | sudo tee -a /etc/exports
+done
+```
+
+```
+sudo exportfs -ra
+```
+
 > On Control Plane Master    
+> - Environment: SIT  
 ```
 NFS_FQDN=lxot-optic-nfs.afcucorp.test
+```
 
+> - Environment: PROD
+```
+NFS_FQDN=lxo-optic-nfs.afcucorp.local
+```
+
+```
 cat << EOT > /opt/glg/nom/2022.11/nom_pv.yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -205,11 +283,11 @@ sudo kubectl create -f /opt/glg/nom/2022.11/nom_pv.yaml
 > On Control Plane Master  
 ```
 idmPod=$(sudo kubectl get pods -n opsb-helm | grep itom-idm | awk '{print $1}' | head -n 1)
-kubectl -n opsb-helm cp $idmPod:/var/run/secrets/boostport.com/trustedCAs/RE_ca.crt ProvRE.crt
-kubectl -n opsb-helm cp $idmPod:/var/run/secrets/boostport.com/trustedCAs/RID_ca.crt ProvRID.crt
+sudo kubectl -n opsb-helm cp $idmPod:/var/run/secrets/boostport.com/trustedCAs/RE_ca.crt /opt/glg/nom/ProvRE.crt
+sudo kubectl -n opsb-helm cp $idmPod:/var/run/secrets/boostport.com/trustedCAs/RID_ca.crt /opt/glg/nom/ProvRID.crt
 
-transportAdminPW=$(kubectl -n opsb-helm get secret opsbridge-suite-secret --template={{.data.idm_transport_admin_password}} | base64 -d)
-integrationAdminPW=$(kubectl -n opsb-helm get secret opsbridge-suite-secret --template={{.data.idm_integration_admin_password}} | base64 -d)
+transportAdminPW=$(sudo kubectl -n opsb-helm get secret opsbridge-suite-secret --template={{.data.idm_transport_admin_password}} | base64 -d)
+integrationAdminPW=$(sudo kubectl -n opsb-helm get secret opsbridge-suite-secret --template={{.data.idm_integration_admin_password}} | base64 -d)
 ```
 
 
@@ -238,19 +316,26 @@ integrationAdminPW=$(kubectl -n opsb-helm get secret opsbridge-suite-secret --te
 
 ### Download NOM images
 ```
-/opt/cdf/tools/generate-download/generate_download_bundle.sh --chart /opt/glg/nom/2022.11/nom-helm-charts/charts/nom-1.8.0+20221100.353.tgz -d /opt/glg/nom/2022.11/
+sudo $CDF_HOME/tools/generate-download/generate_download_bundle.sh --chart /opt/glg/nom/2022.11/nom-helm-charts/charts/nom-1.8.0+20221100.353.tgz -d /opt/glg/nom/2022.11/
 unzip /opt/glg/nom/2022.11/offline-download.zip -d /opt/glg/nom/2022.11/
-rm /opt/glg/nom/2022.11/offline-download.zip
+rm -f /opt/glg/nom/2022.11/offline-download.zip
 
 /opt/glg/nom/2022.11/offline-download/downloadimages.sh -u dockerhubglg -d /opt/glg/nom/2022.11/images -o hpeswitom
 /opt/glg/nom/2022.11/offline-download/uploadimages.sh -d /opt/glg/nom/2022.11/images -o hpeswitom
-
 ```
 
 ## Deploy NOM
 ### Create NOM namespace
 
+> - Environment: SIT
+```
 /opt/cdf/bin/cdfctl deployment create -t helm -d nom -n nom-sit
+```
+
+> - Environment: PROD
+```
+sudo $CDF_HOME/bin/cdfctl deployment create -t helm -d nom -n nom-prd
+```
 
 ### Upload NOM chart to Apphub
 > Login to Apphub portal
