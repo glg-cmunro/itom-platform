@@ -58,3 +58,17 @@ helm get values oo -n oo > ~/oo/2023.05/oo_values-2022.11.yaml.bak
 ```
 helm upgrade oo -n oo ~/oo/2023.05/oo-helm-charts-1.1.0-20230501.15/oo-helm-charts/charts/oo-1.1.0+20230501.15.tgz -f ~/oo/2023.05/oo_values-2022.11.yaml.bak --timeout 30m
 ```
+
+
+### Enable OO Bits Download for Tenant
+> Required:  
+> - SMAX FQDN
+> - TENANT_ID
+> - INTEGRATION PASSWORD (for bo-integration user)
+> - OO FQDN
+```
+kubectl exec -ti -n $NS deploy/itom-toolkit -c itom-toolkit -- bash
+cd /toolkit && python3 /toolkit/enable_download/enable_download.py <SMAX FQDN> <TENANT_ID> bo-integration@dummy.com <INTEGRATION PASSWORD> https://<OO FQDN>:443/oo/downloader OO_DOWNLOAD_SERVICE
+```
+*Example command from the SMA Support Assistant for SMAX-WEST GreenLight Prod Tenant*
+> cd /toolkit && python3 /toolkit/enable_download/enable_download.py smax-west.gitops.com 269014623 bo-integration@dummy.com Gr33nl1ght_ https://smax-west-oo.gitops.com:443/oo/downloader OO_DOWNLOAD_SERVICE
