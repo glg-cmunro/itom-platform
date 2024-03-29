@@ -2,9 +2,9 @@ cat << EOT > ~/gitops-alertmanager-config.tmp
 global:
   smtp_smarthost: "email-smtp.us-east-1.amazonaws.com:587"
   smtp_from: prometheus_testing@greenlightgroup.com
-  smtp_auth_username: AKIAZSYWGF44FCYIELPD
-  smtp_auth_identity: AKIAZSYWGF44FCYIELPD
-  smtp_auth_password: RK3wLnvOVHHflZZ/Qj95Apumw4zDI/NcUE3On/SE
+  smtp_auth_username: <AWS_KEY>
+  smtp_auth_identity: <AWS_KEY>
+  smtp_auth_password: <AWS_SECRET>
   resolve_timeout: 5m
 route:
   receiver: "gitops-email-receiver"
