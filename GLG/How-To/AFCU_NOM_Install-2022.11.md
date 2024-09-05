@@ -57,7 +57,16 @@ sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-
 sudo dnf -qy module disable postgresql
 sudo dnf install -y postgresql14-server
 
+
+
 ## Setup PostgreSQL DB
+sudo systemctl edit postgresql-14.service
+##Add the following contents 'vi style' - without the comments
+#[Service]
+#Environment=PGDATA=/pgdata/14/data
+
+sudo systemctl daemon-reload
+
 sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
 
 > AFCU SIT  

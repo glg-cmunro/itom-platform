@@ -46,6 +46,7 @@ inhibit_rules:
   equal:
   - namespace
 receivers:
+- name: "null"
 - name: "gitops-email-receiver"
   email_configs:
   - to: "chris@greenlightgroup.com,brian@greenlightgroup.com"
@@ -57,7 +58,6 @@ receivers:
   webhook_configs:
   - url: https://connect.signl4.com/webhook/8ypkwkvxxb
     send_resolved: true
-- name: "null"
 templates:
 - /etc/alertmanager/config/*.tmpl
 - /data/alertmanager/templates/*.tmpl
@@ -73,3 +73,21 @@ amconfigsecret=$(kubectl get secret -n core alertmanager-itom-prometheus-alertma
 
 kubectl patch secret -n core alertmanager-itom-prometheus-alertmanager -p '{"data":{"alertmanager.yaml":"'"$amconfigstring"'"}}'
 kubectl patch secret -n core alertmanager-itom-prometheus-alertmanager-generated -p '{"data":{"alertmanager.yaml.gz":"'"$amconfiggzstring"'"}}'
+
+
+
+######
+# Patch Prometheus
+######
+kubectl patch prometheus -n core itom-prometheus-prometheus --type='json' -p='[{"op": "replace", "path": "/spec/externalUrl", "value": "https://smax-west.gitops.com:5443/prometheus"}]'
+
+
+######
+# Patch Alertmanager
+######
+kubectl patch alertmanager -n core itom-prometheus-alertmanager --type='json' -p='[{"op": "replace", "path": "/spec/externalUrl", "value": "https://smax-west.gitops.com:5443/alertmanager"}]'
+
+
+kubectl patch alertmanager -n core itom-prometheus-alertmanager --type='json' -p='[{"op": "add", "path": "/spec/volumes/2", "value": {"name": "gitops-volume", "configMap": {"name": "gitops-alertmanager-email-template"}}'
+
+spec.volumes[2].[{}]
