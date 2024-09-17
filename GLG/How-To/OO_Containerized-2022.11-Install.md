@@ -10,7 +10,10 @@
  > - Prepare NFS/EFS directories for OO PVs
  >   - Prepare PV / PVC for OO
  > - Create Databases for OO
+ > - Create IDM Admin account for OO
+ > - Prepare oo-secrets
  > - 
+ > - Download and Extract OO Patch 3 helm charts
  
 ## Install OO Containerized - 2022.11
 
@@ -27,18 +30,13 @@ mkdir ~/oo
 curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo/oo-1.0.3-20221101.8.zip
 unzip ~/oo/oo-1.0.3-20221101.8.zip -d ~/oo/2022.11
 ```
-> OO_2022.11.P3
-```
-curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
-unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
-```
 
 ### Create OO Deployment in OMT
 ```
 /opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
 ```
 
-### Create NFS/EFS directories for OO PVs
+### Prepare NFS/EFS directories for OO PVs
 ```
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
@@ -239,6 +237,12 @@ vi ~/oo/${CLUSTER_NAME}_oo-values.yaml
 
     helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="install" --set global.secretStorageType="null" --timeout 30m
 
+### Download and extract OO Charts  
+> OO_2022.11.P3
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
+unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
+```
 
 ##### Enable OO RAS and Designer downloads from Endpoint Manager
 [OpenText DOC: Customize OO Download Link](https://docs.microfocus.com/doc/SMAX/2022.11/CustomizeOODownloadLinks)

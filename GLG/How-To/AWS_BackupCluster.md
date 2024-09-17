@@ -9,16 +9,17 @@
 ---
 
 #### System Prep
-These steps should be performed using the Cluster Control Node you want the backups created for
+These steps should be performed using the GreenLight Control Node for the cluster you want the backups created for
 
 ##### NOTES:
 > Velero Backup Name must be unique with each execution or the playbook will fail
+> Velero Backup Name must be all lowercase alpha-numeric of the backup will fail
 > Ansible modules required:
 >     ansible-galaxy collection install community.aws
 >     ansible-galaxy collection install kubernetes.core
 
-- Playbook: aws-smax-upgrade-backup-all.yaml
-- Required inputs: Cluster FQDN, Backup Name, RDS Snapshot Name
+**Playbook:** *aws-smax-upgrade-backup-all.yaml*  
+**Required inputs:** *Cluster FQDN, Backup Name, RDS Snapshot Name*
 
 ---
 
