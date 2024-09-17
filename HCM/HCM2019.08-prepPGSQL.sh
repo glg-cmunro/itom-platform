@@ -61,6 +61,9 @@ EOF
 sed -e "/max_connections/ s/^#*/#/g" -i /var/lib/pgsql/9.6/data/postgresql.conf
 sed -e "/shared_buffers/ s/^#*/#/g" -i /var/lib/pgsql/9.6/data/postgresql.conf
 
+sed -e "/max_connections/ s/^#*/#/g" -i /var/lib/pgsql/14/data/postgresql.conf
+sed -e "/shared_buffers/ s/^#*/#/g" -i /var/lib/pgsql/14/data/postgresql.conf
+
 cat <<EOT >> /var/lib/pgsql/9.6/data/postgresql.conf
 ## CDF Edits - HCM 2019.08
 max_connections = '1000'

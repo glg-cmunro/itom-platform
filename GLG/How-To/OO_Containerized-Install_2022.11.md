@@ -17,12 +17,12 @@
  
 ## Install OO Containerized - 2022.11
 
-### Backup Cluster and SUITE before making any changes  
-> [AWS Backup Cluster](./AWS_BackupCluster.md)
-    
+### Backup Cluster and SUITE before making any changes
+> [AWS Backup Cluster](./AWS_Cluster-Backup.md)
+ 
 ### Download and extract OO Charts  
 ```
-mkdir ~/oo
+mkdir -p ~/oo
 ```
 
 > OO_2022.11
@@ -176,6 +176,7 @@ vi ~/oo/${CLUSTER_NAME}_oo-values.yaml
 > - global.database.port: 5432
 > - global.idm.idmAuthUrl: <SMAX Integration FQDN>:2443/idm-service
 > - global.idm.idmServiceUrl: <SMAX FQDN>:443/idm-service
+> - global.idm.tenant: sysbo
 > - global.smaxFqdn: <SMAX FQDN>
 
 ### Install OO

@@ -1,24 +1,52 @@
-1. Check local environment executables
+1. Check Local Environment Executables
+2. Check Images Repository for correct images
+3. Check Application Component Versions
 
- - AWS CLI Client version
-   - `aws --version`
+POST Upgrade Checks:
+1. Check Alertmanager config
+2. Check Promethues config
+3. Check Prometheus metrics collected (Gitops Metrics)
 
- - Kubernetes Client
-   - `kubectl version`
+---
+
+## Check Local Environment Executables  
+### AWS CLI  
+```
+aws --version
+```
+As of March 2024  
+- AWS CLI version should be *2.15.27*  
+- Python Version should be *3.11.8*  
+
+### Kubernetes Client
+```
+kubectl version
+```
+As of March 2024:
+- Kubernetes Client should be *v1.27*
+
+
    > - 1.19: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.19.6/2021-01-05/bin/linux/amd64/kubectl
    > - 1.20: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.20.15/2022-10-31/bin/linux/amd64/kubectl
    > - 1.21: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.14/2023-01-11/bin/linux/amd64/kubectl
    > - 1.22: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.17/2023-01-11/bin/linux/amd64/kubectl
    > - 1.23: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.15/2023-01-11/bin/linux/amd64/kubectl
    > - 1.24: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.24.9/2023-01-11/bin/linux/amd64/kubectl
+   > - 1.24: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.24.17/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.25: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.25.13/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.26: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.26.8/2023-09-14/bin/linux/amd64/kubectl
+   > - 1.27: curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.5/2023-09-14/bin/linux/amd64/kubectl
 
  - Kubernetes Client for Rocky Linux
    > - Latest: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
    
- - Helm Client
-   - `helm version`
+- Helm Client
+```
+helm version
+which helm
+```
 
-# Control Node vinaries upgrade steps
+## Control Node binaries upgrade steps
 1. AWS CLI
    ```
    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -50,19 +78,40 @@
    sed -i '/        value: GLG_ProdEngineer/d' ~/.kube/config
    ```
 
+---
 
-# MF ITOM Cluster DNS records
-1. Cluster FQDN
-  - recovery2.dev.gitops.com
-2. OO External FQDN
-  - recovery2-oo.dev.gitops.com
-3. OO Integration - Internal
-  - recovery2-int.dev.gitops.com
-4. CMS Application Server
-  - recovery2-cms.dev.gitops.com
-5. CMS Gateway - Internal
-  - recovery2-cms-gateway.dev.gitops.com
+# OpenText ITOM Cluster DNS records
+#### Production
+  | DNS Name                           | Purpose/Component                                  |
+  | --                                 | --                                                 |
+  | smax-west.gitops.com               | Primary Cluster FQDN                               |
+  | smax-west-int.gitops.com           | Internal cross component integrations              |
+  | smax-west-oo.gitops.com            | Operations Orchestration [OO]                      |
+  | smax-west-cms.gitops.com           | Configuration Management System [CMS] - App Server |
+  | smax-west-cms-gateway.gitops.com   | CMS Gateway for Native SACM                        |
+  | smax-west-audit.gitops.com         | Audit Engine and Access Gateway                    |
 
+#### Staging
+  | DNS Name                           | Purpose/Component                                  |
+  | --                                 | --                                                 |
+  | qa.dev.gitops.com                  | Primary Cluster FQDN                               |
+  | qa-int.dev.gitops.com              | Internal cross component integrations              |
+  | qa-oo.dev.gitops.com               | Operations Orchestration [OO]                      |
+  | qa-cms.dev.gitops.com              | Configuration Management System [CMS] - App Server |
+  | qa-cms-gateway.dev.gitops.com      | CMS Gateway for Native SACM                        |
+  | qa-audit.dev.gitops.com            | Audit Engine and Access Gateway                    |
+
+#### Development
+  | DNS Name                           | Purpose/Component                                  |
+  | --                                 | --                                                 |
+  | testing.dev.gitops.com             | Primary Cluster FQDN                               |
+  | testing-int.dev.gitops.com         | Internal cross component integrations              |
+  | testing-oo.dev.gitops.com          | Operations Orchestration [OO]                      |
+  | testing-cms.dev.gitops.com         | Configuration Management System [CMS] - App Server |
+  | testing-cms-gateway.dev.gitops.com | CMS Gateway for Native SACM                        |
+  | testing-audit.dev.gitops.com       | Audit Engine and Access Gateway                    |
+
+---
 
 container - pod (ip address) - worker (ip address) - cluster | ingress - target group - listener - alb (FQDN)
 

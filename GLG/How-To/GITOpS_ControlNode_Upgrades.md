@@ -1,3 +1,7 @@
+# OS and System patches
+sudo yum upgrade -y
+
+
 # Upgrade python to python3.8
 > Install required packages first  
 `sudo yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel`
@@ -15,3 +19,9 @@ sudo make altinstall
 `pip3.8 install --upgrade --user pip`
 `pip3.8 install --upgrade --user ansible`
 
+sudo find /mnt/efs/var -name *.log* -mtime +90 -delete
+
+
+```
+pip3.8 install ansible
+```
