@@ -156,12 +156,13 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e nlb_stack_name=BSMOBM-DR-LB \
  -e vpc_id=vpc-92e486f6 \
  -e vpc_cidr="10.120.0.0/16" \
- -e region=us-west-2 \
+ -e aws_region=us-west-2 \
  -e nlb_public_subnets=subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870 \
  -e nlb_ssh_key_pair_name=obmgr-dev \
- -e nlb_cert_chain="{{lookup('file', '/opt/glg/obm/obmdev.trtc.com.ca.pem')}}" \
- -e nlb_certificate="{{lookup('file', '/opt/glg/obm/obmdev.trtc.com.crt')}}" \
- -e nlb_private_key="{{lookup('file', '/opt/glg/obm/obmdev.trtc.com.key.nopass')}}" \
+ -e nlb_cert_chain="{{lookup('file', '~/obm/Certificates/OBMDEV/ChainCA.pem')}}" \
+ -e nlb_certificate="{{lookup('file', '~/obm/Certificates/OBMDEV/OBMDEV-Cilent.pem')}}" \
+ -e nlb_private_key="{{lookup('file', '~/obm/Certificates/OBMDEV/obmdev-key.pem')}}" \
+ -e nlb_cert_arn="arn:aws:acm:us-west-2:222313454062:certificate/3a261eff-0483-48a4-acba-ef0fd00e8b6c" \
  -e tag_env=Development \
  -e tag_app=BSMOBM-DR \
  -e tag_cust="DiscountTire" \
@@ -249,10 +250,10 @@ spec:
     path: /var/vols/itom/itom-logging-vol
     server: ${EFS_HOST}
   persistentVolumeReclaimPolicy: Retain
-  claimRef:
-    apiVersion: v1
-    kind: PersistentVolumeClaim
-    name: itom-logging-vol-claim
+#  claimRef:
+#    apiVersion: v1
+#    kind: PersistentVolumeClaim
+#    name: itom-logging-vol-claim
 #  namespace: core
   storageClassName: cdf-default
   volumeMode: Filesystem
@@ -291,10 +292,10 @@ spec:
     path: /var/vols/itom/db-single-vol
     server: ${EFS_HOST}
   persistentVolumeReclaimPolicy: Retain
-  claimRef:
-    apiVersion: v1
-    kind: PersistentVolumeClaim
-    name: db-single-vol-claim
+#  claimRef:
+#    apiVersion: v1
+#    kind: PersistentVolumeClaim
+#    name: db-single-vol-claim
 #  namespace: core
   storageClassName: cdf-default
   volumeMode: Filesystem
@@ -402,6 +403,17 @@ EOT
  
  --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=false" \
  
+
+TG_3000=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-NLB-TG3000/eeaa5fe6614d7274
+TG_5443=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG5443/4a022b4b5536ebc1
+
+
+TG_443=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-NLB-TG443/fb6229e4e031c25f
+TG_30001=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG30001/62fcf9f697d7fc9f
+TG_30004=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG30004/d7fe1bf96ae416b9
+TG_30005=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG30005/e2957c9af1ee99a0
+TG_31051=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG31051/374c179f2c830b49
+TG_383=arn:aws:elasticloadbalancing:us-west-2:365439582464:targetgroup/BSMOBM-ext-ALB-TG383/1e83aff3c19cf16f
 
 #Download OpsBridge helm chart
 ##opsbridge-suite-chart-2023.05.2.zip
