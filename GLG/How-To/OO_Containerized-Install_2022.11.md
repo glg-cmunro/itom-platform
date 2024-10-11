@@ -30,13 +30,18 @@ mkdir -p ~/oo
 curl -kLs https://owncloud.gitops.com/index.php/s/PEPTDATZ0sOItVm/download -o ~/oo/oo-1.0.3-20221101.8.zip
 unzip ~/oo/oo-1.0.3-20221101.8.zip -d ~/oo/2022.11
 ```
+> OO_2022.11.P3
+```
+curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
+unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
+```
 
 ### Create OO Deployment in OMT
 ```
 /opt/smax/2022.11/scripts/cdfctl.sh deployment create -d oo -n oo
 ```
 
-### Prepare NFS/EFS directories for OO PVs
+### Create NFS/EFS directories for OO PVs
 ```
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_config_vol
 sudo mkdir -p /mnt/efs/var/vols/itom/oo/oo_data_vol
@@ -238,12 +243,6 @@ vi ~/oo/${CLUSTER_NAME}_oo-values.yaml
 
     helm upgrade oo -n oo ~/oo/oo_2022.11.P3/oo-helm-charts-1.0.3-20221101P3.1/oo-helm-charts/charts/oo-1.0.3+20221101P3.1.tgz -f ~/oo/oo_2022.11.P3-values.yaml --set global.deploymentType="install" --set global.secretStorageType="null" --timeout 30m
 
-### Download and extract OO Charts  
-> OO_2022.11.P3
-```
-curl -kLs https://owncloud.gitops.com/index.php/s/mvm0f4n2CwJ45Ia/download -o ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip
-unzip ~/oo/oo-helm-charts-1.0.3-20221101P3.1.zip -d ~/oo/2022.11.P3
-```
 
 ##### Enable OO RAS and Designer downloads from Endpoint Manager
 [OpenText DOC: Customize OO Download Link](https://docs.microfocus.com/doc/SMAX/2022.11/CustomizeOODownloadLinks)
@@ -252,6 +251,11 @@ Example used for testing.dev.gitops.com
 ```
 python3 ~/toolkit/enable_download/enable_download.py testing.dev.gitops.com 462039570 bo-integration@dummy.com Gr33nl1ght_ https://testing-oo.dev.gitpps.com:443/oo/downloader OO_DOWNLOAD_SERVICE
 ```
+
+```
+kubectl exec -ti -n $NS deploy/itom-toolkit -c itom-toolkit -- python3 /toolkit/enable_download/enable_download.py qa.dev.gitops.com 252274196 bo-integration@dummy.com Gr33nl1ght_ https://qa-oo.dev.gitpps.com:443/oo/downloader OO_DOWNLOAD_SERVICE
+```
+
 
 ##### Install OO RAS Server (External RAS)
 - NOTE: CMS Gateway (RAS Server) needs xorg-x11-auth, bzip2, gtk2 packages installed for OO RAS Installer

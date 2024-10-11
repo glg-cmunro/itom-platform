@@ -45,3 +45,6 @@ sudo chmod a+x kubectl
 #sudo chown centos:wheel kubectl
 sudo mv kubectl /usr/bin/kubectl
 
+### Install Terraform
+sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo dnf install -y terraform
