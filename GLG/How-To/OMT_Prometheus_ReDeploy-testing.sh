@@ -88,6 +88,6 @@ kubectl patch prometheus -n core itom-prometheus-prometheus --type='json' -p='[{
 kubectl patch alertmanager -n core itom-prometheus-alertmanager --type='json' -p='[{"op": "replace", "path": "/spec/externalUrl", "value": "https://smax-west.gitops.com:5443/alertmanager"}]'
 
 
-kubectl patch alertmanager -n core itom-prometheus-alertmanager --type='json' -p='[{"op": "add", "path": "/spec/volumes/2", "value": {"name": "gitops-volume", "configMap": {"name": "gitops-alertmanager-email-template"}}'
+kubectl patch alertmanager -n core itom-prometheus-alertmanager --type='json' -p='[{"op": "add", "path": "/spec/volumes/2", "value": {"name": "gitops-volume", "configMap": {"name": "gitops-alertmanager-email-template"}}}]'
 
 spec.volumes[2].[{}]

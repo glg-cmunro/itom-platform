@@ -13,29 +13,29 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 </details>
 
 # AWS Infrastructure  
-## DR Environment:
-EXT_ACCESS_FQDN=ombdev.trtc.com
-CLUSTER_NAME=BSMOBM-DR
+## QA Environment:
+EXT_ACCESS_FQDN=ombqa.trtc.com
+CLUSTER_NAME=BSMOBM-QA
 
-VPC_ID=vpc-92e486f6
-AZ1_SN=subnet-0bf7394d375e27b1c
-AZ2_SN=subnet-01696c4ee2c34c870
-#AZ3_SN=--
-DB1_SN=subnet-d12e9da7
-DB2_SN=subnet-1822ba7c
-EFS_SG=sg-065c61602049b9fab
-EKS_SG=sg-0e47c12ddc0e449e7
-WKR_SG=sg-0f92d21651ef86dd7
-RDS_SG=sg-0d1955adf7826ced8
+VPC_ID=vpc-e5cc5b81
+AZ1_SN=subnet-c69f30b0
+AZ2_SN=subnet-d8af3bbc
+AZ3_SN=subnet-6f42b137
+DB1_SN=subnet-c79f30b1
+DB2_SN=subnet-d9af3bbd
 
-RDS_DATABASE=bsmobm-qa2dr
-EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com
+EFS_SG=sg-0d456a5483d28d2fc
+EKS_SG=sg-02ad7999fa6f197c9
+WKR_SG=sg-0a44e5484a636b232
+RDS_SG=sg-02691b90a225d65b9
+
+RDS_DATABASE=bsmobmrds-db
+RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME
+EFS_HOST=fs-0e9a257c5bb913ddf.efs.us-west-2.amazonaws.com
+EFS_NAME="BSMOBMEFS-FS"
 ECR_HOST=222313454062.dkr.ecr.us-west-2.amazonaws.com
 ECR_PASS=$(aws ecr get-login-password --profile bsmobm)
-
-CERT_ARN=$(aws acm list-certificates --profile bsmobm --query "CertificateSummaryList[?DomainName=='obmdev.trtc.com'].CertificateArn" --output text) && echo $CERT_ARN
-RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME
-RDS_ARN=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].DBInstanceArn) && echo $RDS_ARN
+CERT_ARN=arn:aws:acm:us-west-2:222313454062:certificate/8b8dd5d1-8c3f-49af-b4fb-1037b58f2e6d
 
 ## Create Security Groups
 > Execute Ansible Playbook
@@ -440,7 +440,7 @@ ALTER USER cdfidmuser SET search_path TO cdfidmschema;
 
 ### Configure access to the cluster
 ```
-aws eks update-kubeconfig --name BSMOBM-DR --alias bsmobm-dr --profile bsmobm
+aws eks update-kubeconfig --name BSMOBM-QA --alias bsmobm-qa --profile bsmobm
 ```
 
 ### Download OMT installer packages/tools
@@ -502,7 +502,7 @@ EOT
 ~/omt/2023.05/OMT_External_K8s_2023.05-182/install \
  -c ~/omt/omt-install-config.json \
  --k8s-provider aws \
- --external-access-host obmdev.trtc.com \
+ --external-access-host ${EXT_ACCESS_FQDN} \
  --external-access-port 5443 \
  --aws-certificate-arn "${CERT_ARN}" \
  --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=true" \
@@ -517,7 +517,7 @@ EOT
  ```
 
 service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870
+service.beta.kubernetes.io/aws-load-balancer-subnets: ${AZ1_SN},${AZ2_SN},${AZ3_SN}
 service.beta.kubernetes.io/aws-load-balancer-type: nlb
 
 ### Update NLB Target Groups
@@ -707,8 +707,8 @@ aws elbv2 register-targets --target-group-arn $TG_9443 --targets $TGT_9443 --pro
 ### Velero Backup
 > Create Velero Backup
 ```
-VELERO_TTL=8765h
-VELERO_BACKUP_NAME=obmdev-20241021
+VELERO_TTL=8760h
+VELERO_BACKUP_NAME=obmqa-20241021
 velero backup create -n core \
  --ttl ${VELERO_TTL} \
  --exclude-namespaces "default,kube-system,kube-public,kube-node-lease" \
@@ -726,17 +726,18 @@ velero backup create -n core \
 BACKUP_DAYS=30
 BACKUP_VAULT=trtc-strong-encrypted-vault
 BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
-EFS_NAME="BSMOBM-DR-FS"
+EFS_NAME="BSMOBMEFS-FS"
 EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
 EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
 
 > Create EFS Backup
 ```
-aws backup start-backup-job --profile bsmobm \
+aws backup start-backup-job \
  --backup-vault-name="${BACKUP_VAULT}" \
  --resource-arn="${EFS_ARN}" \
  --lifecycle="DeleteAfterDays=${BACKUP_DAYS}" \
- --iam-role-arn="${BACKUP_ROLE}"
+ --iam-role-arn="${BACKUP_ROLE}" \
+ --profile bsmobm
 ```
 
 > Restore EFS Backup
@@ -745,7 +746,8 @@ aws backup start-backup-job --profile bsmobm \
 aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
 ```
 ```
-EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
+aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm | jq -r .RecoveryPoints[0].RecoveryPointArn
+EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:5f1f3fd0-a5ac-47e2-bd01-858c13eca9f1"
 ```
 ```
 aws backup start-restore-job \
@@ -756,24 +758,85 @@ aws backup start-restore-job \
 ```
 
 > Delete EFS Backup
-
+```
+aws backup delete-recovery-point --profile bsmobm \
+ --backup-vault-name="${BACKUP_VAULT}" \
+ --recovery-point-arn "${EFS_RP}"
+```
 
 ### RDS Backup
 > Create RDS Backup
 ```
-SNAPSHOT_NAME="obmdev-db-20241021"
+SNAPSHOT_NAME="obmqa-db-20241021"
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --db-instance-identifier="${RDS_DATABASE}"
+ --db-instance-identifier="${RDS_DATABASE}" 
 ```
 
 > Restore RDS Backuo
-RDS_DB
 aws rds add-tags-to-resource --profile bsmobm \
- --resource-name ${RDS_ARN} \
- --tags Key=Environment,Value=Development Key=CostGroup,Value=60002 Key=Name,Value=BSMOBM-DR-DB
+ --resource-name ${RDS_DATABASE}
+ --tags Key=Environment,Value=Development Key=CostGroup,Value=60002
 
 > Delete RDS Backup
-aws rds delete-db-snapshot \
- --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --profile bsmobm
+aws rds delete-db-snapshot --profile bsmobm \
+ --db-snapshot-identifier="${SNAPSHOT_NAME}"
+
+
+
+## Application Upgrades
+
+### OMT Upgrade
+> Create OMT Working directory
+```
+mkdir -p ~/omt/24.2.P2
+```
+
+> Download / Extract OMT binaries
+```
+curl https://owncloud.gitops.com/index.php/s/soNXhHgmAKSqanG/download -o ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip
+unzip ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip -d ~/omt/24.2.P2/
+unzip ~/omt/24.2.P2/OMT_External_K8s_24.2.2-161.zip -d ~/omt/24.2.P2/
+```
+
+> Upload OMT container images to AWS ECR
+```
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/omt/24.2.P2/OMT_External_K8s_24.2.2-161/scripts/cdf-image-set.json
+```
+
+
+> Get OBM images from chart
+```
+unzip ~/obm/24.2.P1/opsbridge-suite-chart-24.2.1.zip -d ~/obm/24.2.P1/
+```
+```
+$CDF_HOME/tools/generate-download/generate_download_bundle.sh -C ~/obm/24.2.P1/opsbridge-suite-chart/charts/opsbridge-suite-2.8.1+24.2.1-35.tgz -o hpeswitom -d ~/obm/24.2.P1/
+```
+```
+unzip ~/obm/24.2.P1/offline-download.zip -d ~/obm/24.2.P1/
+
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/obm/24.2.P1/offline-download/image-set.json
+```
+
+> Get NOM images from chart
+```
+tar -zxvf ~/nom/24.2.P1/nom-helm-charts-1.12.1.24.2.01.17.tgz -C ~/nom/24.2.P1/
+```
+```
+helm get values -n nom nomqa > ~/nom/24.2.P1/nom-values.yml
+$CDF_HOME/tools/generate-download/generate_download_bundle.sh -C ~/nom/24.2.P1/nom-helm-charts/charts/nom-1.12.1+24.2.01-17.tgz -H ~/nom/24.2.P1/nom-values.yml -o hpeswitom -d ~/nom/24.2.P1/
+```
+```
+unzip ~/nom/24.2.P1/offline-download.zip -d ~/nom/24.2.P1/
+
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/nom/24.2.P1/offline-download/image-set.json
+```

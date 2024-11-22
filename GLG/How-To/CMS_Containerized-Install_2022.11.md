@@ -198,6 +198,7 @@ ADD kubernetes resource detail and kubectl create secret
 
 10. Create CMS Ingress (Internal & External)
 
+
 11. Create CMS Security Group
   ```
   aws ec2 create-security-group \
