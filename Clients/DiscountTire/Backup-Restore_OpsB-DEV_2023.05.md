@@ -61,10 +61,12 @@ aws backup start-backup-job --profile bsmobm \
 ### RDS Backup
 > Create RDS Backup
 ```
-SNAPSHOT_NAME="obmdev-db-20241021"
+SNAPSHOT_NAME="obmdev-db-20241203"
+RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST)
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
  --db-instance-identifier="${RDS_DATABASE}"
+
 ```
 
 </details>
