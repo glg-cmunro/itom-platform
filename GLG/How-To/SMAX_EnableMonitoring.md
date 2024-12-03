@@ -6,17 +6,25 @@
 #### Setup Persistence Filestore
 ##### Create EFS directories for PVs
 ```
-sudo mkdir -p /mnt/efs/var/vols/itom/vol1
-sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/vol1
+sudo mkdir -p /mnt/efs/var/vols/itom/core/vol1
+sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/core/vol1
 ```
 
-`mkdir ~/prometheus`
+#### Setup Prometheus Working dir
+> Create directory for config files and settings for deploying Prometheus  
+```
+mkdir ~/prometheus
+
+EFS_HOST=$(kubectl get pv itom-vol -o json | jq -r .spec.nfs.server)
+
+```
 
 ##### Create PV
 > To create PV you will need to get the EFS Server IP/FQDN and the Filestore Path (typically the path minus the local mount point '/mnt/efs')
 
-`vi ~/prometheus/prometheus_pv.yaml`  
 ```
+cat << EOT > ~/prometheus/prometheus_pv.yaml
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -27,11 +35,13 @@ spec:
   capacity:
     storage: 5Gi
   nfs:
-    path: /var/vols/itom/vol1
-    server: fs-0647c26ba62d36752.efs.us-east-1.amazonaws.com
+    path: /var/vols/itom/core/vol1
+    server: ${EFS_HOST}
   persistentVolumeReclaimPolicy: Retain
   storageClassName: cdf-default
   volumeMode: Filesystem
+EOT
+
 ```
 
 `kubectl create -f ~/prometheus/prometheus_pv.yaml`  

@@ -40,10 +40,14 @@ rm -f awscliv2.zip
 aws configure
 
 ### Setup Kubernetes
+> - kubectl - Kubernetes Client for K8s Cluster Management
+> - helm - Helm Charts to drive deployment of content to K8s Cluster
+```
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 sudo chmod a+x kubectl
 #sudo chown centos:wheel kubectl
 sudo mv kubectl /usr/bin/kubectl
+```
 
 ### Install Terraform
 sudo dnf config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
