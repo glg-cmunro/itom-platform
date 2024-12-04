@@ -86,6 +86,7 @@ aws rds create-db-snapshot --profile bsmobm \
 
  /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
 
+</details>
 
 ## Perform Complete Restore
 
