@@ -158,9 +158,10 @@ velero restore create -n core --exclude-namespaces "default,kube-system,kube-pub
 
 
 
-> Restore RDS Backuo
+### Restore RDS Backuo
+> You will need to retrieve some settings from the existing DB before you can restore a snapshot
+> Namely:  RDS Security Group IDs, RDS Subnet Group Name  
 - rename Database
-- restore DB from snapshot
 ```
 RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
 RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text  --profile bsmobm)
@@ -171,6 +172,25 @@ aws rds modify-db-instance --profile bsmobm \
  --apply-immediately
 
 ```
+
+- restore DB from snapshot
+```
+RDS_DB_NAME=bsmobm-qa2dr
+RDS_DB_SN_GROUP=bsmobm-dr-db-rdssubnetgroup-kfv4t98rrb4l
+RDS_DB_SEC_GROUPS=sg-0d1955adf7826ced8
+SNAPSHOT_RESTORE_NAME="obmdev-db-20241203"
+
+aws rds restore-db-instance-from-db-snapshot --profile bsmobm \
+  --db-instance-identifier ${RDS_DB_NAME} \
+  --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME} \
+  --db-subnet-group-name ${RDS_DB_SN_GROUP} \
+  --db-security-group-ids ${RDS_DB_SEC_GROUPS}
+
+```
+
+
+
+
 
 > Delete Velero Backup
 
