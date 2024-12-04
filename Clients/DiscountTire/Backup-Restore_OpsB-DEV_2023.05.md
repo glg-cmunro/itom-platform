@@ -111,18 +111,16 @@ aws backup start-restore-job \
 ```
 
 > Restore RDS Backuo
+- rename Database
+- restore DB from snapshot
 ```
-RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
 RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text  --profile bsmobm)
 
 aws rds modify-db-instance --profile bsmobm \
- --db-instance-identifier bsmobmrds-db \
- --db-parameter-group-name obm-pgsql-13
-
-aws rds add-tags-to-resource --profile bsmobm \
- --resource-name ${RDS_DATABASE} \
- --tags Key=Environment,Value=Development Key=CostGroup,Value=60002 Key=Name,Value=BSMOBM-DR-DB
-
+ --db-instance-identifier ${RDS_DB_NAME} \
+ --new-db-instance-identifier ${RDS_DB_NAME}-bak \
+ --apply-immediately
 
 
 > Delete Velero Backup
