@@ -1,11 +1,14 @@
-# Maintenance Activites
-<details><summary>Maintenace Activities</summary>
 
-## Stop/Start EC2 Instance
+## Maintenance Activites
+
+<details><summary>Start / Stop EC2 Instance(s)</summary>
+
+### Stop EC2 Instance
 > Stop Instance
 ```
 aws ec2 stop-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR Vertica MC
 ```
+### Start EC2 Instance
 > Start Instance
 ```
 aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR Vertica MC
