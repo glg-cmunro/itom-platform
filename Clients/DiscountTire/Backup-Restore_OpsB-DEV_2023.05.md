@@ -62,7 +62,8 @@ aws backup start-backup-job --profile bsmobm \
 > Create RDS Backup
 ```
 SNAPSHOT_NAME="obmdev-db-20241203"
-RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST)
+RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
  --db-instance-identifier="${RDS_DATABASE}"
@@ -70,6 +71,18 @@ aws rds create-db-snapshot --profile bsmobm \
 ```
 
 </details>
+
+<details><summary>Vertica Backup</summary>
+
+### Vertica DB Backup
+> Create Vertica Backup
+```
+ . /opt/vertica/share/vbr/configs/parameters.sh
+ /opt/vertica/bin/vbr.py --task backup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
+
+```
+
+ /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
 
 
 > Restore Velero Backup
@@ -93,7 +106,9 @@ aws backup start-restore-job \
 ```
 
 > Restore RDS Backuo
-RDS_DB
+```
+RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+
 aws rds add-tags-to-resource --profile bsmobm \
  --resource-name ${RDS_ARN} \
  --tags Key=Environment,Value=Development Key=CostGroup,Value=60002 Key=Name,Value=BSMOBM-DR-DB
@@ -105,8 +120,10 @@ aws rds add-tags-to-resource --profile bsmobm \
 > Delete EFS Backup
 
 > Delete RDS Backup
+```
+SNAPSHOT_NAME="obmdev-db-20241203"
 aws rds delete-db-snapshot \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
  --profile bsmobm
 
-
+```
