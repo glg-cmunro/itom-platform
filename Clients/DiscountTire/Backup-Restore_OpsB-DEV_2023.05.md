@@ -196,7 +196,7 @@ velero backup get -n core
 
 - Create a restore using the specified backup
 ```
-VELERO_BACKUP_NAME=obmdev-20241021
+VELERO_BACKUP_NAME=obmdev-20241203
 
 velero restore create -n core --exclude-namespaces "default,kube-system,kube-public,kube-node-lease"  ${VELERO_BACKUP_NAME}
 
