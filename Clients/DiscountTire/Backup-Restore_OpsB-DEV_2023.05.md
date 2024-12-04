@@ -35,7 +35,7 @@ velero backup create -n core \
 <details><summary>Persistent Filestore Backup</summary>
 
 ### Create Persistent Filestore backup - AWS EFS
-> Environment Variables
+- Environment specific settings
 ```
 BACKUP_DAYS=90
 BACKUP_VAULT=trtc-strong-encrypted-vault
@@ -91,6 +91,56 @@ aws rds create-db-snapshot --profile bsmobm \
 ## Perform Complete Restore  
 ---
 
+> Shutdown ALL application components before starting the restore
+- shutdown NOM
+```
+cdfctl runlevel set -l DOWN -n nom
+
+```
+- shutdown OpsBridge
+```
+cdfctl runlevel set -l DOWN -n obm
+
+```
+- shutdown OMT
+```
+cdfctl runlevel set -l DOWN -n core
+
+```
+
+<details><summary>Persistent Filestore Restore</summary>
+
+### Restpre Persistent Filestore from backup - AWS EFS
+- Environment specific settings  
+```
+EFS_NAME="BSMOBM-DR-FS"
+EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
+EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
+BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
+
+```
+
+- Get Recovery Points available for the restore
+```
+aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
+
+```
+
+- Set the EFS Recovery Point to the value you want to restore  
+> - EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
+
+```
+aws backup start-restore-job \
+ --recovery-point-arn "${EFS_RP}" \
+ --iam-role-arn "${BACKUP_ROLE}" \
+ --metadata "newFileSystem"="False","file-system-id"="${EFS_ID}","Encrypted"="False" \
+ --profile bsmobm
+
+```
+
+</details>
+
+
 > Restore Velero Backup
 - Get the name of the velero backup to be restored
 ```
@@ -107,32 +157,6 @@ velero restore create -n core --exclude-namespaces "default,kube-system,kube-pub
 ```
 
 
-> Restore EFS Backup
-  - Environment specific settings
-  ```
-  EFS_NAME="BSMOBM-DR-FS"
-  EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
-  EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
-  BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
-  
-  ```
-
-* Get Recovery Point to restore
-```
-aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
-
-```
-
-> Set the EFS Recovery Point to the value you want to restore  
-> - EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
-
-```
-aws backup start-restore-job \
- --recovery-point-arn "${EFS_RP}" \
- --iam-role-arn "${BACKUP_ROLE}" \
- --metadata "newFileSystem"="False","file-system-id"="${EFS_ID}","Encrypted"="False" \
- --profile bsmobm
-```
 
 > Restore RDS Backuo
 - rename Database
