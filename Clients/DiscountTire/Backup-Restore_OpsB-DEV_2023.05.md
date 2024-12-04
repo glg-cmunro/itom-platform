@@ -62,11 +62,11 @@ aws backup start-backup-job --profile bsmobm \
 > Create RDS Backup
 ```
 SNAPSHOT_NAME="obmdev-db-20241203"
-RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
 
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --db-instance-identifier="${RDS_DATABASE}"
+ --db-instance-identifier="${RDS_DB_NAME}"
 
 ```
 
@@ -92,11 +92,16 @@ aws rds create-db-snapshot --profile bsmobm \
 > Restore EFS Backup
 * Get Recovery Point to restore
 ```
+EFS_NAME="BSMOBM-DR-FS"
+EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
+EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
+BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
+
 aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
 ```
-```
-EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
-```
+> Set the EFS Recovery Point to the value you want to restore  
+> - EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
+
 ```
 aws backup start-restore-job \
  --recovery-point-arn "${EFS_RP}" \
@@ -108,9 +113,14 @@ aws backup start-restore-job \
 > Restore RDS Backuo
 ```
 RDS_DATABASE=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text  --profile bsmobm)
+
+aws rds modify-db-instance --profile bsmobm \
+ --db-instance-identifier bsmobmrds-db \
+ --db-parameter-group-name obm-pgsql-13
 
 aws rds add-tags-to-resource --profile bsmobm \
- --resource-name ${RDS_ARN} \
+ --resource-name ${RDS_DATABASE} \
  --tags Key=Environment,Value=Development Key=CostGroup,Value=60002 Key=Name,Value=BSMOBM-DR-DB
 
 
