@@ -159,8 +159,6 @@ velero restore create -n core --exclude-namespaces "default,kube-system,kube-pub
 
 
 ### Restore RDS Backuo
-> You will need to retrieve some settings from the existing DB before you can restore a snapshot
-> Namely:  RDS Security Group IDs, RDS Subnet Group Name  
 - rename Database
 ```
 RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
@@ -174,6 +172,9 @@ aws rds modify-db-instance --profile bsmobm \
 ```
 
 - restore DB from snapshot
+> You will need to retrieve some settings from the existing DB before you can restore a snapshot
+> Namely:  RDS Security Group IDs, RDS Subnet Group Name
+> These can be found in the cloud formation template that was used to create the DB initially  
 ```
 RDS_DB_NAME=bsmobm-qa2dr
 RDS_DB_SN_GROUP=bsmobm-dr-db-rdssubnetgroup-kfv4t98rrb4l
@@ -184,7 +185,7 @@ aws rds restore-db-instance-from-db-snapshot --profile bsmobm \
   --db-instance-identifier ${RDS_DB_NAME} \
   --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME} \
   --db-subnet-group-name ${RDS_DB_SN_GROUP} \
-  --db-security-group-ids ${RDS_DB_SEC_GROUPS}
+  --vpc-security-group-ids ${RDS_DB_SEC_GROUPS}
 
 ```
 
