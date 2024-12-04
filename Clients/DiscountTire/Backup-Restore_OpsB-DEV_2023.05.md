@@ -138,25 +138,16 @@ aws backup start-restore-job \
 
 ```
 
+- replace current files with restored
+```
+mv /mnt/efs/var /mnt/efs/var.deleteme
+mv /mnt/efs/var/aws-backup-*/var /mnt/efs/
+
+```
+
 </details>
 
-
-> Restore Velero Backup
-- Get the name of the velero backup to be restored
-```
-velero backup get -n core
-
-```
-
-- Create a restore using the specified backup
-```
-VELERO_BACKUP_NAME=obmdev-20241021
-
-velero restore create -n core --exclude-namespaces "default,kube-system,kube-public,kube-node-lease"  ${VELERO_BACKUP_NAME}
-
-```
-
-
+<details><summary>Database Restore</summary>
 
 ### Restore RDS Backuo
 - rename Database
@@ -173,8 +164,10 @@ aws rds modify-db-instance --profile bsmobm \
 
 - restore DB from snapshot
 > You will need to retrieve some settings from the existing DB before you can restore a snapshot
-> Namely:  RDS Security Group IDs, RDS Subnet Group Name
 > These can be found in the cloud formation template that was used to create the DB initially  
+>  - RDS Security Group IDs
+>  - RDS Subnet Group Name
+>  - RDS DB Parameter Group
 ```
 RDS_DB_NAME=bsmobm-qa2dr
 RDS_DB_SN_GROUP=bsmobm-dr-db-rdssubnetgroup-kfv4t98rrb4l
@@ -185,11 +178,31 @@ aws rds restore-db-instance-from-db-snapshot --profile bsmobm \
   --db-instance-identifier ${RDS_DB_NAME} \
   --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME} \
   --db-subnet-group-name ${RDS_DB_SN_GROUP} \
+  --db-parameter-group-name obm-pgsql-13 \
   --vpc-security-group-ids ${RDS_DB_SEC_GROUPS}
 
 ```
 
+</details>
 
+<details><summary>K8s Cluster Restore</summary>
+
+> Restore Velero Backup
+- Get the name of the velero backup to be restored
+```
+velero backup get -n core
+
+```
+
+- Create a restore using the specified backup
+```
+VELERO_BACKUP_NAME=obmdev-20241021
+
+velero restore create -n core --exclude-namespaces "default,kube-system,kube-public,kube-node-lease"  ${VELERO_BACKUP_NAME}
+
+```
+
+</details>
 
 
 
