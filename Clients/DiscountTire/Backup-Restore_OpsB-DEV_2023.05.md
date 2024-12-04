@@ -88,24 +88,41 @@ aws rds create-db-snapshot --profile bsmobm \
 
 </details>
 
-## Perform Complete Restore
-
-
+## Perform Complete Restore  
+---
 
 > Restore Velero Backup
+- Get the name of the velero backup to be restored
+```
+velero backup get -n core
 
+```
+
+- Create a restore using the specified backup
+```
+VELERO_BACKUP_NAME=obmdev-20241021
+
+velero restore create -n core --exclude-namespaces "default,kube-system,kube-public,kube-node-lease"  ${VELERO_BACKUP_NAME}
+
+```
 
 
 > Restore EFS Backup
+  - Environment specific settings
+  ```
+  EFS_NAME="BSMOBM-DR-FS"
+  EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
+  EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
+  BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
+  
+  ```
+
 * Get Recovery Point to restore
 ```
-EFS_NAME="BSMOBM-DR-FS"
-EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
-EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
-BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
-
 aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
+
 ```
+
 > Set the EFS Recovery Point to the value you want to restore  
 > - EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
 
@@ -129,6 +146,7 @@ aws rds modify-db-instance --profile bsmobm \
  --new-db-instance-identifier ${RDS_DB_NAME}-bak \
  --apply-immediately
 
+```
 
 > Delete Velero Backup
 
