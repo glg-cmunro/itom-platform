@@ -13,7 +13,7 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 </details>
 
 
-## Perform complete backup
+## Complete K8s Cluster Backup
 
 <details><summary>Velero Backup</summary>
 
@@ -29,10 +29,9 @@ velero backup create -n core \
 ```
 
 </details>
-
 <details><summary>Persistent Filestore Backup</summary>
 
-### EFS Backup
+### Create Persistent Filestore backup - AWS EFS
 > Environment Variables
 ```
 BACKUP_DAYS=90
@@ -55,10 +54,9 @@ aws backup start-backup-job --profile bsmobm \
 ```
 
 </details>
-
 <details><summary>Database Backup</summary>
 
-### RDS Backup
+### Create Database backup - AWS RDS
 > Create RDS Backup
 ```
 SNAPSHOT_NAME="obmdev-db-20241203"
@@ -71,18 +69,23 @@ aws rds create-db-snapshot --profile bsmobm \
 ```
 
 </details>
-
 <details><summary>Vertica Backup</summary>
 
-### Vertica DB Backup
-> Create Vertica Backup
+### Create Vertica DB backup
+
+> Create Vertica Backup  
+*_On a Vertica DB Host as dbadmin_*  
 ```
- . /opt/vertica/share/vbr/configs/parameters.sh
+ . /opt/vertica/share/vbr/configs/parameters.sh; 
  /opt/vertica/bin/vbr.py --task backup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
 
 ```
 
  /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
+
+
+## Perform Complete Restore
+
 
 
 > Restore Velero Backup
