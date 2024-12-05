@@ -150,6 +150,11 @@ mv /mnt/efs/var/aws-backup-*/var /mnt/efs/
 <details><summary>Vertica Database Restore</summary>
 
 ### Restore Vertica DB
+- Shutdown the Vertica DB
+```
+adminTools -t stop_db -d itomdb --force --password=$(grep dbPassword /opt/vertica/share/vbr/configs/parameter.txt | awk -F= '{print $2}')
+
+```
 - get list of available backups
 ```
 . /opt/vertica/share/vbr/configs/parameters.sh
@@ -157,18 +162,31 @@ mv /mnt/efs/var/aws-backup-*/var /mnt/efs/
 
 ```
 - choose an arcive to restore
-> [dbadmin@ip-10-120-196-206 ~]$ /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
-> backup                                backup_type   epoch    objects   include_patterns   exclude_patterns   version     file_system_type
-> itomdb_DEV_snapshot_20241204_012754   full          214790                                                   v12.0.3-3   [Linux]
-> itomdb_DEV_snapshot_20241024_170146   full          141550                                                   v12.0.3-3   [Linux]
-> itomdb_DEV_snapshot_20241022_163454   full          141647                                                   v12.0.3-3   [Linux]
+> [dbadmin@ip-10-120-196-206 ~]$ /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini  
+> backup                                backup_type   epoch    objects   include_patterns   exclude_patterns   version     file_system_type  
+> itomdb_DEV_snapshot_20241204_012754   full          214790                                                   v12.0.3-3   [Linux]  
+> itomdb_DEV_snapshot_20241024_170146   full          141550                                                   v12.0.3-3   [Linux]  
+> itomdb_DEV_snapshot_20241022_163454   full          141647                                                   v12.0.3-3   [Linux]  
 > itomdb_DEV_snapshot_20241022_160931   full          141550                                                   v12.0.3-3   
 **_Use only the date_time of the backup as the archive_**
 ```
 VDB_ARCHIVE=20241204_012754
 
-/opt/vertica/bin/vbr.py --task restore --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini --archive=${VDB_ARCHIVE}
 ```
+
+- Restore database archive
+```
+/opt/vertica/bin/vbr.py --task restore --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini --archive=${VDB_ARCHIVE}
+
+```
+
+- Start Vertica DB after restore is complete
+```
+adminTools -t start_db -d itomdb --password=$(grep dbPassword /opt/vertica/share/vbr/configs/parameter.txt | awk -F= '{print $2}')
+
+```
+
+</details>
 
 <details><summary>PostgreSQL Database Restore</summary>
 
@@ -234,6 +252,7 @@ velero restore create -n core --exclude-namespaces "default,kube-system,kube-pub
 </details>
 
 
+## TODO: Cleanup
 
 > Delete Velero Backup
 
