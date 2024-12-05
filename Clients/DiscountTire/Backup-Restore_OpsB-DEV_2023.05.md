@@ -89,7 +89,8 @@ aws rds create-db-snapshot --profile bsmobm \
 </details>
 
 ## Perform Complete Restore  
----
+
+<details><summary>Stop cluster applications</summary>
 
 > Shutdown ALL application components before starting the restore
 - shutdown NOM
@@ -107,6 +108,8 @@ cdfctl runlevel set -l DOWN -n obm
 cdfctl runlevel set -l DOWN -n core
 
 ```
+
+</details>
 
 <details><summary>Persistent Filestore Restore</summary>
 
