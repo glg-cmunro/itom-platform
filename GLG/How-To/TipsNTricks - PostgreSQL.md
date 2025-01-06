@@ -33,6 +33,34 @@ FROM (
 
 
 SELECT pg_size_pretty( pg_database_size('dbname') );
+SELECT pg_size_pretty( pg_database_size('oocentraldb') );
+
+
+### PostgreSQL backup using pg_dump
+Our biggest table contains raw image data in form of a bytea column.
+
+When we did a simple COPY from psql on this table to stdout, it was quite fast (1 or 2 minutes), but it was very slow with the pg_dump. It took ~60 minutes.
+
+So investigating this I stumbled across this discussion. It seems that the pg_dump compression is rather slow if data is already compressed as it is with image data in a bytea format. And it is better to compress outside of pg_dump (-Z0).
+
+Additionally we found that we can make use of our multi-core cpu (-j 10 and pigz -p 10 to use 10 cores. you might select a different number of cores).
+
+So now we are doing it like this:
+
+```
+pg_dump -Z0 -j 10 -Fd database_name -f dumpdir
+tar -cf - dumpdir | pigz -p 10 > dumpdir.tar.gz
+rm -r dumpdir
+```
+*_The time has dropped from ~70 minutes to ~5 minutes. Quite amazing._*
+
+You can restore it like this:
+
+```
+mkdir -p dumpdir
+pigz -p 10 -dc dumpdir.tar.gz | tar -C dumpdir --strip-components 1 -xf -
+pg_restore -j 10 -Fd -O -d database_name dumpdir
+```
 
 
 ### OPTIC Cluster - Operations Bridge SUITE

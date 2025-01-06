@@ -171,6 +171,7 @@ adminTools -t stop_db -d itomdb --force --password=$(grep dbPassword /opt/vertic
 > itomdb_DEV_snapshot_20241024_170146   full          141550                                                   v12.0.3-3   [Linux]  
 > itomdb_DEV_snapshot_20241022_163454   full          141647                                                   v12.0.3-3   [Linux]  
 > itomdb_DEV_snapshot_20241022_160931   full          141550                                                   v12.0.3-3   
+
 **_Use only the date_time of the backup as the archive_**
 ```
 VDB_ARCHIVE=20241204_012754
