@@ -19,6 +19,8 @@ EKS_SG=sg-09304bd256473d613
 WKR_SG=sg-0736f2993f0e54781
 RDS_SG=sg-0f0a7ae173043a1af  
 
+NODE_ROLE=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC
+
 RDS_DATABASE=bsmobmrds-db  
 RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME  
 EFS_NAME="BSMOBMEFS-FS"  
@@ -74,9 +76,9 @@ aws backup start-backup-job --profile bsmobm \
 > Create a velero backup of the Kubernetes cluster resources 
 ```
 VELERO_TTL=8765h
-VELERO_BACKUP_NAME=obmprd-20250105  
+VELERO_BACKUP_NAME=obmprd-20250126  
 
-velero backup create -n core \
+velero backup create -n velero \
  --ttl ${VELERO_TTL} \
  ${VELERO_BACKUP_NAME}
 
@@ -275,7 +277,7 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ1 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
@@ -293,7 +295,7 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ2 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
@@ -311,7 +313,7 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ3 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
@@ -325,13 +327,13 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_version=1.26 \
  -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=${AZ3_SN} \
+ -e eks_nodes_subnets=${AZ1_SN} \
  -e eks_nodes_security_group=${WKR_SG} \
  -e eks_nodes_instance_type=m5.4xlarge \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-v126a-workernodes-AZ1 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
@@ -344,13 +346,13 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_version=1.26 \
  -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=${AZ3_SN} \
+ -e eks_nodes_subnets=${AZ2_SN} \
  -e eks_nodes_security_group=${WKR_SG} \
  -e eks_nodes_instance_type=m5.4xlarge \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-v126a-workernodes-AZ2 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
@@ -369,7 +371,7 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_nodegroup_name=BSMOBM-v126a-workernodes-AZ3 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::365439582464:role/BSMOBMEKS-Cluster-NodeInstanceRole-T01CCAETYBOC \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
 /opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
@@ -382,11 +384,11 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e stack_name=BSMOBM \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_version=1.29 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_worker_subnets=subnet-c69f30b0,subnet-d8af3bbc,subnet-6f42b137 \
- -e eks_security_group=sg-02ad7999fa6f197c9 \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks.yaml
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN},${AZ3_SN} \
+ -e eks_security_group=${WKR_SG} \
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks.yaml
 
 ```
 
@@ -397,11 +399,11 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e stack_name=BSMOBM \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_version=1.30 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_worker_subnets=subnet-c69f30b0,subnet-d8af3bbc,subnet-6f42b137 \
- -e eks_security_group=sg-02ad7999fa6f197c9 \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks.yaml
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN},${AZ3_SN} \
+ -e eks_security_group=${WKR_SG} \
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks.yaml
 
 ```
 
@@ -421,17 +423,17 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-AZ1 \
  -e eks_version=1.30 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-c69f30b0 \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
+ -e eks_nodes_subnets=${AZ1_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
  -e eks_nodes_instance_type=m6a.4xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_node_name=obmgrwnamw2lq1 \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
+ -e eks_nodes_node_name=obmgrwnamw2lp1 \
  -e eks_nodes_nodegroup_name=BSMOBM-130-workernodes-AZ1 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
 ```
@@ -440,17 +442,17 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-AZ2 \
  -e eks_version=1.30 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-d8af3bbc \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
+ -e eks_nodes_subnets=${AZ2_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
  -e eks_nodes_instance_type=m6a.4xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_node_name=obmgrwnamw2lq2 \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
+ -e eks_nodes_node_name=obmgrwnamw2lp2 \
  -e eks_nodes_nodegroup_name=BSMOBM-130-workernodes-AZ2 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
 ```
@@ -459,17 +461,17 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-AZ3 \
  -e eks_version=1.30 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-6f42b137 \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
+ -e eks_nodes_subnets=${AZ3_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
  -e eks_nodes_instance_type=m6a.4xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_node_name=obmgrwnamw2lq3 \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
+ -e eks_nodes_node_name=obmgrwnamw2lp3 \
  -e eks_nodes_nodegroup_name=BSMOBM-130-workernodes-AZ3 \
  -e worker_nodes=2 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
 
@@ -480,18 +482,18 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ1 \
  -e eks_version=1.28 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-c69f30b0 \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
- -e eks_nodes_instance_type=m5.2xlarge \
+ -e eks_nodes_subnets=${AZ1_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
+ -e eks_nodes_instance_type=m5.4xlarge \
  -e eks_nodes_node_name=obmgrwnamw2lq1 \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ1 \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
+ -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ1 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
 ```
@@ -500,18 +502,18 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ2 \
  -e eks_version=1.28 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-d8af3bbc \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
- -e eks_nodes_instance_type=m5.2xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
+ -e eks_nodes_subnets=${AZ2_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
+ -e eks_nodes_instance_type=m5.4xlarge \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
  -e eks_nodes_node_name=obmgrwnamw2lq2 \
- -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ2 \
+ -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ2 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```
 ```
@@ -520,17 +522,17 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_stack_name=BSMOBMEKS-Cluster \
  -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ3 \
  -e eks_version=1.28 \
- -e vpc_id=vpc-e5cc5b81 \
+ -e vpc_id=${VPC_ID} \
  -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-6f42b137 \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
- -e eks_nodes_instance_type=m5.2xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_node_name=obmgrwnamw2lq3 \
- -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ3 \
+ -e eks_nodes_subnets=${AZ3_SN} \
+ -e eks_nodes_security_group=${WKR_SG} \
+ -e eks_nodes_instance_type=m5.4xlarge \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-prd \
+ -e eks_nodes_node_name=obmgrwnamw2lp3 \
+ -e eks_nodes_nodegroup_name=BSMOBM-128-workernodes-AZ3 \
  -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+/opt/glg/aws-obm/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
 
 ```

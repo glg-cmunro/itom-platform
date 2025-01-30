@@ -2,6 +2,29 @@
 1. Create VPC (VPC, Subnets, Security Groups, IAM Roles, ...)
 2. 
 
+> Create AWS Infrastructure resources
+```
+ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/aws-infra-create-all.yml -e full_name=T800.dev.gitops.com -v
+
+```
+> Run second time to complete config
+```
+ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/aws-infra-create-all.yml -e full_name=T800.dev.gitops.com -v
+
+```
+
+> Login to the Control Node to git clone aws-smax repo
+```
+cd /opt/glg
+git clone git@github.com:GreenLightGroup/aws-smax.git
+
+```
+
+> Deploy OMT and SMAX using silent install
+```
+ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/optic-deploy-omt.yml -e full_name=T800.dev.gitops.com -v
+
+```
 
 
 998. Deploy AWS Load Balancer Controller add-on

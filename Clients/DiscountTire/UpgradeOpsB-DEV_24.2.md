@@ -1,7 +1,38 @@
-# Maintenance Activites
-<details><summary>Maintenace Activities</summary>
+# Environment Information  
+<details open><summary>Environment Information</summary>  
 
-## Stop/Start EC2 Instance
+> Add these variables to the environment to assist with tasks below  
+## DEV Environment:  
+```
+EXT_ACCESS_FQDN=ombdev.trtc.com  
+CLUSTER_NAME=BSMOBM-DR  
+
+VPC_ID=vpc-92e486f6  
+AZ1_SN=subnet-0bf7394d375e27b1c  
+AZ2_SN=subnet-01696c4ee2c34c870  
+AZ3_SN=N/A  
+DB1_SN=subnet-d12e9da7  
+DB2_SN=subnet-1822ba7c  
+
+EFS_SG=sg-065c61602049b9fab  
+EKS_SG=sg-0e47c12ddc0e449e7  
+WKR_SG=sg-0f92d21651ef86dd7  
+RDS_SG=sg-0d1955adf7826ced8  
+
+NODE_ROLE=arn:aws:iam::222313454062:role/BSMOBM-DR-EKS-NodeInstanceRole-KwldlSQC6i1P  
+
+RDS_DATABASE=bsmobm-dev-db  
+RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME  
+EFS_NAME="BSMOBM-DR-FS"  
+EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN  
+EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID  
+EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com  
+ECR_HOST=222313454062.dkr.ecr.us-west-2.amazonaws.com  
+ECR_PASS=$(aws ecr get-login-password --profile bsmobm)  
+CERT_ARN=arn:aws:acm:us-west-2:222313454062:certificate/3a261eff-0483-48a4-acba-ef0fd00e8b6c  
+
+```
+## Maintenance Tasks
 > Stop Instance
 ```
 aws ec2 stop-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR Vertica MC
@@ -12,111 +43,259 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 ```
 </details>
 
-# AWS Infrastructure  
-## DR Environment:
-EXT_ACCESS_FQDN=obmdev.trtc.com
-CLUSTER_NAME=BSMOBM-DEV
+# Pre-Upgrade Activities
+<details><summary>Pre-Upgrade Activities</summary>
 
-VPC_ID=vpc-92e486f6
-AZ1_SN=subnet-0bf7394d375e27b1c
-AZ2_SN=subnet-01696c4ee2c34c870
-#AZ3_SN=--
-DB1_SN=subnet-d12e9da7
-DB2_SN=subnet-1822ba7c
-RDS_SG=sg-0d1955adf7826ced8
-EFS_SG=sg-065c61602049b9fab
-EKS_SG=sg-0e47c12ddc0e449e7
-WKR_SG=sg-0f92d21651ef86dd7
-
-RDS_DATABASE=bsmobm-dev-db
-EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com
-ECR_HOST=222313454062.dkr.ecr.us-west-2.amazonaws.com
-ECR_PASS=$(aws ecr get-login-password --profile bsmobm)
-
-CERT_ARN=$(aws acm list-certificates --profile bsmobm --query "CertificateSummaryList[?DomainName=='obmdev.trtc.com'].CertificateArn" --output text) && echo $CERT_ARN
-RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME
-RDS_ARN=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].DBInstanceArn) && echo $RDS_ARN
-
-## Create Security Groups
-> Execute Ansible Playbook
+## Backup the Database
+> Using RDS_DATABASE from 'Environment Information' and SNAPSHOT_NAME below,  
+> create a Database snapshot in AWS  
 ```
-ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=BSMOBM-DR \
- -e sg_stack_name=BSMOBM-DR-SG \
- -e sg_template_name=aws-cf-sg-v3.0.1-noBastion.json \
- -e vpc_id=vpc-92e486f6 \
- -e vpc_cidr="10.120.0.0/16" \
- -e aws_region=us-west-2 \
- -e tag_env=Development \
- -e tag_app=BSMOBM-DR \
- -e tag_cust="DiscountTire" \
- -e tag_costcenter=60002 \
- -e tag_costgroup=BSMOBMDR \
-/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-sg-v3.0.1.yml
+SNAPSHOT_NAME="obmqa-db-20241024"
+
+aws rds create-db-snapshot --profile bsmobm \
+ --db-snapshot-identifier="${SNAPSHOT_NAME}" \
+ --db-instance-identifier="${RDS_DATABASE}"
+
+```
+## Backup Persistent Filesystem (EFS)
+> Using EFS_ARN from 'Environmnet Information' and the BACKUP variables below,  
+> create an AWS Backup of EFS in AWS 
+```
+BACKUP_DAYS=30
+BACKUP_VAULT=trtc-strong-encrypted-vault
+BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
+
+aws backup start-backup-job --profile bsmobm \
+ --resource-arn="${EFS_ARN}" \
+ --iam-role-arn="${BACKUP_ROLE}" \
+ --backup-vault-name="${BACKUP_VAULT}" \
+ --lifecycle="DeleteAfterDays=${BACKUP_DAYS}"
+
+```
+## Backup K8s Cluster configuration
+> Create a velero backup of the Kubernetes cluster resources 
+```
+VELERO_TTL=8765h
+VELERO_BACKUP_NAME=obmdev-20250128
+
+velero backup create -n velero \
+ --ttl ${VELERO_TTL} \
+ ${VELERO_BACKUP_NAME}
+
 ```
 
-## Create EFS Stack
-> Execute Ansible Playbook
-```
-ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=BSMOBM-DR \
- -e efs_stack_name=BSMOBM-DR-FS \
- -e efs_template_name=aws-cf-efs-v3.0.1-2zone.json \
- -e vpc_id=vpc-92e486f6 \
- -e aws_region=us-west-2 \
- -e efs_subnets=subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870 \
- -e efs_security_group=sg-065c61602049b9fab \
-/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-efs-v3.0.1.yml
-```
+## Backup Vertica DB  
 
-## Create RDS Stack
-> Execute Ansible Playbook
-```
-ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=${CLUSTER_NAME} \
- -e rds_stack_name=${CLUSTER_NAME}-DB \
- -e vpc_id=${VPC_ID} \
- -e aws_region=us-west-2 \
- -e rds_db_subnet_1=${DB1_SN} \
- -e rds_db_subnet_2=${DB2_SN} \
- -e rds_security_group=${RDS_SG} \
- -e rds_key_pair_name=obmgr-dev \
- -e rds_db_version=13.15 \
- -e rds_db_param_group=obm-pgsql-13 \
-/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-rds-v3.0.1.yml -e theState=absent
-```
+</details>
 
-> ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
->  -e stack_name=BSMOBM-DR \
->  -e rds_stack_name=BSMOBM-DR-DB \
->  -e vpc_id=vpc-92e486f6 \
->  -e aws_region=us-west-2 \
->  -e rds_db_subnet_1=subnet-01696c4ee2c34c870 \
->  -e rds_db_subnet_2=subnet-0bf7394d375e27b1c \
->  -e rds_security_group=sg-0d1955adf7826ced8 \
->  -e rds_key_pair_name=obmgr-dev \
->  -e rds_db_param_group=bsmobm-postgres15 \
-> /opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-rds-v3.0.1.yml
-```
 
-## Create EKS Stack
-> Execute Ansible Playbook
+sudo alternatives --install /usr/bin/python python /usr/bin/python3.9
+
+## Upgrade EKS Cluster and Workers  
+### Upgrade EKS to 1.27  
 ```
 ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e stack_name=BSMOBM-DR \
  -e eks_stack_name=BSMOBM-DR-EKS \
- -e eks_version=1.26 \
- -e vpc_id=vpc-92e486f6 \
+ -e eks_version=1.27 \
+ -e vpc_id=${VPC_ID} \
  -e aws_region=us-west-2 \
- -e eks_worker_subnets=subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870 \
- -e eks_security_group=sg-0e47c12ddc0e449e7 \
- -e tag_env=Development \
- -e tag_app=BSMOBM-DR \
- -e tag_cust="DiscountTire" \
- -e tag_costcenter=60002 \
- -e tag_costgroup=BSMOBMDR \
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN} \
+ -e eks_security_group=${EKS_SG} \
 /opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-v3.0.1.yml
+
 ```
+
+### Upgrade EKS to 1.28
+> After the upgrade to 1.27 is complete, then upgrade the cluster to 1.28
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_version=1.28 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN} \
+ -e eks_security_group=${EKS_SG} \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-v3.0.1.yml
+
+```
+
+### Upgrade EKS Worker nodes for each AZ
+#Drop old workers by AZ
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ1 \
+ -e eks_version=1.26 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_nodes_subnets=${AZ1_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m5.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-126-workernodes-AZ1 \
+ -e worker_nodes=0 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+ -e theState=absent \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
+
+```
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ2 \
+ -e eks_version=1.28 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_nodes_subnets=${AZ2_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m5.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-126-workernodes-AZ2 \
+ -e worker_nodes=0 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+ -e theState=absent \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
+
+```
+
+### Upgrade EKS to 1.29
+> After the old EKS 1.26 workers have been removed, then upgrade the cluster to 1.29
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_version=1.29 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN} \
+ -e eks_security_group=${EKS_SG} \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-v3.0.1.yml
+
+```
+
+### Upgrade EKS to 1.30
+> After the EKS upgrade is complete, then upgrade the cluster to 1.30
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_version=1.30 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_worker_subnets=${AZ1_SN},${AZ2_SN} \
+ -e eks_security_group=${EKS_SG} \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-v3.0.1.yml
+
+```
+
+### Update kubectl client to match
+```
+curl https://s3.us-west-2.amazonaws.com/amazon-eks/1.30.4/2024-09-11/bin/linux/amd64/kubectl -o ~/kubectl
+chmod a+x ~/kubectl
+sudo mv ~/kubectl /usr/bin/kubectl
+
+```
+
+### Upgrade EKS Worker nodes for each AZ
+#Create EKS Nodes in separate Node Groups per AZ
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ1 \
+ -e eks_version=1.30 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_nodes_subnets=${AZ1_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m6a.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-130-workernodes-AZ1 \
+ -e worker_nodes=3 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
+
+```
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ2 \
+ -e eks_version=1.30 \
+ -e vpc_id=${VPC_ID} \
+ -e region=us-west-2 \
+ -e eks_nodes_subnets=${AZ2_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m6a.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-130-workernodes-AZ2 \
+ -e worker_nodes=3 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
+
+```
+
+#Drop old workers by AZ
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM \
+ -e eks_stack_name=BSMOBMEKS-Cluster \
+ -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ1 \
+ -e eks_version=1.28 \
+ -e vpc_id=vpc-e5cc5b81 \
+ -e region=us-west-2 \
+ -e eks_nodes_subnets=subnet-c69f30b0 \
+ -e eks_nodes_security_group=sg-0a44e5484a636b232 \
+ -e eks_nodes_instance_type=m5.2xlarge \
+ -e eks_nodes_node_name=obmgrwnamw2lq1 \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
+ -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ1 \
+ -e worker_nodes=0 \
+ -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e theState=absent \
+/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+
+```
+```
+ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+ -e stack_name=BSMOBM \
+ -e eks_stack_name=BSMOBMEKS-Cluster \
+ -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ2 \
+ -e eks_version=1.28 \
+ -e vpc_id=vpc-e5cc5b81 \
+ -e region=us-west-2 \
+ -e eks_nodes_subnets=subnet-d8af3bbc \
+ -e eks_nodes_security_group=sg-0a44e5484a636b232 \
+ -e eks_nodes_instance_type=m5.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
+ -e eks_nodes_node_name=obmgrwnamw2lq2 \
+ -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ2 \
+ -e worker_nodes=0 \
+ -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e theState=absent \
+/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Create EKS Nodes  
 ### EKS Nodes in AZ1  
@@ -265,32 +444,32 @@ export EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com
 ```
 ```
 cat << EOT | kubectl apply -f -
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: itom-vol
-spec:
-  accessModes:
-  - ReadWriteMany
-  capacity:
-    storage: 20Gi
-  nfs:
-    path: /var/vols/itom/core
-    server: ${EFS_HOST}
-  persistentVolumeReclaimPolicy: Retain
+#---
+#apiVersion: v1
+#kind: PersistentVolume
+#metadata:
+#  name: itom-vol
+#spec:
+#  accessModes:
+#  - ReadWriteMany
+#  capacity:
+#    storage: 20Gi
+#  nfs:
+#    path: /var/vols/itom/core
+#    server: ${EFS_HOST}
+#  persistentVolumeReclaimPolicy: Retain
 #  claimRef:
 #    apiVersion: v1
 #    kind: PersistentVolumeClaim
 #    name: itom-vol-claim
 #  namespace: core
-  storageClassName: cdf-default
-  volumeMode: Filesystem
+#  storageClassName: cdf-default
+#  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: itom-logging
+  name: itom-logging-vol
 spec:
   accessModes:
   - ReadWriteMany
@@ -311,7 +490,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: itom-monitor
+  name: itom-monitor-vol
 spec:
   accessModes:
   - ReadWriteMany
@@ -328,27 +507,27 @@ spec:
 #  namespace: core
   storageClassName: cdf-default
   volumeMode: Filesystem
-#---
-#apiVersion: v1
-#kind: PersistentVolume
-#metadata:
-#  name: db-single-vol
-#spec:
-#  accessModes:
-#  - ReadWriteMany
-#  capacity:
-#    storage: 20Gi
-#  nfs:
-#    path: /var/vols/itom/db-single-vol
-#    server: ${EFS_HOST}
-#  persistentVolumeReclaimPolicy: Retain
-##  claimRef:
-##    apiVersion: v1
-##    kind: PersistentVolumeClaim
-##    name: db-single-vol-claim
-##  namespace: core
-#  storageClassName: cdf-default
-#  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-single-vol
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 20Gi
+  nfs:
+    path: /var/vols/itom/db-single-vol
+    server: ${EFS_HOST}
+  persistentVolumeReclaimPolicy: Retain
+#  claimRef:
+#    apiVersion: v1
+#    kind: PersistentVolumeClaim
+#    name: db-single-vol-claim
+#  namespace: core
+  storageClassName: cdf-default
+  volumeMode: Filesystem
 EOT
 ```
 #OBM PVs
@@ -433,15 +612,6 @@ DROP DATABASE cdfidmdb IF EXISTS;
 DROP ROLE cdfidmuser IF EXISTS;
 DROP DATABASE cdfapiserverdb IF EXISTS;
 DROP ROLE cdfapiserver IF EXISTS;
-
-DROP DATABASE cdfidmdb IF EXISTS;
-DROP ROLE cdfidmuser IF EXISTS;
-DROP DATABASE cdfapiserverdb IF EXISTS;
-DROP ROLE cdfapiserver IF EXISTS;
-DROP DATABASE cdfidmdb IF EXISTS;
-DROP ROLE cdfidmuser IF EXISTS;
-DROP DATABASE cdfapiserverdb IF EXISTS;
-DROP ROLE cdfapiserver IF EXISTS;
 ```
 ```
 CREATE USER cdfidmuser login PASSWORD 'optic4DTC12_21'; 
@@ -463,24 +633,17 @@ ALTER USER cdfidmuser SET search_path TO cdfidmschema;
 
 ### Configure access to the cluster
 ```
-aws eks update-kubeconfig --name BSMOBM-DR --alias bsmobm-dr --profile bsmobm
+aws eks update-kubeconfig --name BSMOBM-QA --alias bsmobm-qa --profile bsmobm
 ```
 
 ### Download OMT installer packages/tools
 ```
 mkdir -p ~/omt/2023.05
 ```
-```
-mkdir -p ~/omt/24.2.P2
-```
 * Get OMT Package
 ```
 unzip ~/omt/2023.05/OMT2305-182-15001-External-K8s.zip -d ~/omt/2023.05/
 unzip ~/omt/2023.05/OMT_External_K8s_2023.05-182.zip -d ~/omt/2023.05/
-```
-```
-unzip ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip -d ~/omt/24.2.P2/
-unzip ~/omt/24.2.P2/OMT_External_K8s_24.2.2-161.zip -d ~/omt/24.2.P2/
 ```
 
 ### Setup the install config file
@@ -492,19 +655,13 @@ cat << EOT > ~/omt/omt-install-config.json
     "port": "443",
     "serverKey": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.key",
     "serverCrt": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.crt",
-    "rootCrt": "/home/ec2-user/omt/root_CA.crt"
+    "rootCrt": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.crt"
   },
   "licenseAgreement": {
     "eula": true,
     "callHome": false
   },
   "volumes": [
-    {
-      "type": "EFS",
-      "name": "itom-vol",
-      "host": "${EFS_HOST}",
-      "path": "/var/vols/itom/core"
-    },
     {
       "type": "EFS",
       "name": "itom-logging-vol",
@@ -535,13 +692,14 @@ EOT
 
 ## Deploy OMT
 ```
-~/omt/24.2.P2/OMT_External_K8s_24.2.2-161/install \
+~/omt/2023.05/OMT_External_K8s_2023.05-182/install \
  -c ~/omt/omt-install-config.json \
  --k8s-provider aws \
  --external-access-host ${EXT_ACCESS_FQDN} \
  --external-access-port 5443 \
  --aws-certificate-arn "${CERT_ARN}" \
- --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=true;aws-load-balancer-subnets=subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870" \
+ --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=true" \
+ --cluster-wide-ingress true \
  --nfs-server ${EFS_HOST} \
  --nfs-folder /var/vols/itom/core \
  --registry-url ${ECR_HOST} \
@@ -550,10 +708,9 @@ EOT
  --cdf-home /opt/cdf \
  --capabilities "ClusterManagement=false,DeploymentManagement=true,LogCollection=false,Monitoring=true,MonitoringContent=true,NfsProvisioner=false,Tools=true,K8sBackup=false"
  ```
- --cluster-wide-ingress true \
 
 service.beta.kubernetes.io/aws-load-balancer-internal: "true"
-service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870
+service.beta.kubernetes.io/aws-load-balancer-subnets: ${AZ1_SN},${AZ2_SN},${AZ3_SN}
 service.beta.kubernetes.io/aws-load-balancer-type: nlb
 
 ### Update NLB Target Groups
@@ -563,11 +720,9 @@ TG_5443=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-D
 ALB_5443=$(kubectl get svc portal-ingress-controller-svc -n core -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_5443
 nslookup $ALB_5443
 ```
-TGT_5443="Id=10.120.37.201 Id=10.120.191.144"  
-TGT_5443_OLD="Id=10.104.28.216 Id=10.104.28.228"  
+TGT_5443="Id=10.120.153.68 Id=10.120.112.225"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_5443 --targets $TGT_5443 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_5443 --targets $TGT_5443_OLD --profile bsmobm
 ```
 
 > OBM UI :443
@@ -576,11 +731,9 @@ TG_443=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-DR
 ALB_443=$(kubectl get svc itom-ingress-controller-svc-internal -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_443
 nslookup $ALB_443
 ```
-TGT_443="Id=10.120.151.107 Id=10.120.98.168"  
-TGT_443_OLD="Id=10.104.28.233 Id=10.104.28.215 Id=10.104.28.230 Id=10.104.28.217"  
+TGT_443="Id=10.120.49.240 Id=10.120.192.185"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_443 --targets $TGT_443 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_443 --targets $TGT_443_OLD --profile bsmobm
 ```
 
 > DI Administration :18443
@@ -589,11 +742,9 @@ TG_30004=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30004=$(kubectl get svc itom-di-administration-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30004
 nslookup $ALB_30004
 ```
-TGT_30004="Id=10.120.81.22 Id=10.120.248.138"  
-TGT_30004_OLD="Id=10.104.24.100"  
+TGT_30004="Id=10.120.217.188 Id=10.120.8.201"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30004 --targets $TGT_30004 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_30004 --targets $TGT_30004_OLD --profile bsmobm
 ```
 
 > DI Data Access :28443
@@ -602,11 +753,9 @@ TG_30003=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30003=$(kubectl get svc itom-di-data-access-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30003
 nslookup $ALB_30003
 ```
-TGT_30003="Id=10.120.24.107 Id=10.120.146.160"  
-TGT_30003_OLD="Id=10.104.24.42 Id=10.104.28.229 Id=10.104.28.220 Id=10.104.24.182"  
+TGT_30003="Id=10.120.89.142 Id=10.120.212.152"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30003 --targets $TGT_30003 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_30003 --targets $TGT_30003_OLD --profile bsmobm
 ```
 
 > DI Receiver :5050
@@ -615,11 +764,9 @@ TG_30001=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30001=$(kubectl get svc itom-di-receiver-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30001
 nslookup $ALB_30001
 ```
-TGT_30001="Id=10.120.184.218 Id=10.120.33.156"  
-TGT_30001_OLD="Id=10.104.28.228 Id=10.104.28.221 Id=10.104.24.242 Id=10.104.24.114"  
+TGT_30001="Id=10.120.200.54 Id=10.120.80.234"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30001 --targets $TGT_30001 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_30001 --targets $TGT_30001_OLD --profile bsmobm
 ```
 
 > Pulsar Proxy :6651
@@ -628,24 +775,20 @@ TG_31051=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_31051=$(kubectl get svc itomdipulsar-proxy -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_31051
 nslookup $ALB_31051
 ```
-TGT_31051="Id=10.120.119.209 Id=10.120.217.18"  
-TGT_31051_OLD="Id=10.104.28.232 Id=10.104.28.219 Id=10.104.24.254 Id=10.104.24.33"  
+TGT_31051="Id=10.120.199.158 Id=10.120.76.102"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_31051 --targets $TGT_31051 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_31051 --targets $TGT_31051_OLD --profile bsmobm
 ```
 
 > OM Agent :383
 ```
 TG_383=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-DR-int-NLB-TG383/8d41999001c0ccee
-ALB_383=$(kubectl get svc omi-bbc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_383
+ALB_383=$(kubectl get svc itom-monitoring-service-data-broker-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_383
 nslookup $ALB_383
 ```
-TGT_383="Id=10.120.202.203 Id=10.120.28.180"  
-TGT_383_OLD="Id=10.104.28.234 Id=10.104.28.218"  
+TGT_383=""  
 ```
 aws elbv2 register-targets --target-group-arn $TG_383 --targets $TGT_383 --profile bsmobm
-aws elbv2 deregister-targets --target-group-arn $TG_383 --targets $TGT_383_OLD --profile bsmobm
 ```
 
 ## Add EKSCTL to Control Node
@@ -709,30 +852,29 @@ eksctl create addon --name aws-ebs-csi-driver --cluster BSMOBM-DR --service-acco
 ## Deploy OpsBridge
 ### Download OpsBridge helm chart
 ```
-mkdir -p ~/obm/24.2.P1_HF4
-#curl -kLs ... -o  ~/obm/24.2.P1-H4/opsbridge-suite-chart-24.2.P1_HF4.zip
-unzip ~/obm/24.2.P1_HF4/opsbridge-suite-chart-24.2.P1_HF4.zip -d ~/obm/24.2.P1_HF4/
+mkdir -p ~/obm/2023.05.P2
+#curl -kLs ... -o  ~/obm/2023.05.P2/opsbridge-suite-chart-2023.05.2.zip
+unzip ~/obm/2023.05.P2/opsbridge-suite-chart-2023.05.2.zip -d ~/obm/2023.05.P2/
 ```
 
 ### Copy UDX Plugin to Vertica
 VERT1=10.120.196.206
-scp -i ~/.ssh/vdb_id ~/obm/24.2.P1_HF4/opsbridge-suite-chart/tools/itom-di-pulsarudx-2.12.2-2.x86_64.rpm dbadmin@${VERT1}:/home/dbadmin/
+scp -i ~/.ssh/vdb_id ~/obm/2023.05.P2/opsbridge-suite-chart/tools/itom-di-pulsarudx-2.9.0-63.x86_64.rpm dbadmin@${VERT1}:/home/dbadmin/
 
 > On Vertica1 Node
 sudo su -
-rpm -Uhv /home/dbadmin/itom-di-pulsarudx-2.12.2-2.x86_64.rpm
+rpm -ihv /home/dbadmin/itom-di-pulsarudx-2.9.0-63.x86_64.rpm
 
 export VERTICA_HOME=/vertica/data
 export VERTICA_DBA=dbadmin
 export VERTICA_RO_USER=vertica_rouser
 export VERTICA_RW_USER=vertica_rwuser
 export VERTICA_DB=itomdb
-export VERTICA_DBA_PASS=TRe6uMA2\$2022
 
 cd /usr/local/itom-di-pulsarudx/bin
 ./dbinit.sh genconfig
 
-/usr/local/itom-di-pulsarudx/bin/dbinit.sh -s --tlscrt /home/dbadmin/certificates/verticadev1.crt --tlskey /home/dbadmin/certificates/verticadev1.key --tlsenforce true --tlscacrt /home/dbadmin/certificates/verticadev1-ca.crt  --tlsonly
+/usr/local/itom-di-pulsarudx/bin/dbinit.sh -s --tlscrt /home/dbadmin/certificates/verticadev1.crt --tlskey /home/dbadmin/certificates/verticadev1.key --tlsenforce true --tlscacrt /home/dbadmin/certificates/verticadev1-ca.crt  -tlsonly
 
 
 ### OpsBridge Application deployment
@@ -741,7 +883,7 @@ cd /usr/local/itom-di-pulsarudx/bin
 
 
 ### NOM Application deployment
-/opt/cdf/bin/cdfctl deployment create -t helm -d nomdev -n nom
+/opt/cdf/bin/cdfctl deployment create -t helm -d nomdev -n obm
 
 
 TG_9443=
@@ -758,8 +900,8 @@ aws elbv2 register-targets --target-group-arn $TG_9443 --targets $TGT_9443 --pro
 ### Velero Backup
 > Create Velero Backup
 ```
-VELERO_TTL=8765h
-VELERO_BACKUP_NAME=obmdev-20241021
+VELERO_TTL=8760h
+VELERO_BACKUP_NAME=obmqa-20241021
 velero backup create -n core \
  --ttl ${VELERO_TTL} \
  --exclude-namespaces "default,kube-system,kube-public,kube-node-lease" \
@@ -777,17 +919,18 @@ velero backup create -n core \
 BACKUP_DAYS=30
 BACKUP_VAULT=trtc-strong-encrypted-vault
 BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
-EFS_NAME="BSMOBM-DR-FS"
+EFS_NAME="BSMOBMEFS-FS"
 EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
 EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
 
 > Create EFS Backup
 ```
-aws backup start-backup-job --profile bsmobm \
+aws backup start-backup-job \
  --backup-vault-name="${BACKUP_VAULT}" \
  --resource-arn="${EFS_ARN}" \
  --lifecycle="DeleteAfterDays=${BACKUP_DAYS}" \
- --iam-role-arn="${BACKUP_ROLE}"
+ --iam-role-arn="${BACKUP_ROLE}" \
+ --profile bsmobm
 ```
 
 > Restore EFS Backup
@@ -796,7 +939,8 @@ aws backup start-backup-job --profile bsmobm \
 aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm
 ```
 ```
-EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:daa17de3-e3b7-49c3-90ee-741e4eece12b"
+aws backup list-recovery-points-by-resource --resource-arn ${EFS_ARN} --profile bsmobm | jq -r .RecoveryPoints[0].RecoveryPointArn
+EFS_RP="arn:aws:backup:us-west-2:222313454062:recovery-point:5f1f3fd0-a5ac-47e2-bd01-858c13eca9f1"
 ```
 ```
 aws backup start-restore-job \
@@ -807,24 +951,172 @@ aws backup start-restore-job \
 ```
 
 > Delete EFS Backup
-
+```
+aws backup delete-recovery-point --profile bsmobm \
+ --backup-vault-name="${BACKUP_VAULT}" \
+ --recovery-point-arn "${EFS_RP}"
+```
 
 ### RDS Backup
 > Create RDS Backup
 ```
-SNAPSHOT_NAME="obmdev-db-20241021"
+SNAPSHOT_NAME="obmqa-db-20241021"
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --db-instance-identifier="${RDS_DATABASE}"
+ --db-instance-identifier="${RDS_DATABASE}" 
 ```
 
 > Restore RDS Backuo
-RDS_DB
 aws rds add-tags-to-resource --profile bsmobm \
- --resource-name ${RDS_ARN} \
- --tags Key=Environment,Value=Development Key=CostGroup,Value=60002 Key=Name,Value=BSMOBM-DR-DB
+ --resource-name ${RDS_DATABASE}
+ --tags Key=Environment,Value=Development Key=CostGroup,Value=60002
 
 > Delete RDS Backup
-aws rds delete-db-snapshot \
- --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --profile bsmobm
+aws rds delete-db-snapshot --profile bsmobm \
+ --db-snapshot-identifier="${SNAPSHOT_NAME}"
+
+
+
+## Application Upgrades
+
+### OMT Upgrade
+> Create OMT Working directory
+```
+mkdir -p ~/omt/24.2.P2
+```
+
+> Download / Extract OMT binaries
+```
+curl https://owncloud.gitops.com/index.php/s/soNXhHgmAKSqanG/download -o ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip
+unzip ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip -d ~/omt/24.2.P2/
+unzip ~/omt/24.2.P2/OMT_External_K8s_24.2.2-161.zip -d ~/omt/24.2.P2/
+```
+
+> Upload OMT container images to AWS ECR
+```
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/omt/24.2.P2/OMT_External_K8s_24.2.2-161/scripts/cdf-image-set.json
+```
+
+> Get OBM images from chart
+```
+unzip ~/obm/24.2.P1/opsbridge-suite-chart-24.2.1.zip -d ~/obm/24.2.P1/
+```
+```
+helm get values -n obm obmqa > ~/obm/24.2.P1/obm-values.yml
+$CDF_HOME/tools/generate-download/generate_download_bundle.sh -C ~/obm/24.2.P1/opsbridge-suite-chart/charts/opsbridge-suite-2.8.1+24.2.1-35.tgz -H ~/obm/24.2.P1/obm-values.yml -o hpeswitom -d ~/obm/24.2.P1/
+```
+```
+unzip ~/obm/24.2.P1/offline-download.zip -d ~/obm/24.2.P1/
+
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/obm/24.2.P1/offline-download/image-set.json
+```
+
+> Get NOM images from chart
+```
+tar -zxvf ~/nom/24.2.P1/nom-helm-charts-1.12.1.24.2.01.17.tgz -C ~/nom/24.2.P1/
+```
+```
+helm get values -n nom nomqa > ~/nom/24.2.P1/nom-values.yml
+$CDF_HOME/tools/generate-download/generate_download_bundle.sh -C ~/nom/24.2.P1/nom-helm-charts/charts/nom-1.12.1+24.2.01-17.tgz -H ~/nom/24.2.P1/nom-values.yml -o hpeswitom -d ~/nom/24.2.P1/
+```
+```
+unzip ~/nom/24.2.P1/offline-download.zip -d ~/nom/24.2.P1/
+
+ansible-playbook /opt/glg/aws-smax/ansible/playbooks/aws-config-ecr-images.yaml \
+ --ask-vault-pass \
+ -e region=us-west-2 \
+ -e image_set_file=~/nom/24.2.P1/offline-download/image-set.json
+```
+
+### Execute OMT Upgrade
+```
+~/omt/24.2.P2/OMT_External_K8s_24.2.2-161/upgrade.sh -u
+
+```
+
+### Prepare Vertica Resource Pools
+> On the Vertica DB Host as 'dbadmin' use vsql to search for and DROP Resource Pools
+  > Resource Pools to DROP
+  * itom_di_express_load_respool_provider_default
+  * ro_user_pool
+  * itom_monitor_respool_provider_default
+  ```
+  vsql -d itomdb
+  
+  ```
+  ```
+  SELECT * FROM v_monitor.resource_pool_status;
+
+  DROP RESOURCE POOL itom_di_express_load_respool_provider_default;
+  DROP RESOURCE POOL ro_user_pool;
+  DROP RESOURCE POOL itom_monitor_respool_provider_default;
+
+  ```
+
+> On the Vertica DB Host as 'dbadmin' use vsql to create a new Resource Pool
+  > Resource Pools to CREATE
+  ```
+  vsql -d itomdb
+  
+  ```
+  ```
+  CREATE RESOURCE POOL itom_di_aecbackground_respool_provider_default MEMORYSIZE '10%' MAXMEMORYSIZE '25%';
+  
+  GRANT USAGE ON RESOURCE POOL itom_di_aecbackground_respool_provider_default to vertica_rwuser WITH GRANT OPTION;
+  
+  ```
+
+### Execute OBM Upgrade
+> When uploading the chart you will be prompted for the admin password to continue
+```
+cdfctl chart upload ~/obm/24.2.P1/opsbridge-suite-chart/charts/opsbridge-suite-2.8.1+24.2.1-35.tgz -u admin
+
+```
+```
+helm get values -n obm obmqa > ~/obm/obm-values_2023.05.yaml
+
+helm upgrade -n obm obmqa ~/obm/24.2.P1/opsbridge-suite-chart/charts/opsbridge-suite-2.8.1+24.2.1-35.tgz -f ~/obm/obm-values_2023.05.yaml  --timeout 30m
+```
+
+### Execute NOM Upgrade
+> When uploading the chart you will be prompted for the admin password to continue
+```
+cdfctl chart upload ~/nom/24.2.P1/nom-helm-charts/charts/nom-1.12.1+24.2.01-17.tgz -u admin
+
+```
+```
+helm get values -n nom nomqa > ~/nom/nom-values_2023.05.yaml
+
+#Use the AppHub UI due to SSL Certificate issues
+#helm upgrade -n nom nomqa ~/nom/24.2.P1/nom-helm-charts/charts/nom-1.12.1+24.2.01-17.tgz -f ~/nom/nom-values_2023.05.yaml  --timeout 30m
+```
+
+### Upgrade Pulsar UDX Plugin
+> On the Vertica DB Host copy the UDX Plugin from the opsbridge chart file
+* Uninstall previous UDX Plugin  
+```
+/opt/vertica/bin/vsql -U dbadmin -d itomdb -f /usr/local/itom-di-pulsarudx/sql/uninstall.sql -w TRe6uMA2\$2022
+
+```
+* Stop / Re-start the Vertica DB
+```
+/opt/vertica/bin/admintools -t stop_db -d itomdb -p TRe6uMA2\$2022 -F
+
+/opt/vertica/bin/admintools -t start_db -d itomdb -p TRe6uMA2\$2022
+
+```
+
+* Install the new UDX Plugin
+```
+sudo rpm -Uvh itom-di-pulsarudx-2.12.1-1.x86_64.rpm
+
+sudo /usr/local/itom-di-pulsarudx/bin/dbinit.sh
+
+```
+
