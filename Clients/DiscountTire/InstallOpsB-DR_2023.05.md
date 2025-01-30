@@ -14,8 +14,8 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 
 # AWS Infrastructure  
 ## DR Environment:
-EXT_ACCESS_FQDN=ombdev.trtc.com
-CLUSTER_NAME=BSMOBM-DR
+EXT_ACCESS_FQDN=obmdev.trtc.com
+CLUSTER_NAME=BSMOBM-DEV
 
 VPC_ID=vpc-92e486f6
 AZ1_SN=subnet-0bf7394d375e27b1c
@@ -23,12 +23,12 @@ AZ2_SN=subnet-01696c4ee2c34c870
 #AZ3_SN=--
 DB1_SN=subnet-d12e9da7
 DB2_SN=subnet-1822ba7c
+RDS_SG=sg-0d1955adf7826ced8
 EFS_SG=sg-065c61602049b9fab
 EKS_SG=sg-0e47c12ddc0e449e7
 WKR_SG=sg-0f92d21651ef86dd7
-RDS_SG=sg-0d1955adf7826ced8
 
-RDS_DATABASE=bsmobm-qa2dr
+RDS_DATABASE=bsmobm-dev-db
 EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com
 ECR_HOST=222313454062.dkr.ecr.us-west-2.amazonaws.com
 ECR_PASS=$(aws ecr get-login-password --profile bsmobm)
@@ -73,16 +73,30 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
 > Execute Ansible Playbook
 ```
 ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=BSMOBM-DR \
- -e rds_stack_name=BSMOBM-DR-DB \
- -e vpc_id=vpc-92e486f6 \
+ -e stack_name=${CLUSTER_NAME} \
+ -e rds_stack_name=${CLUSTER_NAME}-DB \
+ -e vpc_id=${VPC_ID} \
  -e aws_region=us-west-2 \
- -e rds_db_subnet_1=subnet-01696c4ee2c34c870 \
- -e rds_db_subnet_2=subnet-0bf7394d375e27b1c \
- -e rds_security_group=sg-0d1955adf7826ced8 \
+ -e rds_db_subnet_1=${DB1_SN} \
+ -e rds_db_subnet_2=${DB2_SN} \
+ -e rds_security_group=${RDS_SG} \
  -e rds_key_pair_name=obmgr-dev \
- -e rds_db_param_group=bsmobm-postgres15 \
-/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-rds-v3.0.1.yml
+ -e rds_db_version=13.15 \
+ -e rds_db_param_group=obm-pgsql-13 \
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-rds-v3.0.1.yml -e theState=absent
+```
+
+> ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
+>  -e stack_name=BSMOBM-DR \
+>  -e rds_stack_name=BSMOBM-DR-DB \
+>  -e vpc_id=vpc-92e486f6 \
+>  -e aws_region=us-west-2 \
+>  -e rds_db_subnet_1=subnet-01696c4ee2c34c870 \
+>  -e rds_db_subnet_2=subnet-0bf7394d375e27b1c \
+>  -e rds_security_group=sg-0d1955adf7826ced8 \
+>  -e rds_key_pair_name=obmgr-dev \
+>  -e rds_db_param_group=bsmobm-postgres15 \
+> /opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-rds-v3.0.1.yml
 ```
 
 ## Create EKS Stack
@@ -251,32 +265,32 @@ export EFS_HOST=fs-00ed80b78f68a7b40.efs.us-west-2.amazonaws.com
 ```
 ```
 cat << EOT | kubectl apply -f -
-#---
-#apiVersion: v1
-#kind: PersistentVolume
-#metadata:
-#  name: itom-vol
-#spec:
-#  accessModes:
-#  - ReadWriteMany
-#  capacity:
-#    storage: 20Gi
-#  nfs:
-#    path: /var/vols/itom/core
-#    server: ${EFS_HOST}
-#  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: itom-vol
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 20Gi
+  nfs:
+    path: /var/vols/itom/core
+    server: ${EFS_HOST}
+  persistentVolumeReclaimPolicy: Retain
 #  claimRef:
 #    apiVersion: v1
 #    kind: PersistentVolumeClaim
 #    name: itom-vol-claim
 #  namespace: core
-#  storageClassName: cdf-default
-#  volumeMode: Filesystem
+  storageClassName: cdf-default
+  volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: itom-logging-vol
+  name: itom-logging
 spec:
   accessModes:
   - ReadWriteMany
@@ -297,7 +311,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: itom-monitor-vol
+  name: itom-monitor
 spec:
   accessModes:
   - ReadWriteMany
@@ -314,27 +328,27 @@ spec:
 #  namespace: core
   storageClassName: cdf-default
   volumeMode: Filesystem
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: db-single-vol
-spec:
-  accessModes:
-  - ReadWriteMany
-  capacity:
-    storage: 20Gi
-  nfs:
-    path: /var/vols/itom/db-single-vol
-    server: ${EFS_HOST}
-  persistentVolumeReclaimPolicy: Retain
-#  claimRef:
-#    apiVersion: v1
-#    kind: PersistentVolumeClaim
-#    name: db-single-vol-claim
-#  namespace: core
-  storageClassName: cdf-default
-  volumeMode: Filesystem
+#---
+#apiVersion: v1
+#kind: PersistentVolume
+#metadata:
+#  name: db-single-vol
+#spec:
+#  accessModes:
+#  - ReadWriteMany
+#  capacity:
+#    storage: 20Gi
+#  nfs:
+#    path: /var/vols/itom/db-single-vol
+#    server: ${EFS_HOST}
+#  persistentVolumeReclaimPolicy: Retain
+##  claimRef:
+##    apiVersion: v1
+##    kind: PersistentVolumeClaim
+##    name: db-single-vol-claim
+##  namespace: core
+#  storageClassName: cdf-default
+#  volumeMode: Filesystem
 EOT
 ```
 #OBM PVs
@@ -447,10 +461,17 @@ aws eks update-kubeconfig --name BSMOBM-DR --alias bsmobm-dr --profile bsmobm
 ```
 mkdir -p ~/omt/2023.05
 ```
+```
+mkdir -p ~/omt/24.2.P2
+```
 * Get OMT Package
 ```
 unzip ~/omt/2023.05/OMT2305-182-15001-External-K8s.zip -d ~/omt/2023.05/
 unzip ~/omt/2023.05/OMT_External_K8s_2023.05-182.zip -d ~/omt/2023.05/
+```
+```
+unzip ~/omt/24.2.P2/OMT2422-161-15001-External-K8s.zip -d ~/omt/24.2.P2/
+unzip ~/omt/24.2.P2/OMT_External_K8s_24.2.2-161.zip -d ~/omt/24.2.P2/
 ```
 
 ### Setup the install config file
@@ -462,13 +483,19 @@ cat << EOT > ~/omt/omt-install-config.json
     "port": "443",
     "serverKey": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.key",
     "serverCrt": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.crt",
-    "rootCrt": "/home/ec2-user/omt/${EXT_ACCESS_FQDN}.crt"
+    "rootCrt": "/home/ec2-user/omt/root_CA.crt"
   },
   "licenseAgreement": {
     "eula": true,
     "callHome": false
   },
   "volumes": [
+    {
+      "type": "EFS",
+      "name": "itom-vol",
+      "host": "${EFS_HOST}",
+      "path": "/var/vols/itom/core"
+    },
     {
       "type": "EFS",
       "name": "itom-logging-vol",
@@ -499,14 +526,13 @@ EOT
 
 ## Deploy OMT
 ```
-~/omt/2023.05/OMT_External_K8s_2023.05-182/install \
+~/omt/24.2.P2/OMT_External_K8s_24.2.2-161/install \
  -c ~/omt/omt-install-config.json \
  --k8s-provider aws \
- --external-access-host obmdev.trtc.com \
+ --external-access-host ${EXT_ACCESS_FQDN} \
  --external-access-port 5443 \
  --aws-certificate-arn "${CERT_ARN}" \
- --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=true" \
- --cluster-wide-ingress true \
+ --loadbalancer-info "aws-load-balancer-type=nlb;aws-load-balancer-internal=true;aws-load-balancer-subnets=subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870" \
  --nfs-server ${EFS_HOST} \
  --nfs-folder /var/vols/itom/core \
  --registry-url ${ECR_HOST} \
@@ -515,6 +541,7 @@ EOT
  --cdf-home /opt/cdf \
  --capabilities "ClusterManagement=false,DeploymentManagement=true,LogCollection=false,Monitoring=true,MonitoringContent=true,NfsProvisioner=false,Tools=true,K8sBackup=false"
  ```
+ --cluster-wide-ingress true \
 
 service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870
@@ -527,9 +554,11 @@ TG_5443=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-D
 ALB_5443=$(kubectl get svc portal-ingress-controller-svc -n core -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_5443
 nslookup $ALB_5443
 ```
-TGT_5443="Id=10.120.153.68 Id=10.120.112.225"  
+TGT_5443="Id=10.120.37.201 Id=10.120.191.144"  
+TGT_5443_OLD="Id=10.104.28.216 Id=10.104.28.228"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_5443 --targets $TGT_5443 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_5443 --targets $TGT_5443_OLD --profile bsmobm
 ```
 
 > OBM UI :443
@@ -538,9 +567,11 @@ TG_443=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-DR
 ALB_443=$(kubectl get svc itom-ingress-controller-svc-internal -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_443
 nslookup $ALB_443
 ```
-TGT_443="Id=10.120.49.240 Id=10.120.192.185"  
+TGT_443="Id=10.120.151.107 Id=10.120.98.168"  
+TGT_443_OLD="Id=10.104.28.233 Id=10.104.28.215 Id=10.104.28.230 Id=10.104.28.217"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_443 --targets $TGT_443 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_443 --targets $TGT_443_OLD --profile bsmobm
 ```
 
 > DI Administration :18443
@@ -549,9 +580,11 @@ TG_30004=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30004=$(kubectl get svc itom-di-administration-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30004
 nslookup $ALB_30004
 ```
-TGT_30004="Id=10.120.217.188 Id=10.120.8.201"  
+TGT_30004="Id=10.120.81.22 Id=10.120.248.138"  
+TGT_30004_OLD="Id=10.104.24.100"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30004 --targets $TGT_30004 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_30004 --targets $TGT_30004_OLD --profile bsmobm
 ```
 
 > DI Data Access :28443
@@ -560,9 +593,11 @@ TG_30003=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30003=$(kubectl get svc itom-di-data-access-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30003
 nslookup $ALB_30003
 ```
-TGT_30003="Id=10.120.89.142 Id=10.120.212.152"  
+TGT_30003="Id=10.120.24.107 Id=10.120.146.160"  
+TGT_30003_OLD="Id=10.104.24.42 Id=10.104.28.229 Id=10.104.28.220 Id=10.104.24.182"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30003 --targets $TGT_30003 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_30003 --targets $TGT_30003_OLD --profile bsmobm
 ```
 
 > DI Receiver :5050
@@ -571,9 +606,11 @@ TG_30001=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_30001=$(kubectl get svc itom-di-receiver-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_30001
 nslookup $ALB_30001
 ```
-TGT_30001="Id=10.120.200.54 Id=10.120.80.234"  
+TGT_30001="Id=10.120.184.218 Id=10.120.33.156"  
+TGT_30001_OLD="Id=10.104.28.228 Id=10.104.28.221 Id=10.104.24.242 Id=10.104.24.114"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_30001 --targets $TGT_30001 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_30001 --targets $TGT_30001_OLD --profile bsmobm
 ```
 
 > Pulsar Proxy :6651
@@ -582,20 +619,24 @@ TG_31051=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-
 ALB_31051=$(kubectl get svc itomdipulsar-proxy -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_31051
 nslookup $ALB_31051
 ```
-TGT_31051="Id=10.120.199.158 Id=10.120.76.102"  
+TGT_31051="Id=10.120.119.209 Id=10.120.217.18"  
+TGT_31051_OLD="Id=10.104.28.232 Id=10.104.28.219 Id=10.104.24.254 Id=10.104.24.33"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_31051 --targets $TGT_31051 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_31051 --targets $TGT_31051_OLD --profile bsmobm
 ```
 
 > OM Agent :383
 ```
 TG_383=arn:aws:elasticloadbalancing:us-west-2:222313454062:targetgroup/BSMOBM-DR-int-NLB-TG383/8d41999001c0ccee
-ALB_383=$(kubectl get svc itom-monitoring-service-data-broker-svc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_383
+ALB_383=$(kubectl get svc omi-bbc -n obm -o='jsonpath={.status.loadBalancer.ingress[].hostname}') && echo $ALB_383
 nslookup $ALB_383
 ```
-TGT_383=""  
+TGT_383="Id=10.120.202.203 Id=10.120.28.180"  
+TGT_383_OLD="Id=10.104.28.234 Id=10.104.28.218"  
 ```
 aws elbv2 register-targets --target-group-arn $TG_383 --targets $TGT_383 --profile bsmobm
+aws elbv2 deregister-targets --target-group-arn $TG_383 --targets $TGT_383_OLD --profile bsmobm
 ```
 
 ## Add EKSCTL to Control Node
@@ -659,29 +700,30 @@ eksctl create addon --name aws-ebs-csi-driver --cluster BSMOBM-DR --service-acco
 ## Deploy OpsBridge
 ### Download OpsBridge helm chart
 ```
-mkdir -p ~/obm/2023.05.P2
-#curl -kLs ... -o  ~/obm/2023.05.P2/opsbridge-suite-chart-2023.05.2.zip
-unzip ~/obm/2023.05.P2/opsbridge-suite-chart-2023.05.2.zip -d ~/obm/2023.05.P2/
+mkdir -p ~/obm/24.2.P1_HF4
+#curl -kLs ... -o  ~/obm/24.2.P1-H4/opsbridge-suite-chart-24.2.P1_HF4.zip
+unzip ~/obm/24.2.P1_HF4/opsbridge-suite-chart-24.2.P1_HF4.zip -d ~/obm/24.2.P1_HF4/
 ```
 
 ### Copy UDX Plugin to Vertica
 VERT1=10.120.196.206
-scp -i ~/.ssh/vdb_id ~/obm/2023.05.P2/opsbridge-suite-chart/tools/itom-di-pulsarudx-2.9.0-63.x86_64.rpm dbadmin@${VERT1}:/home/dbadmin/
+scp -i ~/.ssh/vdb_id ~/obm/24.2.P1_HF4/opsbridge-suite-chart/tools/itom-di-pulsarudx-2.12.2-2.x86_64.rpm dbadmin@${VERT1}:/home/dbadmin/
 
 > On Vertica1 Node
 sudo su -
-rpm -ihv /home/dbadmin/itom-di-pulsarudx-2.9.0-63.x86_64.rpm
+rpm -Uhv /home/dbadmin/itom-di-pulsarudx-2.12.2-2.x86_64.rpm
 
 export VERTICA_HOME=/vertica/data
 export VERTICA_DBA=dbadmin
 export VERTICA_RO_USER=vertica_rouser
 export VERTICA_RW_USER=vertica_rwuser
 export VERTICA_DB=itomdb
+export VERTICA_DBA_PASS=TRe6uMA2\$2022
 
 cd /usr/local/itom-di-pulsarudx/bin
 ./dbinit.sh genconfig
 
-/usr/local/itom-di-pulsarudx/bin/dbinit.sh -s --tlscrt /home/dbadmin/certificates/verticadev1.crt --tlskey /home/dbadmin/certificates/verticadev1.key --tlsenforce true --tlscacrt /home/dbadmin/certificates/verticadev1-ca.crt  -tlsonly
+/usr/local/itom-di-pulsarudx/bin/dbinit.sh -s --tlscrt /home/dbadmin/certificates/verticadev1.crt --tlskey /home/dbadmin/certificates/verticadev1.key --tlsenforce true --tlscacrt /home/dbadmin/certificates/verticadev1-ca.crt  --tlsonly
 
 
 ### OpsBridge Application deployment
@@ -690,7 +732,7 @@ cd /usr/local/itom-di-pulsarudx/bin
 
 
 ### NOM Application deployment
-/opt/cdf/bin/cdfctl deployment create -t helm -d nomdev -n obm
+/opt/cdf/bin/cdfctl deployment create -t helm -d nomdev -n nom
 
 
 TG_9443=

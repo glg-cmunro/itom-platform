@@ -130,6 +130,15 @@ spec:
 ```
 `kubectl create -f ~/prometheus/alertmanager_ingress.yaml`
 
+##### Patch prometheuses
+kubectl patch prometheuses itom-prometheus-prometheus -n core --type=json -p '
+[
+  {
+    "op": replace,
+    "path":"/spec/externalUrl",
+    "value": "https://qa.dev.gitops.com:5443/prometheus"
+  }
+]'
 
 
 
