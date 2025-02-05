@@ -161,6 +161,7 @@ CERT_ARN=arn:aws:acm:us-east-1:713745958112:certificate/4210d4fc-eb24-458b-b2ee-
 VPC_CIDR=10.8.0.0/16
 CLUSTER_NAME=T800
 CLUSTER_FQDN=t800.dev.gitops.com
+INTEGRATION_FQDN=t800-int.dev.gitops.com
 NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo $NS
 
 cat << EOT | kubectl apply -f -

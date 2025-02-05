@@ -2,6 +2,20 @@
 
 ### Deployment Steps
 1. Download/Extract ESM Helm Chart
+2. Pre-Requisites
+  Gather System Information
+  Extend EFS Volumes
+  Sync Data Volumes
+  Get basic values
+  Get custom values
+
+3. Transform SMA classic to ESM Helm
+  Stop OMT and SMA
+  Verify resources are 'DOWN'
+  Delete SMA namespace
+  Sync Data Volumes (incremental)
+  Patch OMT deployment
+  Create ESM deployment
 
 
 
@@ -10,29 +24,25 @@
 #### Download/Extract ESM Helm Chart
 > Download the ESM Helm chart for ESM 24.2 Patch 2
 ```
-#mkdir ~/esm/24.2
-#
-#curl https://owncloud.gitops.com/index.php/s/mDynkiMWjCyVDHU/download -o ~/esm/24.2/ESM_Helm_Chart-24.2.zip
-#unzip ~/esm/24.2/ESM_Helm_Chart-24.2.zip -d ~/esm/24.2/
-#unzip ~/esm/24.2/esm-1.0.0+24.2-528.zip -d ~/esm/24.2/
-#rm ~/esm/24.2/esm-1.0.0+24.2-528.zip
-#rm ~/esm/24.2/esm-1.0.0+24.2-528.zip.sig
+mkdir -p ~/esm/24.2.2
 
 ```
-
 ```
-mkdir ~/esm/24.2.2
-
 curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
 unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
 unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
 
+chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
+chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
+
 ```
 
 
-### Pre-requisites  
+#### Pre-requisites  
 > Gather system information  
 ```
 NAMESPACE=`kubectl get namespace|grep itsma | cut -f1 -d " "`
@@ -57,19 +67,12 @@ sudo chmod g+w /mnt/efs/var/vols/itom/itsma/config-volume
 sudo chmod g+s /mnt/efs/var/vols/itom/itsma/logging-volume
 sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
 
-sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
+#sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
 
 ```
 
 > Sync data volumes
 ```
-#chmod u+x ~/esm/24.2/scripts/transformation/syncData.sh
-#sudo ~/esm/24.2/scripts/transformation/syncData.sh \
-# --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
-# --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
-# --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
-
-chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
  --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
@@ -79,37 +82,29 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
 
 > Get Basic environment Helm values  
 ```
-#chmod u+x ~/esm/24.2/scripts/transformation/generateBasicValuesYaml.sh
-#~/esm/24.2/scripts/transformation/generateBasicValuesYaml.sh
-#cp values.yaml ~/esm/
-#cp values.yaml ~/esm/24.2/charts/
-
-chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 cd ~/esm/24.2.2/scripts/transformation/
 ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
-cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
 
+```
+```
+cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
 cd ~
 
 ```
 
 > Get Customizations to resources Helm values  
 ```
-#chmod u+x ~/esm/24.2/scripts/custom_settings/generateCustomSettings.sh
-#cd ~/esm/24.2/scripts/custom_settings
-#~/esm/24.2/scripts/custom_settings/generateCustomSettings.sh
-#cp ~/esm/24.2/scripts/custom_settings/customized_values.yaml ~/esm/24.2/charts/
-
-chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
 cd ~/esm/24.2.2/scripts/custom_settings
 ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
-cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 
+```
+```
+cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
 
 ```
 
-### Start the Transformation to Helm  
+#### Start the Transformation to Helm  
 > Stop the Suite and OMT  
 ```
 $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n $NAMESPACE
@@ -140,11 +135,6 @@ kubectl get ns
 
 > Sync ingremental data since pre-reqs
 ```
-#sudo ~/esm/24.2/scripts/transformation/syncData.sh \
-# --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
-# --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
-# --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
-
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
  --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
@@ -166,14 +156,11 @@ $CDF_HOME/bin/cdfctl deployment create -d $NAMESPACE
 
 > Refine existing PVs for new deployment
 ```
-#chmod u+x ~/esm/24.2/scripts/transformation/refinePV.sh
-#cd ~/esm/24.2/scripts/transformation
-#~/esm/24.2/scripts/transformation/refinePV.sh $SIZE
-
-chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
 cd ~/esm/24.2.2/scripts/transformation
 ~/esm/24.2.2/scripts/transformation/refinePV.sh $SIZE
 
+```
+```
 cd ~
 
 ```
@@ -238,6 +225,9 @@ $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $N
 
 > Redeploy sma-ingress
 ```
+INTEGRATION_FQDN=t800-int.dev.gitops.com
+CLUSTER_NAME=T800
+
 ELB_NAME=$(kubectl get ing -n core mng-ingress -ojson | jq -r '.metadata.annotations["alb.ingress.kubernetes.io/group.name"]') && echo $ELB_NAME
 EXT_ACCESS_FQDN=$(kubectl get ing -n core mng-ingress -ojson | jq -r '.spec.tls[].hosts[]') && echo $EXT_ACCESS_FQDN
 CERT_ARN=$(kubectl get ing -n core mng-ingress -ojson | jq -r '.metadata.annotations["alb.ingress.kubernetes.io/certificate-arn"]') && echo $CERT_ARN
@@ -279,6 +269,43 @@ spec:
                   number: 443
             path: /*
             pathType: ImplementationSpecific
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
+    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-int
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 2443}]'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=180
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/target-type: instance
+  finalizers:
+  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-int
+  labels:
+    app: sma-integration-ingress
+  name: sma-integration-ingress
+  namespace: ${NS}
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: itom-nginx-ingress-svc
+            port:
+              number: 443
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ${INTEGRATION_FQDN,,}
 EOT
 
 ```
@@ -286,8 +313,38 @@ EOT
 
 > Update helm autopass
 ```
-chmod u+x ~/esm/24.2/scripts/transformation/updateAutopassKey.sh
-~/esm/24.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
+#chmod u+x ~/esm/24.2/scripts/transformation/updateAutopassKey.sh
+#~/esm/24.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
+
+chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
+~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
+
+```
+
+
+
+#Install Support Assistant
+#Reconfigure monitoring
+
+
+### Cleanup unused OMT resources
+```
+sudo chmod g+rx ${CDF_HOME}/charts
+sudo chmod g+rw ${CDF_HOME}/charts/*
+
+APPHUB_CHART=$(cd ${CDF_HOME}/charts && ls apphub-1*.tgz) && echo ${APPHUB_CHART}
+
+helm upgrade apphub $CDF_HOME/charts/${APPHUB_CHART} --reuse-values --set global.services.suiteDeploymentManagement=false -n core
+
+```
+```
+kubectl delete deploy suite-conf-pod-itsma -n core --ignore-not-found=true
+kubectl delete svc suite-conf-svc-itsma  -n core --ignore-not-found=true
+kubectl delete ingress suite-conf-ing-itsma -n core --ignore-not-found=true
+
+```
+```
+kubectl delete ingress -n core -l app=install-ingress 
 
 ```
 
