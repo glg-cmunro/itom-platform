@@ -21,6 +21,13 @@ RDS_SG=sg-0d1955adf7826ced8
 
 NODE_ROLE=arn:aws:iam::222313454062:role/BSMOBM-DR-EKS-NodeInstanceRole-KwldlSQC6i1P  
 
+EKS_ALBs=$(kubectl get svc -A | grep LoadBalancer | awk '{print $5}')
+for alb in ${EKS_ALBs}; do
+  nslookup $alb;
+done
+
+service.beta.kubernetes.io/aws-load-balancer-subnets: subnet-0bf7394d375e27b1c,subnet-01696c4ee2c34c870
+
 RDS_DATABASE=bsmobm-dev-db  
 RDS_HOSTNAME=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DATABASE} | jq -r .DBInstances[].Endpoint.Address) && echo $RDS_HOSTNAME  
 EFS_NAME="BSMOBM-DR-FS"  
@@ -227,7 +234,7 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
  -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ2 \
  -e eks_version=1.30 \
  -e vpc_id=${VPC_ID} \
- -e region=us-west-2 \
+ -e aws_region=us-west-2 \
  -e eks_nodes_subnets=${AZ2_SN} \
  -e eks_nodes_security_group=${EKS_SG} \
  -e eks_nodes_instance_type=m6a.2xlarge \
@@ -242,42 +249,40 @@ ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
 #Drop old workers by AZ
 ```
 ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=BSMOBM \
- -e eks_stack_name=BSMOBMEKS-Cluster \
- -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ1 \
- -e eks_version=1.28 \
- -e vpc_id=vpc-e5cc5b81 \
- -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-c69f30b0 \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
- -e eks_nodes_instance_type=m5.2xlarge \
- -e eks_nodes_node_name=obmgrwnamw2lq1 \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ1 \
- -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ1 \
+ -e eks_version=1.30 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_nodes_subnets=${AZ1_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m6a.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-130-workernodes-AZ1 \
+ -e worker_nodes=3 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
 
 ```
 ```
 ansible-playbook --vault-password-file=/opt/glg/.ans_pass \
- -e stack_name=BSMOBM \
- -e eks_stack_name=BSMOBMEKS-Cluster \
- -e eks_nodes_stack_name=BSMOBMEKS-Nodes-128-AZ2 \
- -e eks_version=1.28 \
- -e vpc_id=vpc-e5cc5b81 \
- -e region=us-west-2 \
- -e eks_nodes_subnets=subnet-d8af3bbc \
- -e eks_nodes_security_group=sg-0a44e5484a636b232 \
- -e eks_nodes_instance_type=m5.2xlarge \
- -e eks_nodes_ssh_key_pair_name=bsmobm-qa \
- -e eks_nodes_node_name=obmgrwnamw2lq2 \
- -e eks_nodes_nodegroup_name=BSMOBM-120-workernodes-AZ2 \
- -e worker_nodes=0 \
- -e eks_nodes_instance_role=arn:aws:iam::222313454062:role/BSMOBMEKS-Cluster-NodeInstanceRole-2L9PGD8WUB1K \
+ -e stack_name=BSMOBM-DR \
+ -e eks_stack_name=BSMOBM-DR-EKS \
+ -e eks_nodes_stack_name=BSMOBM-DR-EKS-Nodes-AZ2 \
+ -e eks_version=1.30 \
+ -e vpc_id=${VPC_ID} \
+ -e aws_region=us-west-2 \
+ -e eks_nodes_subnets=${AZ2_SN} \
+ -e eks_nodes_security_group=${EKS_SG} \
+ -e eks_nodes_instance_type=m6a.2xlarge \
+ -e eks_nodes_ssh_key_pair_name=obmgr-dev \
+ -e eks_nodes_nodegroup_name=BSMOBM-DR-130-workernodes-AZ2 \
+ -e worker_nodes=3 \
+ -e eks_nodes_instance_role=${NODE_ROLE} \
  -e theState=absent \
-/opt/glg/aws-smax/ansible/playbooks/aws-infra-cf-eks-nodes.yaml
+/opt/glg/aws-dr/ansible/playbooks/aws-infra-cf-eks-nodes-v3.0.1.yml
 
 ```
 
