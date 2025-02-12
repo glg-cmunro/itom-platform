@@ -2,6 +2,11 @@
 # GreenLight Group - Tips N' Tricks - PostgreSQL commands
 
 ---
+### PostgreSQL environment variables
+export PGHOST=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST)
+export PGDATABASE=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_NAME)
+export PGUSER=$(kubectl get cm -n core default-database-configmap -o json | jq -r .data.DEFAULT_DB_USERNAME)
+export PGPASSWORD=$(kubectl exec -ti -n core deploy/itom-idm -c idm -- get_secret dbpasswordkey | awk -F= '{print $2}' | tr -d '\r')
 
 ### PostgreSQL stats statements
 
@@ -34,6 +39,37 @@ FROM (
 
 SELECT pg_size_pretty( pg_database_size('dbname') );
 SELECT pg_size_pretty( pg_database_size('oocentraldb') );
+
+SELECT pg_size_pretty( pg_database_size('bo_ats
+SELECT pg_size_pretty( pg_database_size('bo_config
+SELECT pg_size_pretty( pg_database_size('bo_license
+SELECT pg_size_pretty( pg_database_size('bo_user
+
+SELECT pg_size_pretty( pg_database_size('autopassdb
+SELECT pg_size_pretty( pg_database_size('idm
+SELECT pg_size_pretty( pg_database_size('maas_admin
+SELECT pg_size_pretty( pg_database_size('maas_template
+SELECT pg_size_pretty( pg_database_size('smartadb
+SELECT pg_size_pretty( pg_database_size('xservices_ems
+SELECT pg_size_pretty( pg_database_size('xservices_mng
+SELECT pg_size_pretty( pg_database_size('xservices_rms
+
+aplsdb
+oocentraldb
+oocontrollerdb
+ooschedulerdb
+oouidb
+
+cdfapiserverdb
+cdfidm
+
+
+cms_autopass_db
+cms_probe_db
+cms_ucmdb_db
+
+
+
 
 
 ### PostgreSQL backup using pg_dump

@@ -68,6 +68,8 @@ sudo mount
 
 ```
 ```
+aws eks update-kubeconfig --name T800 --alias T800
+
 kubectl get nodes
 
 ```
@@ -317,14 +319,34 @@ spec:
         pathType: ImplementationSpecific
   tls:
   - hosts:
-    - smax-west-int.gitops.com
+    - ${INTEGRATION_FQDN,,}
 EOT
 
  - Add/Update DNS entry in Route53 with new ALB
-ALB_NAME=$(kubectl get ing -n ${NS} sma-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname) && echo ${ALB_NAME}
-ALB_INT_NAME=$(kubectl get ing -n ${NS} sma-integration-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname) && echo ${ALB_INT_NAME}
+```
+CLUSTER_FQDN=T800.dev.gitops.com
+CSN=$(echo ${CLUSTER_FQDN} | awk -F. '{print $1}')
+INT_FQDN=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
 
-aws route53
+HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Name==`dev.gitops.com.`].Id' --output text) && echo ${HOSTED_ZONE_ID}
+NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo ${NS}
+ALB_NAME=$(kubectl get ing -n ${NS} sma-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname); echo ${ALB_NAME}
+ALB_INT_NAME=$(kubectl get ing -n ${NS} sma-integration-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname) && echo ${ALB_INT_NAME}
+ALB_QRY=LoadBalancers[?DNSName==\`${ALB_NAME}\`].CanonicalHostedZoneId
+ALB_ZONE_ID=$(aws elbv2 describe-load-balancers --query ${ALB_QRY} --output text) && echo ${ALB_ZONE_ID}
+ALB_INT_ZONE_ID=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?DNSName==`k8s-t800sma-5339eba018-120607947.us-east-1.elb.amazonaws.com`].CanonicalHostedZoneId' --output text) && echo ${ALB_ZONE_ID}
+
+CHANGE_BATCH="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${CLUSTER_FQDN,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_ZONE_ID}\", \"DNSName\": \"${ALB_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
+aws route53 change-resource-record-sets \
+  --hosted-zone-id ${HOSTED_ZONE_ID} \
+  --change-batch "${CHANGE_BATCH}"
+
+CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${INT_FQDN,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_INT_ZONE_ID}\", \"DNSName\": \"${ALB_INT_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
+aws route53 change-resource-record-sets \
+  --hosted-zone-id ${HOSTED_ZONE_ID} \
+  --change-batch "${CHANGE_BATCH_INT}"
+```
+
 
 """
 - name: Use a routing policy to distribute traffic
