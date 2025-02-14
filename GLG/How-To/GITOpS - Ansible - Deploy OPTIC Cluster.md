@@ -1,3 +1,6 @@
+# GreenLight Group - How To - Deploy OPTIC Cluster via Ansible  
+# ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)  
+
 ## Deployment Steps  
 1. Create AWS Infrastructure  
 2. Configure GreenLight User Access  
@@ -11,9 +14,11 @@
 
 > Environment variables and prep  
 *_Update the values below to represent the environment you want to build_*  
-
 ```
-cat << EOT > /opt/glg/itom-aws/ansible/vars/testing.dev.gitops.com.yml
+CLUSTER_FQDN=T800.dev.gitops.com
+```
+```
+cat << EOT > /opt/glg/itom-aws/ansible/vars/${CLUSTER_FQDN}$.yml
 ---
 stack_prefix: testing
 cluster_domain: dev.gitops.com
@@ -42,6 +47,7 @@ global:
 
 EOT
 
+vi /opt/glg/itom-aws/ansible/vars/${CLUSTER_FQDN}$.yml
 ```
 
 > Run ansible playbook to build infrastructure  
