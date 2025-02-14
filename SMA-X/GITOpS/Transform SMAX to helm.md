@@ -26,6 +26,8 @@ Backup Cluster and SUITE before making any changes
 ### Execute Actions
 
 #### Download/Extract ESM Helm Chart
+<details><summary>Download/Extract ESM Heln Chart</summary>  
+
 > Create ESM working directory
 ```
 mkdir -p ~/esm/24.2.2
@@ -43,9 +45,11 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
 ```
-
+</details>
 
 #### Pre-requisites  
+<details><summary>Pre-requisites</summary>  
+
 > Gather system information  
 ```
 NAMESPACE=`kubectl get namespace|grep itsma | cut -f1 -d " "`
@@ -54,7 +58,6 @@ SYSTEM_GROUP_ID=$(kubectl get configmap -o jsonpath='{.data.system_group_id}' it
 SIZE=$(kubectl get configmap -o jsonpath='{.data.itom_suite_size}' itsma-common-configmap -n $NAMESPACE)
 
 echo NAMESPACE: $NAMESPACE SYSTEM_USER_ID: ${SYSTEM_USER_ID}, SYSTEM_GROUP_ID: ${SYSTEM_GROUP_ID}, SIZE: ${SIZE}
-
 ```
 
 > Extend EFS volumes  
@@ -106,6 +109,7 @@ cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
 
 ```
+</details>
 
 #### Start the Transformation to Helm  
 > Stop the Suite and OMT  

@@ -17,6 +17,7 @@
 ```
 CLUSTER_FQDN=T800.dev.gitops.com
 ```
+*_Set FQDN variable above, then copy/paste the following block.  Edit as needed_*  
 ```
 cat << EOT > /opt/glg/itom-aws/ansible/vars/${CLUSTER_FQDN}$.yml
 ---
