@@ -1,13 +1,14 @@
-## Transform SMA classic deployment to ESM Helm
+# GreenLight Group - How To - Transform SMA classic deployment to ESM Helm  
+# ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)  
 
 ### Deployment Steps
 1. Download/Extract ESM Helm Chart
 2. Pre-Requisites
-  Gather System Information
-  Extend EFS Volumes
-  Sync Data Volumes
-  Get basic values
-  Get custom values
+  - Gather System Information
+  - Extend EFS Volumes
+  - Sync Data Volumes
+  - Get basic values
+  - Get custom values
 
 3. Transform SMA classic to ESM Helm
   Stop OMT and SMA
@@ -18,15 +19,18 @@
   Create ESM deployment
 
 
+## Backup Cluster  
+Backup Cluster and SUITE before making any changes  
+[AWS Backup Cluster](/docs/Ansible/AWS/AWS_Cluster-Backup.md)
 
 ### Execute Actions
 
 #### Download/Extract ESM Helm Chart
-> Download the ESM Helm chart for ESM 24.2 Patch 2
+> Create ESM working directory
 ```
 mkdir -p ~/esm/24.2.2
-
 ```
+> Download the ESM Helm chart for ESM 24.2 Patch 2
 ```
 curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
 unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
@@ -38,7 +42,6 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
-
 ```
 
 
