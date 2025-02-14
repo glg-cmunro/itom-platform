@@ -19,7 +19,7 @@
    - Create ESM deployment
 
 
-## Backup Cluster  
+### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
 [AWS Backup Cluster](/docs/Ansible/AWS/AWS_Cluster-Backup.md)
 
@@ -111,12 +111,13 @@ cd ~
 ```
 </details>
 
-#### Start the Transformation to Helm  
+#### Start ESM Helm Transformation  
+<details><summary>Start ESM Helm Transformation</summary>  
+
 > Stop the Suite and OMT  
 ```
 $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n $NAMESPACE
 $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
-
 ```
 
 > Verify everything is 'DOWN' before continuing on  
@@ -124,20 +125,17 @@ $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
 ```
 kubectl get pod -n $NAMESPACE|grep -v -E 'throttling|opentelemetry|toolkit|Completed'
 kubectl get pod -n core |grep -v Completed
-
 ```
 
 > Delete classic SMA resources
 ```
 kubectl delete ns $NAMESPACE
-
 ```
 
 > Verify the namespace is successfully deleted  
 **_If the ITSMA namespace still shows up, wait and check again_**  
 ```
 kubectl get ns
-
 ```
 
 > Sync ingremental data since pre-reqs
@@ -146,13 +144,11 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
  --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
  --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
-
 ```
 
 > Patch the deployment name for the core namespace
 ```
 kubectl patch ns core -p '{"metadata":{"labels":{"deployments.microfocus.com/deployment-name":"cdf"}}}'
-
 ```
 
 > Create new ESM deployment (using original itsma namespace name)
@@ -220,7 +216,7 @@ $CDF_HOME/bin/cdfctl runlevel set -l UP -n core
 watch -n 10 'kubectl get pods -n core|grep -v 1/1|grep -v 2/2|grep -v 3/3|grep -v 4/4|grep -v Completed'
 
 ```
-
+</details>
 
 ### Deploy ESM Helm chart
 ```
