@@ -4,11 +4,11 @@
 ### Deployment Steps
 1. Download/Extract ESM Helm Chart
 2. Pre-Requisites
-  - Gather System Information
-  - Extend EFS Volumes
-  - Sync Data Volumes
-  - Get basic values
-  - Get custom values
+    - Gather System Information  
+    - Extend EFS Volumes  
+    - Sync Data Volumes  
+    - Get basic values  
+    - Get custom values  
 
 3. Transform SMA classic to ESM Helm
   Stop OMT and SMA
