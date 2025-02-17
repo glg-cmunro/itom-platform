@@ -109,6 +109,15 @@ cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
 ```
 
+> Get current Alertmanager settings
+```
+kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
+```
+*_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
+```
+cat ~/esm/alert-manager.yml
+```
+
 > Get current INGRESS for SMA
 ```
 kubectl get ing -n $NS sma-ingress -o yaml > ~/esm/sma-ingress.yml
