@@ -85,7 +85,6 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
  --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
  --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
-
 ```
 
 > Get Basic environment Helm values  
