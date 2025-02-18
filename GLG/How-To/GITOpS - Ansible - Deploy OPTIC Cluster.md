@@ -334,10 +334,10 @@ EOT
 
  - Add/Update DNS entry in Route53 with new ALB
 ```
-NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo ${NS}
 CLUSTER_FQDN=T800.dev.gitops.com
 CSN=$(echo ${CLUSTER_FQDN} | awk -F. '{print $1}')
-INT_FQDN=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
+CLUSTER_FQDN_INT=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
+NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo ${NS}
 
 HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Name==`dev.gitops.com.`].Id' --output text) && echo ${HOSTED_ZONE_ID}
 ALB_NAME=$(kubectl get ing -n ${NS} sma-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname); echo ${ALB_NAME}
@@ -352,7 +352,7 @@ aws route53 change-resource-record-sets \
   --hosted-zone-id ${HOSTED_ZONE_ID} \
   --change-batch "${CHANGE_BATCH}"
 
-CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${INT_FQDN,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_INT_ZONE_ID}\", \"DNSName\": \"${ALB_INT_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
+CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${CLUSTER_FQDN_INT,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_INT_ZONE_ID}\", \"DNSName\": \"${ALB_INT_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
 aws route53 change-resource-record-sets \
   --hosted-zone-id ${HOSTED_ZONE_ID} \
   --change-batch "${CHANGE_BATCH_INT}"
