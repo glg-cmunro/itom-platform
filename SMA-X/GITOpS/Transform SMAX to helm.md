@@ -9,7 +9,6 @@
    - Sync Data Volumes  
    - Get basic values  
    - Get custom values  
-
 3. Transform SMA classic to ESM Helm
    - Stop OMT and SMA
    - Verify resources are 'DOWN'
@@ -18,10 +17,13 @@
    - Patch OMT deployment
    - Create ESM deployment
 
+---
 
 ### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
 [AWS Backup Cluster](/docs/Ansible/AWS/AWS_Cluster-Backup.md)
+
+---
 
 ### Execute Actions
 
@@ -32,14 +34,16 @@ Backup Cluster and SUITE before making any changes
 ```
 mkdir -p ~/esm/24.2.2
 ```
-> Download the ESM Helm chart for ESM 24.2 Patch 2
+> Download the ESM Helm chart matching existing SMAX deployment (ESM 24.2 Patch 2)
 ```
 curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
 unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
 unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
-
+```
+> Set execute for requisite scripts
+```
 chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh

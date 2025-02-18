@@ -1,3 +1,5 @@
+# OPTIC Platform - PostgreSQL Databases
+
 ### Create OMT Database
 ```
 psql -h ${RDS_HOSTNAME} -U dbadmin -d postgres
@@ -30,3 +32,18 @@ ALTER USER cdfidm SET search_path TO cdfidmschema;
 ```
 \q
 ```
+
+
+### Create ESM Databases
+
+
+
+### Create OO Databases
+
+
+
+### Create Audit Databases
+
+
+
+### Create CMS Databases
