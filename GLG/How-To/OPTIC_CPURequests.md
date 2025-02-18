@@ -102,6 +102,8 @@ kubectl patch deploy -n $NS itom-bo-user-offline-deployment --type='json' -p='[
 ]'
 
 ```
+
+#### HCMX (Cost Governance)
 ```
 kubectl patch deploy -n $NS itom-carbon-footprint-deployment --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"}
@@ -183,413 +185,358 @@ kubectl patch deploy -n $NS itom-dnd-operations-gateway --type='json' -p='[
 ]'
 
 ```
+
+#### SMAX (ITSMA Suite)
 ```
 #itsma-pw118   itom-esm-api                          itom-esm-api,kubernetes-vault-renew                       5m,1m
 kubectl patch deploy -n $NS itom-esm-api --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-iac-controller                   kubernetes-vault-renew,itom-iac-controller                1m,5m
 kubectl patch deploy -n $NS itom-iac-controller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   itom-itsma-certificate-deployment     kubernetes-vault-renew,certificate                        1m,2m
 kubectl patch deploy -n $NS itom-itsma-certificate-deployment --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "2m"}
-]'
-
+]'; \
 #itsma-pw118   itom-nginx-ingress-deployment         nginx-ingress-lb-front                                    20m
 kubectl patch deploy -n $NS itom-nginx-ingress-deployment --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "20m"}
-]'
-
+]'; \
 #itsma-pw118   itom-scheduler                        scheduler,kubernetes-vault-renew                          10m,1m
 kubectl patch deploy -n $NS itom-scheduler --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-sma-ui-deployment                itom-sma-ui-deployment                                    1m
 kubectl patch deploy -n $NS itom-sma-ui-deployment --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-sma-xie-deployment               itom-sma-xie-engine,kubernetes-vault-renew                20m,1m
 kubectl patch deploy -n $NS itom-sma-xie-deployment --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "20m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-toolkit                          kubernetes-vault-renew,itom-toolkit                       1m
 kubectl patch deploy -n $NS itom-toolkit --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-datahub                 kubernetes-vault-renew,itom-xruntime-datahub              1m,5m
 kubectl patch deploy -n $NS itom-xruntime-datahub --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-gateway                 gateway,kubernetes-vault-renew                            15m,1m
 kubectl patch deploy -n $NS itom-xruntime-gateway --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "15m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-mobile-gateway          kubernetes-vault-renew,mobile-gateway                     1m,2m
 kubectl patch deploy -n $NS itom-xruntime-mobile-gateway --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "2m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-opb-ui                  itom-xruntime-opb-ui                                      1m
 kubectl patch deploy -n $NS itom-xruntime-opb-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-platform                kubernetes-vault-renew,itom-xruntime-platform             1m,50m
 kubectl patch deploy -n $NS itom-xruntime-platform --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "50m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-platform-offline        kubernetes-vault-renew,itom-xruntime-platform             1m,50m
 kubectl patch deploy -n $NS itom-xruntime-platform-offline --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "50m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-platform-offline-ng     itom-xruntime-platform,kubernetes-vault-renew             10m,1m
 kubectl patch deploy -n $NS itom-xruntime-platform-offline-ng --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-platform-readonly       kubernetes-vault-renew,itom-xruntime-platform             1m,100m
 kubectl patch deploy -n $NS itom-xruntime-platform-readonly --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "100m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-ppo                     kubernetes-vault-renew,ppo                                1m,1m
 kubectl patch deploy -n $NS itom-xruntime-ppo --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-redis                   kubernetes-vault-renew,itom-xruntime-redis                1m,10m
 kubectl patch deploy -n $NS itom-xruntime-redis --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "10m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-serviceportal           kubernetes-vault-renew,itom-xruntime-serviceportal        1m,5m
 kubectl patch deploy -n $NS itom-xruntime-serviceportal --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-ui                      itom-xruntime-ui                                          5m
 kubectl patch deploy -n $NS itom-xruntime-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-websocket-gateway       kubernetes-vault-renew,itom-sma-wsgateway                 1m,5m
 kubectl patch deploy -n $NS itom-xruntime-websocket-gateway --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   itom-xruntime-xmpp                    xmpp,xmpp-auth,kubernetes-vault-renew                     2m,5m,1m
 kubectl patch deploy -n $NS itom-xruntime-xmpp --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 ##itsma-pw118   sam-backend-deployment                kubernetes-vault-renew,sam-service                        5m,50m
 #kubectl patch deploy -n $NS sam-backend-deployment --type='json' -p='[
 #  {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
 #  {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "50m"}
-#]'
-#
+#]'; \
 ##itsma-pw118   sam-ui-deployment                     sam-ui,kubernetes-vault-renew                             10m,5m
 #kubectl patch deploy -n $NS sam-ui-deployment --type='json' -p='[
 #  {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
 #  {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-#]'
-
+#]'; \
 #itsma-pw118   smarta-admin-ui-backend               smarta-admin-ui-backend                                   1m
 kubectl patch deploy -n $NS smarta-admin-ui-backend --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-data-source                    smarta-data-source,kubernetes-vault-renew                 5m,1m
 kubectl patch deploy -n $NS smarta-data-source --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-installer                      suite-config,kubernetes-vault-renew                       5m,1m
 kubectl patch deploy -n $NS smarta-installer --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-ocr                            kubernetes-vault-renew,smarta-ocr                         1m,5m
 kubectl patch deploy -n $NS smarta-ocr --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-saw-dih                        smarta-saw-dih,kubernetes-vault-renew                     2m,1m
 kubectl patch deploy -n $NS smarta-saw-dih --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-saw-proxy                      smarta-saw-proxy                                          1m
 kubectl patch deploy -n $NS smarta-saw-proxy --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-sawarc-dih                     smarta-sawarc-dih,kubernetes-vault-renew                  2m,1m
 kubectl patch deploy -n $NS smarta-sawarc-dih --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-sawmeta-dih                    smarta-sawmeta-dih,kubernetes-vault-renew                 1m,1m
 kubectl patch deploy -n $NS smarta-sawmeta-dih --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-search                         kubernetes-vault-renew,smarta-search                      1m,2m
 kubectl patch deploy -n $NS smarta-search --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "2m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-smart-ticket                   kubernetes-vault-renew,smarta-smart-ticket                1m,5m
 kubectl patch deploy -n $NS smarta-smart-ticket --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-smart-ticket-admin-ui          smarta-smart-ticket-admin-ui                              1m
 kubectl patch deploy -n $NS smarta-smart-ticket-admin-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-smart-ticket-task              kubernetes-vault-renew,smarta-smart-ticket-task           1m,5m
 kubectl patch deploy -n $NS smarta-smart-ticket-task --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-stx-agent                      kubernetes-vault-renew,smarta-stx-agent                   1m,1m
 kubectl patch deploy -n $NS smarta-stx-agent --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "11m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-stx-category                   smarta-stx-category,kubernetes-vault-renew                1m,1m
 kubectl patch deploy -n $NS smarta-stx-category --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   smarta-stx-media                      smarta-stx-media,kubernetes-vault-renew                   10m,1m
 kubectl patch deploy -n $NS smarta-stx-media --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   virtual-agent-admin-ui                kubernetes-vault-renew,virtual-agent-admin-ui,gateway     1m,2m,1m
 kubectl patch deploy -n $NS virtual-agent-admin-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   virtual-agent-bot-engine              virtual-agent-bot-engine,gateway,kubernetes-vault-renew   2m,1m,1m
 kubectl patch deploy -n $NS virtual-agent-bot-engine --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #itsma-pw118   virtual-agent-nlu                     gateway,kubernetes-vault-renew,virtual-agent-nlu          1m,1m,1m
 kubectl patch deploy -n $NS virtual-agent-nlu --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "1m"}
-]'
+]'; \
+```
 
-
-## Containerized OO
+#### Containerized OO
+```
 #oo            itom-autopass-lms                     vault-renew,itom-autopass-lms                             1m,50m
 kubectl patch deploy -n oo itom-autopass-lms --type='json' --patch='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "50m"}
-]'
-
+]'; \
 #oo            itom-oocentral                        vault-renew,itom-oocentral                                1m,200m
 kubectl patch deploy -n oo itom-oocentral --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "200m"}
-]'
-
+]'; \
 #oo            itom-oocontroller                     vault-renew,itom-oocontroller                             1m,500m
 kubectl patch deploy -n oo itom-oocontroller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "500m"}
-]'
-
+]'; \
 #oo            itom-oodownloader                     vault-renew,itom-oodownloader                             1m,500m
 kubectl patch deploy -n oo itom-oodownloader --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "500m"}
-]'
-
+]'; \
 #oo            itom-ooscheduler                      vault-renew,itom-ooscheduler                              1m,500m
 kubectl patch deploy -n oo itom-ooscheduler --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "500m"}
-]'
-
+]'; \
 #oo            itom-oosession-manager                vault-renew,itom-oosession-manager                        1m,100m
 kubectl patch deploy -n oo itom-oosession-manager --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "100m"}
-]'
-
+]'; \
 #oo            itom-vault                            vault                                                     100m
 kubectl patch deploy -n oo itom-vault --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "100m"}
-]'
-
+]'; \
 #oo            oo-itom-ingress-controller            nginx-ingress-lb,vault-renew,stunnel                      10m,1m,1m
 kubectl patch deploy -n oo oo-itom-ingress-controller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "1m"}
 ]'
+```
 
-##Velero - Cluster Backup
+#### Velero - Cluster Backup
+```
 #velero        velero                                velero                                                    50m
 kubectl patch deploy -n velero velero --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "50m"}
 ]'
+```
 
+```
 ## OMT and related 'core'
 #core          apphub-apiserver                      apphub-apiserver,vault-renew                              5m,1m
 kubectl patch deploy -n core apphub-apiserver --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #core          apphub-ui                             apphub-ui,vault-renew                                     5m,1m
 kubectl patch deploy -n core apphub-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #core          cdf-apiserver                         cdf-apiserver,vault-renew                                 1m,1m
 kubectl patch deploy -n core cdf-apiserver --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          frontend-ingress-controller           nginx-ingress-lb,vault-renew                              10m,1m
 kubectl patch deploy -n core frontend-ingress-controller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-frontend-ui                      suite-installer-frontend,vault-renew                      5m,1m
 kubectl patch deploy -n core itom-frontend-ui --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-idm                              idm,vault-renew                                           5m,1m
 kubectl patch deploy -n core itom-idm --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-kube-dashboard                   dashboard,vault-renew                                     1m,1m
 kubectl patch deploy -n core itom-kube-dashboard --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-kube-dashboard-metrics-scraper   dashboard-metrics-scraper                                 1m
 kubectl patch deploy -n core itom-kube-dashboard-metrics-scraper --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-mng-portal                       mng-portal,vault-renew                                    2m,1m
 kubectl patch deploy -n core itom-mng-portal --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "2m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-prometheus-grafana               vault-renew,grafana-sc-dashboard,grafana                  1m,1m,5m
 kubectl patch deploy -n core itom-prometheus-grafana --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #core          itom-prometheus-kube-state-metrics    vault-renew,stunnel,kube-state-metrics                    1m,1m,2m
 kubectl patch deploy -n core itom-prometheus-kube-state-metrics --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/2/resources/requests/cpu", "value": "2m"}
-]'
-
+]'; \
 #core          itom-prometheus-operator              vault-renew,prometheus                                    1m,1m
 kubectl patch deploy -n core itom-prometheus-operator --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          itom-reloader                         itom-reloader                                             5m
 kubectl patch deploy -n core itom-reloader --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "5m"}
-]'
-
+]'; \
 #core          itom-vault                            vault                                                     100m
 kubectl patch deploy -n core itom-vault --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "100m"}
-]'
-
+]'; \
 #core          portal-ingress-controller             nginx-ingress-lb,vault-renew                              10m,1m
 kubectl patch deploy -n core portal-ingress-controller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #core          suite-conf-pod-itsma                  suite-config,kubernetes-vault-renew                       15m,1m
 kubectl patch deploy -n core suite-conf-pod-itsma --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "15m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
-]'
-
+]'; \
 #SMAX          itom-throttling-controller            kubernetes-vault-renew,throttling-controller              1m,1m
 kubectl patch daemonset -n $NS itom-throttling-controller --type='json' -p='[
   {"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "1m"},
   {"op": "replace", "path": "/spec/template/spec/containers/1/resources/requests/cpu", "value": "1m"}
 ]'
+```
 
+```
 ###Prometheus in OMT
 ###kubectl get prometheuses -A -o custom-columns=NS:.metadata.namespace,NAME:.metadata.name,CONTAINER:.spec.containers[*].name,CPUREQ:.spec.containers[*].resources.requests.cpu,PROMREQ:.spec.resources.requests.cpu
 kubectl patch prometheuses -n core itom-prometheus-prometheus --type='json' -p='[

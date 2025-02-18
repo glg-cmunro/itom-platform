@@ -9,6 +9,7 @@
    - Sync Data Volumes  
    - Get basic values  
    - Get custom values  
+   - Get current INGRESS
 3. Transform SMA classic to ESM Helm
    - Stop OMT and SMA
    - Verify resources are 'DOWN'
@@ -17,17 +18,14 @@
    - Patch OMT deployment
    - Create ESM deployment
 
----
+--- 
 
 ### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
 [AWS Backup Cluster](/docs/Ansible/AWS/AWS_Cluster-Backup.md)
 
----
-
-### Execute Actions
-
-#### Download/Extract ESM Helm Chart
+### Execute Actions  
+#### Download/Extract ESM Helm Chart  
 <details><summary>Download/Extract ESM Heln Chart</summary>  
 
 > Create ESM working directory
@@ -111,7 +109,28 @@ cd ~/esm/24.2.2/scripts/custom_settings
 ```
 cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
+```
 
+> Get current Alertmanager settings
+```
+kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
+```
+*_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
+```
+cat ~/esm/alert-manager.yml
+```
+
+> Get current INGRESS for SMA
+```
+kubectl get ing -n $NS sma-ingress -o yaml > ~/esm/sma-ingress.yml
+kubectl get ing -n $NS sma-integration-ingress -o yaml > ~/esm/sma-integration-ingress.yml
+```
+*_Verify details of INGRESS before contiuning . . ._*  
+```
+cat ~/esm/sma-ingress.yml
+```
+```
+cat ~/esm/sma-integration-ingress.yml
 ```
 </details>
 
@@ -222,7 +241,9 @@ watch -n 10 'kubectl get pods -n core|grep -v 1/1|grep -v 2/2|grep -v 3/3|grep -
 ```
 </details>
 
-### Deploy ESM Helm chart
+#### Deploy ESM Helm chart
+<details><summary>Deploy ESM Helm Chart</summary>  
+
 ```
 #$CDF_HOME/bin/helm install sma ~/esm/24.2/charts/esm-1.0.0+24.2-528.tgz -n $NAMESPACE -f ~/esm/24.2/charts/values.yaml --set global.nodeSelector.Worker=label -f  ~/esm/24.2/charts/customized_values.yaml
 $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $NAMESPACE -f ~/esm/values.yaml --set global.nodeSelector.Worker=label -f  ~/esm/customized_values.yaml
@@ -327,14 +348,14 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
 ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
 
 ```
-
+</details>
 
 
 #Install Support Assistant
 #Reconfigure monitoring
 
 
-### Cleanup unused OMT resources
+### Post Transform: Cleanup unused OMT resources
 ```
 sudo chmod g+rx ${CDF_HOME}/charts
 sudo chmod g+rw ${CDF_HOME}/charts/*
