@@ -177,6 +177,12 @@ NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo $NS
 
 cat << EOT | kubectl apply -f -
 ```
+<script>
+import cluster_ingress from './files/cluster_ingress.yml'
+</script>
+
+{{cluster_ingress}}  
+
 <!--@include:./files/cluster_ingress.yml-->
 ```
 EOT
