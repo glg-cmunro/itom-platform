@@ -176,7 +176,9 @@ CLUSTER_FQDN_INT=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
 NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo $NS
 
 cat << EOT | kubectl apply -f -
+```
 <!--@include:./files/cluster_ingress.yml-->
+```
 EOT
 ```
 
