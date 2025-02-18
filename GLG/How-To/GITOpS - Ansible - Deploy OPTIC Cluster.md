@@ -4,6 +4,7 @@
 ## Deployment Steps  
 1. Create AWS Infrastructure  
 2. Configure GreenLight User Access  
+3. Deploy OMT / SMAX with silent install
 3. Update Route53 for Bastion Host  
 4. Clone GIT Repository for aws-smax  
 
@@ -100,13 +101,11 @@ git clone git@github.com:GreenLightGroup/aws-smax.git
 > Install Metrics Server
 ```
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-
 ```
 
 > Run ansible playbook to deploy OMT/SMAX using silent install
 ```
 ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/optic-deploy-omt.yml -e full_name=testing.dev.gitops.com -i ../../inventory/testing.dev.gitops.com
-
 ```
 </details>
 
@@ -166,168 +165,20 @@ eksctl create iamserviceaccount \
  - Create Ingress smax:443
 
 ```
-CERT_ARN=arn:aws:acm:us-east-1:713745958112:certificate/4210d4fc-eb24-458b-b2ee-4585f0597b25
+#CERT_ARN=arn:aws:acm:us-east-1:713745958112:certificate/4210d4fc-eb24-458b-b2ee-4585f0597b25
+
 VPC_CIDR=10.8.0.0/16
 CLUSTER_NAME=T800
-CLUSTER_FQDN=t800.dev.gitops.com
-INTEGRATION_FQDN=t800-int.dev.gitops.com
+CLUSTER_FQDN=T800.dev.gitops.com
+CSN=$(echo ${CLUSTER_FQDN} | awk -F. '{print $1}')
+CERT_ARN=$(aws acm list-certificates --query "CertificateSummaryList[?DomainName=='*.dev.gitops.com'].CertificateArn" --output text)
+CLUSTER_FQDN_INT=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
 NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo $NS
 
 cat << EOT | kubectl apply -f -
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol: HTTPS
-    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
-    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
-    alb.ingress.kubernetes.io/healthcheck-path: /healthz
-    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
-    alb.ingress.kubernetes.io/inbount-cidrs: ${VPC_CIDR},65.100.209.45/32,35.80.160.129/32
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 5443}]'
-    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/security-groups: ""
-    alb.ingress.kubernetes.io/success-codes: 200-399
-    alb.ingress.kubernetes.io/target-type: instance
-  finalizers:
-    - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
-  labels:
-    app: mng-nginx-ingress
-  name: mng-ingress
-  namespace: core
-spec:
-  ingressClassName: alb
-  rules:
-  - http:
-      paths:
-      - backend:
-          service:
-            name: portal-ingress-controller-svc
-            port:
-              number: 5443
-        path: /*
-        pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - ${CLUSTER_FQDN,,}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol: HTTPS
-    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
-    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
-    alb.ingress.kubernetes.io/healthcheck-path: /
-    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
-    alb.ingress.kubernetes.io/inbount-cidrs: ${VPC_CIDR},65.100.209.45/32,35.80.160.129/32
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 3000}]'
-    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/security-groups: ""
-    alb.ingress.kubernetes.io/success-codes: 200-399
-    alb.ingress.kubernetes.io/target-type: instance
-  finalizers:
-  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
-  labels:
-    app: install-ingress
-  name: install-ingress
-  namespace: core
-spec:
-  ingressClassName: alb
-  rules:
-  - http:
-      paths:
-      - backend:
-          service:
-            name: frontend-ingress-controller-svc
-            port:
-              number: 3000
-        path: /*
-        pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - ${CLUSTER_FQDN,,}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol: HTTPS
-    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
-    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
-    alb.ingress.kubernetes.io/healthcheck-path: /healthz
-    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=180
-    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/security-groups: ""
-    alb.ingress.kubernetes.io/success-codes: 200-399
-    alb.ingress.kubernetes.io/target-type: instance
-  finalizers:
-  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
-  labels:
-    app: sma-ingress
-  name: sma-ingress
-  namespace: ${NS}
-spec:
-  ingressClassName: alb
-  rules:
-  - http:
-      paths:
-      - backend:
-          service:
-            name: itom-nginx-ingress-svc
-            port:
-              number: 443
-        path: /*
-        pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - ${CLUSTER_FQDN,,}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    alb.ingress.kubernetes.io/backend-protocol: HTTPS
-    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
-    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-int
-    alb.ingress.kubernetes.io/healthcheck-path: /healthz
-    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 2443}]'
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=180
-    alb.ingress.kubernetes.io/scheme: internal
-    alb.ingress.kubernetes.io/success-codes: 200-399
-    alb.ingress.kubernetes.io/target-type: instance
-  finalizers:
-  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-int
-  labels:
-    app: sma-integration-ingress
-  name: sma-integration-ingress
-  namespace: ${NS}
-spec:
-  ingressClassName: alb
-  rules:
-  - http:
-      paths:
-      - backend:
-          service:
-            name: itom-nginx-ingress-svc
-            port:
-              number: 443
-        path: /*
-        pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - ${INTEGRATION_FQDN,,}
+<!--@include:./files/cluster_ingress.yml-->
 EOT
+```
 
  - Add/Update DNS entry in Route53 with new ALB
 ```
@@ -366,3 +217,14 @@ aws route53 change-resource-record-sets \
     value: host1.foo.com
     ttl: 30
 """
+
+
+#### Install/Configure Velero
+```
+CLUSTER_FQDN=T800.dev.gitops.com
+BUCKET=t800.dev.gitops
+REGION=us-east-1
+aws s3api create-bucket \
+    --bucket $BUCKET \
+    --region $REGION
+```

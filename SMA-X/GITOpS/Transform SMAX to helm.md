@@ -186,13 +186,11 @@ cd ~/esm/24.2.2/scripts/transformation
 ```
 ```
 cd ~
-
 ```
 
 > Verify new PVs created
 ```
 kubectl get pv|grep -E  "config-volume|logging-volume|data-volume"|grep itsma
-
 ```
 
 > Check if new PVs are not yet 'Available'  
