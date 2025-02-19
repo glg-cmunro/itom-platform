@@ -176,16 +176,168 @@ CLUSTER_FQDN_INT=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
 NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo $NS
 
 cat << EOT | kubectl apply -f -
-<!--@include:./files/cluster_ingress.yml-->
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
+    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/inbount-cidrs: ${VPC_CIDR},65.100.209.45/32,35.80.160.129/32
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 5443}]'
+    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/security-groups: ""
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/target-type: instance
+  finalizers:
+    - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
+  labels:
+    app: mng-nginx-ingress
+  name: mng-ingress
+  namespace: core
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: portal-ingress-controller-svc
+            port:
+              number: 5443
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ${CLUSTER_FQDN,,}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
+    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/inbount-cidrs: ${VPC_CIDR},65.100.209.45/32,35.80.160.129/32
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 3000}]'
+    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/security-groups: ""
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/target-type: instance
+  finalizers:
+  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
+  labels:
+    app: install-ingress
+  name: install-ingress
+  namespace: core
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: frontend-ingress-controller-svc
+            port:
+              number: 3000
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ${CLUSTER_FQDN,,}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
+    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-sma
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=180
+    alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/security-groups: ""
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/target-type: instance
+  finalizers:
+  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-sma
+  labels:
+    app: sma-ingress
+  name: sma-ingress
+  namespace: ${NS}
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: itom-nginx-ingress-svc
+            port:
+              number: 443
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ${CLUSTER_FQDN,,}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/certificate-arn: ${CERT_ARN}
+    alb.ingress.kubernetes.io/group.name: ${CLUSTER_NAME,,}-int
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 2443}]'
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=180
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/success-codes: 200-399
+    alb.ingress.kubernetes.io/target-type: instance
+  finalizers:
+  - group.ingress.k8s.aws/${CLUSTER_NAME,,}-int
+  labels:
+    app: sma-integration-ingress
+  name: sma-integration-ingress
+  namespace: ${NS}
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: itom-nginx-ingress-svc
+            port:
+              number: 443
+        path: /*
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - ${CLUSTER_FQDN_INT,,}
 EOT
 ```
 
  - Add/Update DNS entry in Route53 with new ALB
 ```
-NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo ${NS}
 CLUSTER_FQDN=T800.dev.gitops.com
 CSN=$(echo ${CLUSTER_FQDN} | awk -F. '{print $1}')
-INT_FQDN=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
+CLUSTER_FQDN_INT=$(echo ${CLUSTER_FQDN} | sed "/$CSN/s//$CSN-int/")
+NS=$(kubectl get ns | grep itsma | awk '{print $1}') && echo ${NS}
 
 HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Name==`dev.gitops.com.`].Id' --output text) && echo ${HOSTED_ZONE_ID}
 ALB_NAME=$(kubectl get ing -n ${NS} sma-ingress -o json | /opt/cdf/bin/jq -r .status.loadBalancer.ingress[].hostname); echo ${ALB_NAME}
@@ -200,7 +352,7 @@ aws route53 change-resource-record-sets \
   --hosted-zone-id ${HOSTED_ZONE_ID} \
   --change-batch "${CHANGE_BATCH}"
 
-CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${INT_FQDN,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_INT_ZONE_ID}\", \"DNSName\": \"${ALB_INT_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
+CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"${CLUSTER_FQDN_INT,,}\", \"Type\": \"A\", \"AliasTarget\": {\"HostedZoneId\": \"${ALB_INT_ZONE_ID}\", \"DNSName\": \"${ALB_INT_NAME}\", \"EvaluateTargetHealth\": false }}}]}"
 aws route53 change-resource-record-sets \
   --hosted-zone-id ${HOSTED_ZONE_ID} \
   --change-batch "${CHANGE_BATCH_INT}"
