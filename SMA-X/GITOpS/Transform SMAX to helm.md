@@ -19,6 +19,9 @@
 4. Deploy ESM
    - Execute helm install
    - Redeploy Ingress
+5. Post Transform Tasks
+   - Re-Install ITOM Toolkit
+   - Cleanup OMT
 
 
 --- 
@@ -274,12 +277,21 @@ kubectl create -f ~/esm/sma-integration-ingress.yml
 
 ---
 
-### Re-Install ITOM Toolkit  
+
+---
+
+#Reconfigure monitoring
+
+### Post Transform Tasks  
+<details><summary>Post Transformation Tasks</summary>  
+
+#### Re-Install ITOM Toolkit  
 > Create working directory for Toolkit Framework  
 ```
 mkdir -p ~/toolkit/24.3 
 
 ```
+
 > Download and extract Toolkit  
 ```
 curl -gkLs https://owncloud.gitops.com/index.php/s/Q91ZKRmLTcCDKce/download -o ~/toolkit/24.3/itom-toolkit-framework-24.3.tar.gz
@@ -287,6 +299,7 @@ tar -zxvf ~/toolkit/24.3/itom-toolkit-framework-24.3.tar.gz -C ~/toolkit/24.3/
 chmod a+x ~/toolkit/24.3/toolkit_framework/install.sh
 
 ```
+
 > Install Toolkit
 > **_NOTE: You must execute the install.sh from the toolkit_framework directory or paths will not line up_**
 ```
@@ -295,13 +308,8 @@ cd ~/toolkit/24.3/toolkit_framework/
 
 ```
 
----
-
-#Reconfigure monitoring
-
-### Post Transform: Cleanup unused OMT resources  
-<details><summary>Post Transformation Cleanup</summary>
-
+#### Cleanup unused OMT resources  
+> Drop unused Apphub features  
 ```
 sudo chmod g+rx ${CDF_HOME}/charts
 sudo chmod g+rw ${CDF_HOME}/charts/*
@@ -311,12 +319,16 @@ APPHUB_CHART=$(cd ${CDF_HOME}/charts && ls apphub-1*.tgz) && echo ${APPHUB_CHART
 helm upgrade apphub $CDF_HOME/charts/${APPHUB_CHART} --reuse-values --set global.services.suiteDeploymentManagement=false -n core
 
 ```
+
+> Delete unused SMAX metadata pods  
 ```
 kubectl delete deploy suite-conf-pod-itsma -n core --ignore-not-found=true
 kubectl delete svc suite-conf-svc-itsma  -n core --ignore-not-found=true
 kubectl delete ingress suite-conf-ing-itsma -n core --ignore-not-found=true
 
 ```
+
+> Delete :3000 Ingress
 ```
 kubectl delete ingress -n core -l app=install-ingress
 
