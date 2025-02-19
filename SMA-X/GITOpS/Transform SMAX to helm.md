@@ -1,7 +1,7 @@
 # GreenLight Group - How To - Transform SMA classic to ESM Helm  
 # ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)  
 
-### Deployment Steps
+### Deployment Steps  
 1. Download/Extract ESM Helm Chart
 2. Pre-Requisites
    - Gather System Information  
@@ -22,7 +22,6 @@
 5. Post Transform Tasks
    - Re-Install ITOM Toolkit
    - Cleanup OMT
-
 
 --- 
 
@@ -146,8 +145,8 @@ cat ~/esm/sma-integration-ingress.yml
 
 ---
 
-#### Start ESM Helm Transformation  
-<details><summary>Start ESM Helm Transformation</summary>  
+#### ESM Helm Transformation  
+<details><summary>SMAX metadata to ESM Helm Transformation</summary>  
 
 > Stop the Suite and OMT  
 ```
