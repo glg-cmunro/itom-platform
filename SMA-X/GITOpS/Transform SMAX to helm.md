@@ -277,11 +277,6 @@ kubectl create -f ~/esm/sma-integration-ingress.yml
 
 ---
 
-
----
-
-#Reconfigure monitoring
-
 ### Post Transform Tasks  
 <details><summary>Post Transformation Tasks</summary>  
 
@@ -333,6 +328,8 @@ kubectl delete ingress suite-conf-ing-itsma -n core --ignore-not-found=true
 kubectl delete ingress -n core -l app=install-ingress
 
 ```
+
+#Reconfigure monitoring
 </details>
 
 ---
