@@ -40,7 +40,7 @@ SIZE=$(kubectl get configmap -o jsonpath='{.data.itom_suite_size}' itsma-common-
 
 ### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
-[AWS Backup Cluster](/docs/Ansible/AWS/AWS_Cluster-Backup.md)
+[AWS Backup Cluster](https://github.com/GreenlightGroup/how-tos/blob/main/docs/Ansible/AWS/AWS_Cluster-Backup.md)
 
 ### Execute Actions  
 #### Download/Extract ESM Helm Chart  
