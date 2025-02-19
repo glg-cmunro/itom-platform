@@ -46,6 +46,8 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
+
 ```
 </details>
 
@@ -198,7 +200,8 @@ kubectl get pv|grep itsma|grep -v -E "db-volume|global-volume|smartanalytics"|aw
 
 > Copy OMT vault data to global-volume for independant SMA vault
 ```
-sudo cp -R /mnt/efs/var/vols/itom/core/vault /mnt/efs/var/vols/itom/itsma/global-volume/
+VAULT_PATH=$(kubectl get pv itom-vol -o json | jq -r .spec.nfs.path)
+sudo cp -R /mnt/efs${VAULT_PATH}/vault /mnt/efs/var/vols/itom/itsma/global-volume/
 sudo chown -R $SYSTEM_USER_ID:$SYSTEM_GROUP_ID /mnt/efs/var/vols/itom/itsma/global-volume/vault
 ```
 
@@ -224,7 +227,7 @@ $CDF_HOME/bin/cdfctl runlevel set -l UP -n core
 
 > Verify OMT is up and running completely before continuing
 ```
-watch -n 10 'kubectl get pods -n core|grep -v 1/1|grep -v 2/2|grep -v 3/3|grep -v 4/4|grep -v Completed'
+watch -n 10 'kubectl get pods -n core|grep -v -E "1/1|2/2|3/3|4/4|Completed'
 ```
 </details>
 
@@ -235,17 +238,22 @@ watch -n 10 'kubectl get pods -n core|grep -v 1/1|grep -v 2/2|grep -v 3/3|grep -
 $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $NAMESPACE --set global.nodeSelector.Worker=label -f  ~/esm/customized_values.yaml -f ~/esm/values.yaml
 ```
 
+**_After helm deployment completes, ensure SMAX is up and running and healthy before continuing_**
+
+```
+watch -n 10 'kubectl get pods -n ${NAMESPACE}|grep -v -E "1/1|2/2|3/3|4/4|Completed'
+
+```
 > Redeploy sma-ingress
 ```
 kubectl create -f ~/esm/sma-ingress.yml; \
 kubectl create -f ~/esm/sma-integration-ingress.yml
+
 ```
-
-
 > Update helm autopass
 ```
-chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
-~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
+~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh -n ${NAMESPACE}
+
 ```
 </details>
 
