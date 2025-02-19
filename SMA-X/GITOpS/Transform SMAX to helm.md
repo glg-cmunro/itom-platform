@@ -16,9 +16,24 @@
    - Delete SMA namespace
    - Sync Data Volumes (incremental)
    - Patch OMT deployment
-   - Create ESM deployment
+4. Deploy ESM
+   - Execute helm install
+   - Redeploy Ingress
+
 
 --- 
+
+### Environment Variables used throughout this document  
+```
+CDF_HOME=/opt/cdf
+NAMESPACE=`kubectl get namespace|grep itsma | cut -f1 -d " "`
+SYSTEM_USER_ID=$(kubectl get configmap -o jsonpath='{.data.system_user_id}' itsma-common-configmap -n $NAMESPACE)
+SYSTEM_GROUP_ID=$(kubectl get configmap -o jsonpath='{.data.system_group_id}' itsma-common-configmap -n $NAMESPACE)
+SIZE=$(kubectl get configmap -o jsonpath='{.data.itom_suite_size}' itsma-common-configmap -n $NAMESPACE)
+
+```
+
+---
 
 ### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
@@ -31,6 +46,7 @@ Backup Cluster and SUITE before making any changes
 > Create ESM working directory
 ```
 mkdir -p ~/esm/24.2.2
+
 ```
 > Download the ESM Helm chart matching existing SMAX deployment (ESM 24.2 Patch 2)
 ```
@@ -39,6 +55,7 @@ unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
 unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
 rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
+
 ```
 > Set execute for requisite scripts
 ```
@@ -46,21 +63,14 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
 chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
+
 ```
 </details>
 
+---
+
 #### Pre-requisites  
 <details><summary>Pre-requisites</summary>  
-
-> Gather system information  
-```
-NAMESPACE=`kubectl get namespace|grep itsma | cut -f1 -d " "`
-SYSTEM_USER_ID=$(kubectl get configmap -o jsonpath='{.data.system_user_id}' itsma-common-configmap -n $NAMESPACE)
-SYSTEM_GROUP_ID=$(kubectl get configmap -o jsonpath='{.data.system_group_id}' itsma-common-configmap -n $NAMESPACE)
-SIZE=$(kubectl get configmap -o jsonpath='{.data.itom_suite_size}' itsma-common-configmap -n $NAMESPACE)
-
-echo NAMESPACE: $NAMESPACE SYSTEM_USER_ID: ${SYSTEM_USER_ID}, SYSTEM_GROUP_ID: ${SYSTEM_GROUP_ID}, SIZE: ${SIZE}
-```
 
 > Extend EFS volumes  
 ```
@@ -129,6 +139,8 @@ cat ~/esm/sma-ingress.yml
 cat ~/esm/sma-integration-ingress.yml
 ```
 </details>
+
+---
 
 #### Start ESM Helm Transformation  
 <details><summary>Start ESM Helm Transformation</summary>  
@@ -228,11 +240,20 @@ watch -n 10 'kubectl get pods -n core|grep -v 1/1|grep -v 2/2|grep -v 3/3|grep -
 ```
 </details>
 
-#### Deploy ESM Helm chart
+---
+
+#### Deploy ESM Helm chart  
 <details><summary>Deploy ESM Helm Chart</summary>  
 
 ```
 $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $NAMESPACE --set global.nodeSelector.Worker=label -f  ~/esm/customized_values.yaml -f ~/esm/values.yaml
+
+```
+
+**_After helm deployment completes, ensure SMAX is up and running and healthy before continuing_**  
+```
+watch -n 10 'kubectl get pods -n ${NAMESPACE}|grep -v -E "1/1|2/2|3/3|4/4|Completed'
+
 ```
 
 > Redeploy sma-ingress
@@ -244,17 +265,39 @@ kubectl create -f ~/esm/sma-integration-ingress.yml
 
 > Update helm autopass
 ```
-chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
 ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh -n $NAMESPACE
+
 ```
 </details>
 
+---
 
-#Install Support Assistant
+### Re-Install ITOM Toolkit  
+> Create working directory for Toolkit Framework  
+```
+mkdir -p ~/toolkit/24.3 
+
+```
+> Download and extract Toolkit  
+```
+curl -gkLs https://owncloud.gitops.com/index.php/s/Q91ZKRmLTcCDKce/download -o ~/toolkit/24.3/itom-toolkit-framework-24.3.tar.gz
+tar -zxvf ~/toolkit/24.3/itom-toolkit-framework-24.3.tar.gz -C ~/toolkit/24.3/
+chmod a+x ~/toolkit/24.3/toolkit_framework/install.sh
+
+```
+> Install Toolkit
+> **_NOTE: You must execute the install.sh from the toolkit_framework directory or paths will not line up_**
+```
+cd ~/toolkit/24.3/toolkit_framework/
+./install.sh
+
+```
+
+---
+
 #Reconfigure monitoring
 
-
-### Post Transform: Cleanup unused OMT resources
+### Post Transform: Cleanup unused OMT resources  
 <details><summary>Post Transformation Cleanup</summary>
 
 ```
@@ -264,15 +307,20 @@ sudo chmod g+rw ${CDF_HOME}/charts/*
 APPHUB_CHART=$(cd ${CDF_HOME}/charts && ls apphub-1*.tgz) && echo ${APPHUB_CHART}
 
 helm upgrade apphub $CDF_HOME/charts/${APPHUB_CHART} --reuse-values --set global.services.suiteDeploymentManagement=false -n core
+
 ```
 ```
 kubectl delete deploy suite-conf-pod-itsma -n core --ignore-not-found=true
 kubectl delete svc suite-conf-svc-itsma  -n core --ignore-not-found=true
 kubectl delete ingress suite-conf-ing-itsma -n core --ignore-not-found=true
+
 ```
 ```
 kubectl delete ingress -n core -l app=install-ingress
+
 ```
 </details>
+
+---
 
 ##### End of Doc  
