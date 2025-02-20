@@ -39,37 +39,37 @@ SIZE=$(kubectl get configmap -o jsonpath='{.data.itom_suite_size}' itsma-common-
 
 ### Backup Cluster  
 Backup Cluster and SUITE before making any changes  
-[AWS Backup Cluster](https://github.com/GreenlightGroup/how-tos/blob/main/docs/Ansible/AWS/AWS_Cluster-Backup.md)
+[AWS Backup Cluster](https://github.com/GreenlightGroup/how-tos/blob/main/docs/Ansible/AWS/AWS_Cluster-Backup.md)  
 
 ### Execute Actions  
 #### Download/Extract ESM Helm Chart  
 <details><summary>Download/Extract ESM Heln Chart</summary>  
 
-> Create ESM working directory
-   ```
-   mkdir -p ~/esm/24.2.2
-   
-   ```
+> Create ESM working directory 
+```
+mkdir -p ~/esm/24.2.2
 
-> Download the ESM Helm chart matching existing SMAX deployment (ESM 24.2 Patch 2)
-   ```
-   curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
-   unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
-   unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
-   rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
-   rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
-   
-   ```
+```
 
-> Set execute for requisite scripts
-   ```
-   chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
-   chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
-   chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
-   chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
-   chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
-   
-   ```
+> Download the ESM Helm chart matching existing SMAX deployment (ESM 24.2 Patch 2)  
+```
+curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
+unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
+unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
+rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
+rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
+
+```
+
+> Set execute for requisite scripts  
+```
+chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
+chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
+chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
+
+```
 </details>
 
 ---
@@ -78,21 +78,21 @@ Backup Cluster and SUITE before making any changes
 <details><summary>Pre-requisites</summary>  
 
 > Extend EFS volumes  
-   ```
-   sudo mkdir -p /mnt/efs/var/vols/itom/itsma/logging-volume
-   sudo mkdir -p /mnt/efs/var/vols/itom/itsma/config-volume
-   
-   sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/logging-volume
-   sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/config-volume
-   
-   sudo chmod g+w /mnt/efs/var/vols/itom/itsma/logging-volume
-   sudo chmod g+w /mnt/efs/var/vols/itom/itsma/config-volume
-   sudo chmod g+s /mnt/efs/var/vols/itom/itsma/logging-volume
-   sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
-   
-   #sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
-   
-   ```
+```
+sudo mkdir -p /mnt/efs/var/vols/itom/itsma/logging-volume
+sudo mkdir -p /mnt/efs/var/vols/itom/itsma/config-volume
+
+sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/logging-volume
+sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/config-volume
+
+sudo chmod g+w /mnt/efs/var/vols/itom/itsma/logging-volume
+sudo chmod g+w /mnt/efs/var/vols/itom/itsma/config-volume
+sudo chmod g+s /mnt/efs/var/vols/itom/itsma/logging-volume
+sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
+
+#sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
+
+```
 
 > Sync data volumes  
 
@@ -120,32 +120,31 @@ cd ~
 ```
 
 > Get Customizations to resources Helm values  
-   ```
-   cd ~/esm/24.2.2/scripts/custom_settings
-   ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
-   
-   ```
-   ```
-   cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
-   cd ~
-   
-   ```
+```
+cd ~/esm/24.2.2/scripts/custom_settings
+~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+
+```
+```
+cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
+cd ~
+
+ ```
 
 > Get current Alertmanager settings  
 
-   *_Perform these steps if 'Monitoring' has been deployed to the cluster_*  
+*_Perform these steps if 'Monitoring' has been deployed to the cluster_*  
+```
+kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
 
-   ```
-   kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
-   
-   ```
-   *_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
-   ```
-   cat ~/esm/alert-manager.yml
-   
-   ```
+```
+*_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
+```
+cat ~/esm/alert-manager.yml
 
-> Get current INGRESS for SMA
+```
+
+> Get current INGRESS for SMA  
 ```
 kubectl get ing -n $NS sma-ingress -o yaml > ~/esm/sma-ingress.yml
 kubectl get ing -n $NS sma-integration-ingress -o yaml > ~/esm/sma-integration-ingress.yml
@@ -175,6 +174,7 @@ $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
 ```
 
 > Verify everything is 'DOWN' before continuing on  
+
 **_If any pods return, wait and check again_**  
 ```
 kubectl get pod -n core |grep -v Completed; \
@@ -182,20 +182,21 @@ kubectl get pod -n $NAMESPACE|grep -v -E 'throttling|opentelemetry|toolkit|Compl
 
 ```
 
-> Delete classic SMA resources
+> Delete classic SMA resources  
 ```
 kubectl delete ns $NAMESPACE
 
 ```
 
 > Verify the namespace is successfully deleted  
+
 **_If the ITSMA namespace still shows up, wait and check again_**  
 ```
 kubectl get ns
 
 ```
 
-> Sync ingremental data since pre-reqs
+> Sync ingremental data since pre-reqs  
 ```
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
 --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
@@ -204,19 +205,22 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
 
 ```
 
-> Patch the deployment name for the core namespace
+> Patch the deployment name for the core namespace  
 ```
 kubectl patch ns core -p '{"metadata":{"labels":{"deployments.microfocus.com/deployment-name":"cdf"}}}'
 
 ```
 
-> Create new ESM deployment (using original itsma namespace name)
+> Create new ESM deployment (using original itsma namespace name)  
 ```
 $CDF_HOME/bin/cdfctl deployment create -d $NAMESPACE
 
 ```
 
-> Refine existing PVs for new deployment
+> Refine existing PVs for new deployment  
+
+*_When Prompted: Press 'y' <ENTER> to refine the PVs for $NAMESPACE_*  
+*_When Prompted: Press 'y' <ENTER> again to proceed with the creation of the new PVs_*  
 ```
 cd ~/esm/24.2.2/scripts/transformation
 ~/esm/24.2.2/scripts/transformation/refinePV.sh $SIZE
@@ -227,23 +231,26 @@ cd ~
 
 ```
 
-> Verify new PVs created
+> Verify new PVs created  
 ```
 kubectl get pv|grep -E  "config-volume|logging-volume|data-volume"|grep itsma
+
 ```
 
 > Check if new PVs are not yet 'Available'  
 *_Will only return values for PVs that are NOT yet ready_*  
 ```
 kubectl get pv|grep itsma|grep -v -E "db-volume|global-volume|smartanalytics"|awk '{if ($5!="Available") print $0}'
+
 ```
 
 
-> Copy OMT vault data to global-volume for independant SMA vault
+> Copy OMT vault data to global-volume for independant SMA vault  
 ```
 VAULT_PATH=$(kubectl get pv itom-vol -o json | jq -r .spec.nfs.path)
 sudo cp -R /mnt/efs${VAULT_PATH}/vault /mnt/efs/var/vols/itom/itsma/global-volume/
 sudo chown -R $SYSTEM_USER_ID:$SYSTEM_GROUP_ID /mnt/efs/var/vols/itom/itsma/global-volume/vault
+
 ```
 
 > Cppy OMT vault secrets to SMA vault
