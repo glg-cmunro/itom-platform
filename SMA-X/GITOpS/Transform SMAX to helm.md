@@ -93,6 +93,7 @@ sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
 ```
 
 > Sync data volumes
+*_When prompted: Press 'y' to proceed with the sync copy_*  
 ```
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
@@ -100,15 +101,14 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
 
 ```
-> Press 'y' to proceed with the sync copy  
 
 > Get Basic environment Helm values  
+*_When prompted: Press 'y' to use the discovered itsma namespace  
 ```
 cd ~/esm/24.2.2/scripts/transformation/
 ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 
 ```
-> Press 'y' to use the discovered itsma namespace  
 
 ```
 cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
@@ -166,6 +166,7 @@ cat ~/esm/sma-integration-ingress.yml
 ```
 $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n $NAMESPACE
 $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
+
 ```
 
 > Verify everything is 'DOWN' before continuing on  
@@ -173,6 +174,7 @@ $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
 ```
 kubectl get pod -n $NAMESPACE|grep -v -E 'throttling|opentelemetry|toolkit|Completed'
 kubectl get pod -n core |grep -v Completed
+
 ```
 
 > Delete classic SMA resources
