@@ -46,28 +46,30 @@ Backup Cluster and SUITE before making any changes
 <details><summary>Download/Extract ESM Heln Chart</summary>  
 
 > Create ESM working directory
-```
-mkdir -p ~/esm/24.2.2
+   ```
+   mkdir -p ~/esm/24.2.2
+   
+   ```
 
-```
 > Download the ESM Helm chart matching existing SMAX deployment (ESM 24.2 Patch 2)
-```
-curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
-unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
-unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
-rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
-rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
+   ```
+   curl https://owncloud.gitops.com/index.php/s/eYjtMSYnEi8Qtax/download -o ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip
+   unzip ~/esm/24.2.2/ESM_Helm_Chart-24.2.2.zip -d ~/esm/24.2.2/
+   unzip ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip -d ~/esm/24.2.2/
+   rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip
+   rm ~/esm/24.2.2/esm-1.0.2+24.2.2-18.zip.sig
+   
+   ```
 
-```
 > Set execute for requisite scripts
-```
-chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
-chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
-chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
-chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
-chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
-
-```
+   ```
+   chmod u+x ~/esm/24.2.2/scripts/transformation/syncData.sh
+   chmod u+x ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
+   chmod u+x ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+   chmod u+x ~/esm/24.2.2/scripts/transformation/refinePV.sh
+   chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
+   
+   ```
 </details>
 
 ---
@@ -76,69 +78,69 @@ chmod u+x ~/esm/24.2.2/scripts/transformation/updateAutopassKey.sh
 <details><summary>Pre-requisites</summary>  
 
 > Extend EFS volumes  
-```
-sudo mkdir -p /mnt/efs/var/vols/itom/itsma/logging-volume
-sudo mkdir -p /mnt/efs/var/vols/itom/itsma/config-volume
-
-sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/logging-volume
-sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/config-volume
-
-sudo chmod g+w /mnt/efs/var/vols/itom/itsma/logging-volume
-sudo chmod g+w /mnt/efs/var/vols/itom/itsma/config-volume
-sudo chmod g+s /mnt/efs/var/vols/itom/itsma/logging-volume
-sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
-
-#sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
-
-```
+   ```
+   sudo mkdir -p /mnt/efs/var/vols/itom/itsma/logging-volume
+   sudo mkdir -p /mnt/efs/var/vols/itom/itsma/config-volume
+   
+   sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/logging-volume
+   sudo chown -R 1999:1999 /mnt/efs/var/vols/itom/itsma/config-volume
+   
+   sudo chmod g+w /mnt/efs/var/vols/itom/itsma/logging-volume
+   sudo chmod g+w /mnt/efs/var/vols/itom/itsma/config-volume
+   sudo chmod g+s /mnt/efs/var/vols/itom/itsma/logging-volume
+   sudo chmod g+s /mnt/efs/var/vols/itom/itsma/config-volume
+   
+   #sudo find /mnt/efs/var/vols/itom -type d -exec stat --format='%u:%g %A %n' '{}' \;| grep -v 1999:1999
+   
+   ```
 
 > Sync data volumes  
-*_When prompted: Press 'y' to proceed with the sync copy_*  
-```
-sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
- --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
- --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
- --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
-
-```
+   *_When prompted: Press 'y' to proceed with the sync copy_*  
+   ```
+   sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
+    --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
+    --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
+    --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
+   
+   ```
 
 > Get Basic environment Helm values  
-*_When prompted: Press 'y' to use the discovered itsma namespace_*  
-```
-cd ~/esm/24.2.2/scripts/transformation/
-~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 
-```
-
-```
-cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
-cd ~
-
-```
+   *_When prompted: Press 'y' to use the discovered itsma namespace_*  
+   ```
+   cd ~/esm/24.2.2/scripts/transformation/
+   ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
+   
+   ```
+   ```
+   cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
+   cd ~
+   
+   ```
 
 > Get Customizations to resources Helm values  
-```
-cd ~/esm/24.2.2/scripts/custom_settings
-~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+   ```
+   cd ~/esm/24.2.2/scripts/custom_settings
+   ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+   
+   ```
+   ```
+   cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
+   cd ~
+   
+   ```
 
-```
-
-```
-cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
-cd ~
-
-```
-
-> Get current Alertmanager settings
-```
-kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
-
-```
-*_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
-```
-cat ~/esm/alert-manager.yml
-
-```
+> Get current Alertmanager settings  
+   *__Perform these steps if 'Monitoring' has been deployed to the cluster__*  
+   ```
+   kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
+   
+   ```
+   *_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
+   ```
+   cat ~/esm/alert-manager.yml
+   
+   ```
 
 > Get current INGRESS for SMA
 ```
