@@ -2,26 +2,26 @@
 # ![GreenLight Group Logo](https://assets.website-files.com/5ebcb9396faf10d8f7644479/5ed6a066891af295a039860f_GLGLogolrg-p-500.png)  
 
 ### Deployment Steps  
-1. Download/Extract ESM Helm Chart
-2. Pre-Requisites
+1. Download/Extract ESM Helm Chart  
+2. Pre-Requisites  
    - Gather System Information  
    - Extend EFS Volumes  
    - Sync Data Volumes  
    - Get basic values  
    - Get custom values  
-   - Get current INGRESS
-3. Transform SMA classic to ESM Helm
-   - Stop OMT and SMA
-   - Verify resources are 'DOWN'
-   - Delete SMA namespace
-   - Sync Data Volumes (incremental)
-   - Patch OMT deployment
-4. Deploy ESM
-   - Execute helm install
-   - Redeploy Ingress
-5. Post Transform Tasks
-   - Re-Install ITOM Toolkit
-   - Cleanup OMT
+   - Get current INGRESS  
+3. Transform SMA classic to ESM Helm  
+   - Stop OMT and SMA  
+   - Verify resources are 'DOWN'  
+   - Delete SMA namespace  
+   - Sync Data Volumes (incremental)  
+   - Patch OMT deployment  
+4. Deploy ESM  
+   - Execute helm install  
+   - Redeploy Ingress  
+5. Post Transform Tasks  
+   - Re-Install ITOM Toolkit  
+   - Cleanup OMT  
 
 --- 
 
