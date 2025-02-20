@@ -131,7 +131,9 @@ Backup Cluster and SUITE before making any changes
    ```
 
 > Get current Alertmanager settings  
-   *__Perform these steps if 'Monitoring' has been deployed to the cluster__*  
+
+   *_Perform these steps if 'Monitoring' has been deployed to the cluster_*  
+   
    ```
    kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
    
