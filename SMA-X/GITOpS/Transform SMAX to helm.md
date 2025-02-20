@@ -96,7 +96,7 @@ Backup Cluster and SUITE before making any changes
 
 > Sync data volumes  
 
-**_When prompted: Press 'y' to proceed with the sync copy_**  
+*_When prompted: Press 'y' to proceed with the sync copy_*  
 ```
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
 --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
@@ -107,18 +107,17 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
 
 > Get Basic environment Helm values  
 
-   *_When prompted: Press 'y' to use the discovered itsma namespace__*  
+*_When prompted: Press 'y' to use the discovered itsma namespace_*  
+```
+cd ~/esm/24.2.2/scripts/transformation/
+~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
 
-   ```
-   cd ~/esm/24.2.2/scripts/transformation/
-   ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
-   
-   ```
-   ```
-   cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
-   cd ~
-   
-   ```
+```
+```
+cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
+cd ~
+
+```
 
 > Get Customizations to resources Helm values  
    ```
