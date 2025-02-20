@@ -48,6 +48,9 @@ sudo su - dbadmin
 
 DB_HOST=$(hostname -i)
 /opt/vertica/bin/adminTools -t create_db -d cgro -p Gr33nl1ght_ --hosts=$DB_HOST --policy=always
+
+/opt/vertica/bin/adminTools -t create_db -d cgro -p Gr33nl1ght_ --hosts=$(hostname -i) --policy=always
+
 /opt/vertica/bin/adminTools -t logrotate -d cgro -r daily -k7
 vsql -U dbadmin -w Gr33nl1ght_ -c 'select display_license();'
 
@@ -63,6 +66,27 @@ openssl genrsa -out client.key
 openssl req -new -key client.key -out client_reqout.txt
 openssl x509 -req -in client_reqout.txt -days 3650 -sha1 -CAcreateserial -CA serverca.crt -CAkey servercakey.pem -out client.crt
 
+####
+CREATE KEY ca_key TYPE 'RSA' LENGTH 4096;
+
+CREATE CA CERTIFICATE ca_certificate
+SUBJECT '/C=US/ST=UT/L=Salt Lake City/O=GreenLight Group/OU=GLG IT/CN=Vertica Root CA'
+VALID FOR 3560
+EXTENSIONS 'authorityKeyIdentifier' = 'keyid:always,issuer', 'nsComment' = 'Vertica generated root CA cert'
+KEY ca_key;
+
+CREATE KEY server_key TYPE 'RSA' LENGTH 4096;
+
+CREATE CERTIFICATE server_san
+SUBJECT '/C=US/ST=UT/L=Salt Lake City/O=GreenLight Group/OU=GLG IT/CN=Vertica server/emailAddress=gitops-dev@greenlightgroup.com'
+SIGNED BY ca_certificate
+EXTENSIONS 'nsComment' = 'Vertica server cert', 'extendedKeyUsage' = 'serverAuth', 'subjectAltName' = 'IP:10.8.50.30,DNS:10.8.50.30'
+KEY server_key;
+
+ALTER TLS CONFIGURATION server CERTIFICATE server_san;
+
+
+####
 
 
 #####

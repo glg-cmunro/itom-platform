@@ -95,7 +95,8 @@ Backup Cluster and SUITE before making any changes
    ```
 
 > Sync data volumes  
-   *_When prompted: Press 'y' to proceed with the sync copy_*  
+   **_When prompted: Press 'y' to proceed with the sync copy_**  
+
    ```
    sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
     --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
@@ -106,7 +107,8 @@ Backup Cluster and SUITE before making any changes
 
 > Get Basic environment Helm values  
 
-   *_When prompted: Press 'y' to use the discovered itsma namespace_*  
+   **_When prompted: Press 'y' to use the discovered itsma namespace_**  
+   
    ```
    cd ~/esm/24.2.2/scripts/transformation/
    ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
@@ -133,7 +135,7 @@ Backup Cluster and SUITE before making any changes
 > Get current Alertmanager settings  
 
    *_Perform these steps if 'Monitoring' has been deployed to the cluster_*  
-   
+
    ```
    kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
    
