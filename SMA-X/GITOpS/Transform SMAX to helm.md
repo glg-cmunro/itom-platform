@@ -98,48 +98,62 @@ sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
  --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
  --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
  --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
+
 ```
+> Press 'y' to proceed with the sync copy  
 
 > Get Basic environment Helm values  
 ```
 cd ~/esm/24.2.2/scripts/transformation/
 ~/esm/24.2.2/scripts/transformation/generateBasicValuesYaml.sh
+
 ```
+> Press 'y' to use the discovered itsma namespace  
+
 ```
 cp ~/esm/24.2.2/scripts/transformation/values.yaml ~/esm/
 cd ~
+
 ```
 
 > Get Customizations to resources Helm values  
 ```
 cd ~/esm/24.2.2/scripts/custom_settings
 ~/esm/24.2.2/scripts/custom_settings/generateCustomSettings.sh
+
 ```
+
 ```
 cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
+
 ```
 
 > Get current Alertmanager settings
 ```
 kubectl get secret -n core alertmanager-itom-prometheus-alertmanager -o json | jq -r '.data."alertmanager.yaml"' | base64 -d > ~/esm/alert-manager.yml
+
 ```
 *_Verify details of Alertmanager ConfigMap before contiuning . . ._*  
 ```
 cat ~/esm/alert-manager.yml
+
 ```
 
 > Get current INGRESS for SMA
 ```
 kubectl get ing -n $NS sma-ingress -o yaml > ~/esm/sma-ingress.yml
 kubectl get ing -n $NS sma-integration-ingress -o yaml > ~/esm/sma-integration-ingress.yml
+
 ```
 *_Verify details of INGRESS before contiuning . . ._*  
 ```
 cat ~/esm/sma-ingress.yml
+
 ```
 ```
 cat ~/esm/sma-integration-ingress.yml
+
 ```
 </details>
 
