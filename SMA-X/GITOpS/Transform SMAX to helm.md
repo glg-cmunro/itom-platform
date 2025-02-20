@@ -357,7 +357,7 @@ kubectl delete ingress suite-conf-ing-itsma -n core --ignore-not-found=true
 
 ```
 
-> Delete :3000 Ingress
+> Delete :3000 Ingress  
 ```
 kubectl delete ingress -n core -l app=install-ingress
 
