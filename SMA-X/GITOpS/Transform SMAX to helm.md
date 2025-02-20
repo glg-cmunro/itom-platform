@@ -129,7 +129,7 @@ cd ~/esm/24.2.2/scripts/custom_settings
 cp ~/esm/24.2.2/scripts/custom_settings/customized_values.yaml ~/esm/
 cd ~
 
- ```
+```
 
 > Get current Alertmanager settings  
 
@@ -253,7 +253,7 @@ sudo chown -R $SYSTEM_USER_ID:$SYSTEM_GROUP_ID /mnt/efs/var/vols/itom/itsma/glob
 
 ```
 
-> Cppy OMT vault secrets to SMA vault
+> Copy OMT vault secrets to SMA vault
 ```
 #!/bin/bash
 #NAMESPACE=${NAMESPACE}
@@ -266,6 +266,7 @@ kubectl get secrets -n core $secret -o yaml | sed "s/meta.helm.sh\/release-names
 cm=public-ca-certificates
 echo "-----create cm $cm from core to ${NAMESPACE} -----"
 kubectl get cm -n core $cm -o yaml | sed "s/meta.helm.sh\/release-namespace\:\ core/meta.helm.sh\/release-namespace\:\ ${NAMESPACE}/g" | sed "s/meta.helm.sh\/release-name\:\ apphub/meta.helm.sh\/release-name\:\ \'${releaseName}\'/g" | sed "s/namespace\:\ core/namespace\:\ ${NAMESPACE}/g" | kubectl create -f -
+
 ```
 
 > Start OMT back up to continue deployment
@@ -288,6 +289,7 @@ watch -n 10 'kubectl get pods -n core|grep -v -E "1/1|2/2|3/3|4/4|Completed'
 
 ```
 $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $NAMESPACE --set global.nodeSelector.Worker=label -f  ~/esm/customized_values.yaml -f ~/esm/values.yaml
+
 ```
 
 **_After helm deployment completes, ensure SMAX is up and running and healthy before continuing_**
