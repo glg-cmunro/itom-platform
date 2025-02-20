@@ -177,47 +177,54 @@ $CDF_HOME/bin/cdfctl runlevel set -l DOWN -n core
 > Verify everything is 'DOWN' before continuing on  
 **_If any pods return, wait and check again_**  
 ```
+kubectl get pod -n core |grep -v Completed; \
 kubectl get pod -n $NAMESPACE|grep -v -E 'throttling|opentelemetry|toolkit|Completed'
-kubectl get pod -n core |grep -v Completed
 
 ```
 
 > Delete classic SMA resources
 ```
 kubectl delete ns $NAMESPACE
+
 ```
 
 > Verify the namespace is successfully deleted  
 **_If the ITSMA namespace still shows up, wait and check again_**  
 ```
 kubectl get ns
+
 ```
 
 > Sync ingremental data since pre-reqs
 ```
 sudo ~/esm/24.2.2/scripts/transformation/syncData.sh \
- --globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
- --smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
- --configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
+--globalVolumePath /mnt/efs/var/vols/itom/itsma/global-volume \
+--smartanalyticsVolumePath /mnt/efs/var/vols/itom/itsma/smartanalytics-volume \
+--configVolumePath /mnt/efs/var/vols/itom/itsma/config-volume
+
 ```
 
 > Patch the deployment name for the core namespace
 ```
 kubectl patch ns core -p '{"metadata":{"labels":{"deployments.microfocus.com/deployment-name":"cdf"}}}'
+
 ```
 
 > Create new ESM deployment (using original itsma namespace name)
 ```
 $CDF_HOME/bin/cdfctl deployment create -d $NAMESPACE
+
 ```
 
 > Refine existing PVs for new deployment
 ```
 cd ~/esm/24.2.2/scripts/transformation
 ~/esm/24.2.2/scripts/transformation/refinePV.sh $SIZE
+
 ```
 ```
 cd ~
+
 ```
 
 > Verify new PVs created
