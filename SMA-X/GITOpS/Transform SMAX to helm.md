@@ -295,7 +295,7 @@ $CDF_HOME/bin/helm install sma ~/esm/24.2.2/charts/esm-1.0.2+24.2.2-18.tgz -n $N
 **_After helm deployment completes, ensure SMAX is up and running and healthy before continuing_**
 
 ```
-watch -n 10 'kubectl get pods -n ${NAMESPACE}|grep -v -E "1/1|2/2|3/3|4/4|Completed'
+watch -n 10 'kubectl get pods -n ${NAMESPACE}|grep -v -E "1/1|2/2|3/3|4/4|Completed"'
 
 ```
 > Redeploy sma-ingress
