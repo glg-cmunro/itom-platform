@@ -277,7 +277,7 @@ $CDF_HOME/bin/cdfctl runlevel set -l UP -n core
 
 > Verify OMT is up and running completely before continuing
 ```
-watch -n 10 'kubectl get pods -n core|grep -v -E "1/1|2/2|3/3|4/4|Completed'
+watch -n 10 'kubectl get pods -n core|grep -v -E "1/1|2/2|3/3|4/4|Completed"'
 
 ```
 </details>
