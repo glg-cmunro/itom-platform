@@ -248,7 +248,7 @@ kubectl get pv|grep itsma|grep -v -E "db-volume|global-volume|smartanalytics"|aw
 > Copy OMT vault data to global-volume for independant SMA vault  
 ```
 VAULT_PATH=$(kubectl get pv itom-vol -o json | jq -r .spec.nfs.path)
-sudo cp -R /mnt/efs${VAULT_PATH}/vault /mnt/efs/var/vols/itom/itsma/global-volume/
+sudo cp -R /mnt/efs/${VAULT_PATH}/vault /mnt/efs/var/vols/itom/itsma/global-volume/
 sudo chown -R $SYSTEM_USER_ID:$SYSTEM_GROUP_ID /mnt/efs/var/vols/itom/itsma/global-volume/vault
 
 ```
