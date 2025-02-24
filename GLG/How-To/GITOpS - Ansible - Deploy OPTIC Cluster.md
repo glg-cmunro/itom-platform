@@ -109,54 +109,70 @@ ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/optic-deploy-omt.yml
 ```
 </details>
 
+> Post OMT deploy: Setup bash profile
+```
+ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/glg-config-bash-profile-by-role.yml -e full_name=T800.dev.gitops.com -i /opt/glg/itom-aws/ansible/inventory/T800.dev.gitops.com -e inv_host=controlNode-v302 -e role=control_node
 
+```
 
 998. Deploy AWS Load Balancer Controller add-on
 ```
 CLUSTER_NAME=T800
 
-#Create AWS IAM Policy
-curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
-aws iam create-policy \
+```
+
+- Create AWS IAM Policy
+   ```
+   curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
+   aws iam create-policy \
     --policy-name AmazonEKS-LBController-IAMPolicy-${CLUSTER_NAME} \
     --policy-document file://iam_policy.json \
     --profile automation
 
-#Install EKSCTL
-ARCH=amd64
-PLATFORM=$(uname -s)_$ARCH
-curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
-curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check
-tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
-sudo mv /tmp/eksctl /usr/local/bin
+    ```
 
-###Per Cluster
-##Associate OIDC Provider
-eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER_NAME} --approve --profile automation
+- Install EKSCTL
+   ```
+   ARCH=amd64
+   PLATFORM=$(uname -s)_$ARCH
+   curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+   curl -sL "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_checksums.txt" | grep $PLATFORM | sha256sum --check
+   tar -xzf eksctl_$PLATFORM.tar.gz -C /tmp && rm eksctl_$PLATFORM.tar.gz
+   sudo mv /tmp/eksctl /usr/local/bin
 
-#Check for association
-oidc_id=$(aws eks describe-cluster --name ${CLUSTER_NAME} --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
-aws iam list-open-id-connect-providers | grep $oidc_id | cut -d "/" -f4
+   ```
 
-#Create Kubernetes Service Account
-eksctl create iamserviceaccount \
-  --cluster=${CLUSTER_NAME} \
-  --namespace=kube-system \
-  --name=aws-load-balancer-controller \
-  --role-name AmazonEKS-LBControllerRole-${CLUSTER_NAME} \
-  --attach-policy-arn=arn:aws:iam::713745958112:policy/AmazonEKS-LBController-IAMPolicy-${CLUSTER_NAME} \
-  --approve \
-  --profile automation
+- Associate OIDC Provider
+   ```
+   eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER_NAME} --approve --profile automation
 
-#Helm deploy alb controller
-/opt/cdf/bin/helm repo add eks https://aws.github.io/eks-charts
-/opt/cdf/bin/helm repo update eks
-/opt/cdf/bin/helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
-  -n kube-system \
-  --set clusterName=${CLUSTER_NAME} \
-  --set serviceAccount.create=false \
-  --set serviceAccount.name=aws-load-balancer-controller 
-```
+   #Check for association
+   oidc_id=$(aws eks describe-cluster --name ${CLUSTER_NAME} --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5)
+   aws iam list-open-id-connect-providers | grep $oidc_id | cut -d "/" -f4
+   
+   #Create Kubernetes Service Account
+   eksctl create iamserviceaccount \
+     --cluster=${CLUSTER_NAME} \
+     --namespace=kube-system \
+     --name=aws-load-balancer-controller \
+     --role-name AmazonEKS-LBControllerRole-${CLUSTER_NAME} \
+     --attach-policy-arn=arn:aws:iam::713745958112:policy/AmazonEKS-LBController-IAMPolicy-${CLUSTER_NAME} \
+     --approve \
+     --profile automation
+   
+   ```
+
+- Helm deploy alb controller  
+   ```
+   /opt/cdf/bin/helm repo add eks https://aws.github.io/eks-charts
+   /opt/cdf/bin/helm repo update eks
+   /opt/cdf/bin/helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+     -n kube-system \
+     --set clusterName=${CLUSTER_NAME} \
+     --set serviceAccount.create=false \
+     --set serviceAccount.name=aws-load-balancer-controller 
+   
+   ```
 
 999. Deploy K8s managed ALB
  - Gather AWS details (Cert ARN, Security Groups, ...)
@@ -165,8 +181,6 @@ eksctl create iamserviceaccount \
  - Create Ingress smax:443
 
 ```
-#CERT_ARN=arn:aws:acm:us-east-1:713745958112:certificate/4210d4fc-eb24-458b-b2ee-4585f0597b25
-
 VPC_CIDR=10.8.0.0/16
 CLUSTER_NAME=T800
 CLUSTER_FQDN=T800.dev.gitops.com
@@ -330,6 +344,7 @@ spec:
   - hosts:
     - ${CLUSTER_FQDN_INT,,}
 EOT
+
 ```
 
  - Add/Update DNS entry in Route53 with new ALB
@@ -356,6 +371,7 @@ CHANGE_BATCH_INT="{\"Changes\": [{ \"Action\": \"UPSERT\", \"ResourceRecordSet\"
 aws route53 change-resource-record-sets \
   --hosted-zone-id ${HOSTED_ZONE_ID} \
   --change-batch "${CHANGE_BATCH_INT}"
+
 ```
 
 
@@ -374,9 +390,43 @@ aws route53 change-resource-record-sets \
 #### Install/Configure Velero
 ```
 CLUSTER_FQDN=T800.dev.gitops.com
-BUCKET=t800.dev.gitops
-REGION=us-east-1
+BUCKET_NAME=t800.dev.gitops
+BUCKET_REGION=us-east-1
 aws s3api create-bucket \
     --bucket $BUCKET \
     --region $REGION
 ```
+
+#### DEV1
+
+BUCKET_NAME=t800.dev.gitops
+BUCKET_REGION=us-east-1
+
+aws s3api create-bucket --bucket ${BUCKET_NAME} --region ${BUCKET_REGION}
+
+ECR_URL=$(kubectl get deploy -n core itom-idm -o json | jq -r .spec.template.spec.containers[0].image | awk -F/ '{print $1}') && echo $ECR_URL
+export VELERO_NAMESPACE=velero
+source $CDF_HOME/properties/images/charts.properties
+
+kubectl create ns velero
+
+helm install itom-velero $CDF_HOME/charts/$CHART_ITOM_VELERO -n ${VELERO_NAMESPACE} \
+ --set fullnameOverride=velero \
+ --set cleanupCRDs=true \
+ --set upgradeCRDs=true \
+ --set global.cluster.k8sProvider=aws \
+ --set global.docker.imagePullSecret=registrypullsecret \
+ --set global.docker.registry=${ECR_URL} \
+ --set global.docker.orgName=hpeswitom \
+ --set global.securityContext.user=1999 \
+ --set global.securityContext.fsGroup=1999 \
+ --set configuration.provider=aws \
+ --set configuration.backupStorageLocation.bucket=${BUCKET_NAME} \
+ --set configuration.backupStorageLocation.prefix=velero \
+ --set configuration.backupStorageLocation.config.region=${BUCKET_REGION} \
+ --set configuration.backupStorageLocation.config.serverSideEncryption=AES256 \
+ --set configuration.volumeSnapshotLocation.config.region=${BUCKET_REGION} \
+ --set cloudserver.deployment.enabled=false \
+ --set cloudserver.deployment.accessKey=AKIA2MLUTATQOBSOEX4O \
+ --set cloudserver.deployment.secretKey=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
+
