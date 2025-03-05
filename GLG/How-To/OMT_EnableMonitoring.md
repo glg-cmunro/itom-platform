@@ -40,13 +40,14 @@ EOT
 
 ##If you cannot source the file, add the correct permissions
 #sudo chmod -R g+rx /opt/cdf/properties/images
+#sudo chmod -R g+rx /opt/cdf/charts/*
 ```
 source $CDF_HOME/properties/images/charts.properties
 helm install prom-crds -n core /opt/cdf/charts/${CHART_ITOM_PROMETHEUS_CRDS} --set global.docker.registry=${REPOSITORY} --set global.docker.orgName=hpeswitom --set global.securityContext.user=1999 --set global.securityContext.fsGroup=1999
 
 ```
 ```
-helm upgrade apphub -n core /opt/cdf/charts/apphub-1.26.2+24.2.2-161.tgz --install --reuse-values --set global.services.monitoring=true
+helm upgrade apphub -n core /opt/cdf/charts/${CHART_ITOM_APPHUB} --install --reuse-values --set global.services.monitoring=true
 
 ```
 
