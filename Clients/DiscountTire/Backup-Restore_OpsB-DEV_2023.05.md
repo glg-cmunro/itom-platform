@@ -197,10 +197,10 @@ adminTools -t start_db -d itomdb --password=$(grep dbPassword /opt/vertica/share
 ### Restore RDS Backuo
 - rename Database
 ```
-RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
-RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text  --profile bsmobm)
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_NAME}
+RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text) && echo ${RDS_ARN}
 
-aws rds modify-db-instance --profile bsmobm \
+aws rds modify-db-instance \
  --db-instance-identifier ${RDS_DB_NAME} \
  --new-db-instance-identifier ${RDS_DB_NAME}-bak \
  --apply-immediately
@@ -217,13 +217,14 @@ aws rds modify-db-instance --profile bsmobm \
 RDS_DB_NAME=bsmobm-qa2dr
 RDS_DB_SN_GROUP=bsmobm-dr-db-rdssubnetgroup-kfv4t98rrb4l
 RDS_DB_SEC_GROUPS=sg-0d1955adf7826ced8
+RDS_DB_PARAM_GROUP=smax-postgres15
 SNAPSHOT_RESTORE_NAME="obmdev-db-20241203"
 
-aws rds restore-db-instance-from-db-snapshot --profile bsmobm \
+aws rds restore-db-instance-from-db-snapshot \
   --db-instance-identifier ${RDS_DB_NAME} \
   --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME} \
   --db-subnet-group-name ${RDS_DB_SN_GROUP} \
-  --db-parameter-group-name obm-pgsql-13 \
+  --db-parameter-group-name ${RDS_DB_PARAM_GROUP} \
   --vpc-security-group-ids ${RDS_DB_SEC_GROUPS}
 
 ```
@@ -249,7 +250,7 @@ kubectl scale deploy -n core itom-velero --replicas=1
 ```
 VELERO_BACKUP_NAME=obmdev-20241203
 
-velero restore create -n core --exclude-namespaces "default,kube-system,kube-public,kube-node-lease" --from-backup ${VELERO_BACKUP_NAME}
+velero restore create -n velero --exclude-namespaces "default,kube-system,kube-public,kube-node-lease" --from-backup ${VELERO_BACKUP_NAME}
 
 ```
 
@@ -270,3 +271,16 @@ aws rds delete-db-snapshot \
  --profile bsmobm
 
 ```
+
+
+#### Route53 Updates 
+Get Hosted Zone ID:
+```
+HOSTED_ZONE='dev.gitops.com'
+HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Name==`'"${HOSTED_ZONE}"'.`].Id' --output text) && echo ${HOSTED_ZONE_ID}
+
+```
+*_eg. HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Name==`dev.gitops.com.`].Id' --output text) && echo ${HOSTED_ZONE_ID}_*
+
+Get DNS Records from Hosted Zone
+

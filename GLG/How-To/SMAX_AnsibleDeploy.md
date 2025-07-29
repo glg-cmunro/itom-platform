@@ -17,12 +17,14 @@ ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/aws-infra-create-all
 ```
 cd /opt/glg
 git clone git@github.com:GreenLightGroup/aws-smax.git
+git clone git@github.com:GreenLightGroup/itom-aws.git
 
 ```
 
 > Deploy OMT and SMAX using silent install
 ```
 ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/optic-deploy-omt.yml -e full_name=T800.dev.gitops.com -v
+ansible-playbook /opt/glg/itom-aws/ansible/playbooks/v3.0.2/optic-deploy-omt.yml -e full_name=testing.dev.gitops.com -v
 
 ```
 
