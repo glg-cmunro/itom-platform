@@ -427,6 +427,4 @@ helm install itom-velero $CDF_HOME/charts/$CHART_ITOM_VELERO -n ${VELERO_NAMESPA
  --set configuration.backupStorageLocation.config.serverSideEncryption=AES256 \
  --set configuration.volumeSnapshotLocation.config.region=${BUCKET_REGION} \
  --set cloudserver.deployment.enabled=false \
- --set cloudserver.deployment.accessKey="|||AWS KEY HERE|||" \
- --set cloudserver.deployment.secretKey=<"|||AWS SECRET HERE|||"
 
