@@ -57,7 +57,7 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 > Using RDS_DATABASE from 'Environment Information' and SNAPSHOT_NAME below,  
 > create a Database snapshot in AWS  
 ```
-SNAPSHOT_NAME="obmqa-db-20241024"
+SNAPSHOT_NAME="obmdev-db-20250730"
 
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
@@ -83,7 +83,7 @@ aws backup start-backup-job --profile bsmobm \
 > Create a velero backup of the Kubernetes cluster resources 
 ```
 VELERO_TTL=8765h
-VELERO_BACKUP_NAME=obmdev-20250128
+VELERO_BACKUP_NAME=obmdev-20250730
 
 velero backup create -n velero \
  --ttl ${VELERO_TTL} \

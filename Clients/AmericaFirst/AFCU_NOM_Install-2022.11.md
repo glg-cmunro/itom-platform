@@ -37,6 +37,7 @@ sudo sysctl -p /etc/sysctl.d/10-optic.conf
 
 sudo swapoff -a
 sudo sed -e "/swap/ s/^#*/#/g" -i /etc/fstab
+
 ```
 
 ### Run cdfctl node add
