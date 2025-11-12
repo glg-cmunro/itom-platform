@@ -6,6 +6,14 @@
 2. 
 
 
+#### Check the current of monitoring  
+---  
+> To retrive the status of OMT services and check for 'monitoring = true'  
+> If monitoring is not set to 'true' then Prometheus and Alertmanager would not be setup  
+```
+helm get values -n core apphub -o json | jq -r .global.services
+
+```  
 
 
 ### Prometheus Ingress for external access   
