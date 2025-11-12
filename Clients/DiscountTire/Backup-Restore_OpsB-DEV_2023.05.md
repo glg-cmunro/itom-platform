@@ -40,7 +40,7 @@ velero backup create -n core \
 BACKUP_DAYS=90
 BACKUP_VAULT=trtc-strong-encrypted-vault
 BACKUP_ROLE=arn:aws:iam::222313454062:role/service-role/AWSBackupDefaultServiceRole
-EFS_NAME="BSMOBM-DR-FS"
+EFS_NAME="BSMOBMEFS-FS"
 EFS_ARN=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemArn" --output text) && echo $EFS_ARN
 EFS_ID=$(aws efs describe-file-systems --profile bsmobm --query "FileSystems[?Name=='${EFS_NAME}'].FileSystemId" --output text) && echo $EFS_ID
 
@@ -62,8 +62,8 @@ aws backup start-backup-job --profile bsmobm \
 ### Create Database backup - AWS RDS
 > Create RDS Backup
 ```
-SNAPSHOT_NAME="obmdev-db-20241203"
-RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')
+SNAPSHOT_NAME="obmqa-cfreset-20251104"
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_NAME}
 
 aws rds create-db-snapshot --profile bsmobm \
  --db-snapshot-identifier="${SNAPSHOT_NAME}" \
@@ -79,12 +79,16 @@ aws rds create-db-snapshot --profile bsmobm \
 > Create Vertica Backup  
 *_On a Vertica DB Host as dbadmin_*  
 ```
- . /opt/vertica/share/vbr/configs/parameters.sh; 
+ . /opt/vertica/share/vbr/configs/parameter.sh; 
  /opt/vertica/bin/vbr.py --task backup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
 
 ```
 
+- Verify Backup succeeded  
+```
  /opt/vertica/bin/vbr.py --task listbackup --config-file /opt/vertica/share/vbr/configs/conf_parameter.ini
+
+```
 
 </details>
 

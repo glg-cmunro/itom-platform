@@ -13,13 +13,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import groovy.json.JsonBuilder;
-import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import java.net.URL;
 import java.util.Base64;
 
-//class EventForwarderScript implements ExternalProcessAdapter {
-class EventForwarderScript {
-
+//class EventForwarderScript {
+class EventForwarderScript implements ExternalProcessAdapter {
     private static final Log e_log = LogFactory.getLog(EventForwarderScript.class.canonicalName);
     private static final String targetContext = "/bsmc/rest/events/nasdaq_test_json";
     private String targetHost;
@@ -60,12 +61,12 @@ class EventForwarderScript {
 
     //void destroy() {
     def destroy() {
-        s_log.debug("Event Forward Script - destroy")
+        e_log.debug("Event Forward Script - destroy")
     }
 
     //Boolean ping(PingArgs args) {
     def ping(def args) {
-        s_log.debug("Event Forward Script - ping");
+        e_log.debug("Event Forward Script - ping");
 
         this.targetUser = args.credentials?.userName;
         //this.targetUser = args.getCredentials().getUserName;
@@ -74,22 +75,23 @@ class EventForwarderScript {
             throw new IllegalArgumentException("Target UserName not configured in Connected Server properties.");
         }
 
-        this.password = args.credentials?.password;
-        //this.password = args.getCredentials().getPassword();
-        if (this.password == null || this.password.isEmpty()) {
+        this.targetPass = args.credentials?.password;
+        //this.targetPass = args.getCredentials().getPassword();
+        if (this.targetPass == null || this.targetPass.isEmpty()) {
             e_log.fatal("Unable to retrieve Target Password from Connected Server properties");
             throw new IllegalArgumentException("Target Password not configured in Connected Server properties.");
         }
         
-        private String authString = username + ":" + password;
+        private String authString = targetUser + ":" + targetPass;
         this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
         
         try {
             URL url = new URL(targetUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             int responseCode = connection.getResponseCode();
-            return responseCode == HttpURLConnection.HTTP_OK;
+            return responseCode == HttpsURLConnection.HTTP_OK;
         } catch (Exception e) {
             e_log.error("Ping failed: " + e.getMessage());
             return false;
@@ -98,9 +100,9 @@ class EventForwarderScript {
 
     //Boolean forwardEvent(final ForwardEventArgs args) {
     def forwardEvent(def args) {
-        s_log.debug("Event Forward Script - forwardEvent");
+        e_log.debug("Event Forward Script - forwardEvent");
         for (OprEvent event : args.getEvents()) {
-            s_log.debug("Event Forward Script - forwardEvent - Event");
+            e_log.debug("Event Forward Script - forwardEvent - Event");
             try {
                 // Construct the JSON payload from the OprEvent object
                 def eventPayload = [
@@ -119,7 +121,8 @@ class EventForwarderScript {
 
                 // Send the JSON payload to the external web service
                 URL url = new URL(targetUrl);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setRequestProperty("Authorization", "Basic ${encAuthString}");
@@ -143,25 +146,35 @@ class EventForwarderScript {
     
     //Boolean receiveChange(final ReceiveChangeArgs args) {
     def receiveChange(def args) {
-        s_log.debug("Event Forward Script - receiveChange");
+        e_log.debug("Event Forward Script - receiveChange");
         return true;
     }
 
     //Boolean forwardChange(final ForwardChangeArgs args) {
     def forwardChange(def args) {
-        s_log.debug("Event Forward Script - forwardChange");
+        e_log.debug("Event Forward Script - forwardChange");
         return true;
     }
     
     //Boolean getExternalEvent(final GetExternalEventArgs args) {
     def getExternalEvent(def args) {
-        s_log.debug("Event Forward Script - getExternalEvent");
+        e_log.debug("Event Forward Script - getExternalEvent");
         return false;
     }
 
     //String toExternalEvent(final OprEvent event) {
     def toExternalEvent(final OprEvent event) {
-        s_log.debug("Event Forward Script - toExternalEvent");
+        e_log.debug("Event Forward Script - toExternalEvent");
         return event.getId();
     }
+
+
+    def HostnameVerifier allHostsValid = new HostnameVerifier() {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            // This is highly insecure and should only be used in specific, controlled testing environments.
+            return true;
+        }
+    };
+
 }

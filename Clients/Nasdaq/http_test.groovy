@@ -1,20 +1,36 @@
+//import org.apache.commons.logging.Log;
+//import org.apache.commons.logging.LogFactory;
+
 import java.util.Base64;
 import groovy.json.JsonBuilder;
-import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import java.net.URL;
 
+println "Java Home (java.home): ${System.getProperty('java.home')}"
 
 String authString = "Username:Password";
 String encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
 
+HostnameVerifier allHostsValid = new HostnameVerifier() {
+    @Override
+    public boolean verify(String hostname, SSLSession session) {
+        // This is highly insecure and should only be used in specific, controlled testing environments.
+        return true;
+    }
+};
+
 println "Auth String: $encAuthString";
 
-URL url = new URL("https://www.google.com");
-HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+URL url = new URL("https://tkcloudkey.TK.int.jcthepcguy.com");
+HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 connection.setRequestMethod("HEAD");
+println connection.getHostnameVerifier();
 int responseCode = connection.getResponseCode();
 println "Response Code: $responseCode";
-return responseCode == HttpURLConnection.HTTP_OK;
+return responseCode == HttpsURLConnection.HTTP_OK;
 
 
 
