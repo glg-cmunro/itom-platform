@@ -288,3 +288,27 @@ HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name --query 'HostedZones[?Nam
 
 Get DNS Records from Hosted Zone
 
+---  
+### Attach/Detach EBS Volumes for Bookkeeper/Zookeeper
+
+aws ec2 attach-volume --volume-id vol-0b70d95fbab6c81ac --instance-id i-0bf2d9513a886d378 --device /dev/xvdba --profile bsmobm
+aws ec2 attach-volume --volume-id vol-08c00d852e0a2e1e6 --instance-id i-0bf2d9513a886d378 --device /dev/xvdbb --profile bsmobm
+aws ec2 attach-volume --volume-id vol-062f177bc31205d26 --instance-id i-0bf2d9513a886d378 --device /dev/xvdbc --profile bsmobm
+aws ec2 attach-volume --volume-id vol-0197538a39b8b64ce --instance-id i-0b13aeaa0990944a3 --device /dev/xvdba --profile bsmobm
+aws ec2 attach-volume --volume-id vol-04b7db7b5e377311c --instance-id i-0b13aeaa0990944a3 --device /dev/xvdbb --profile bsmobm
+aws ec2 attach-volume --volume-id vol-0e2b2f9bf26bf4a47 --instance-id i-0b13aeaa0990944a3 --device /dev/xvdbc --profile bsmobm
+aws ec2 attach-volume --volume-id vol-01e99a4757cbedc7b --instance-id i-094a4138e24865790 --device /dev/xvdbc --profile bsmobm
+aws ec2 attach-volume --volume-id vol-0c02c7721606ab07f --instance-id i-094a4138e24865790 --device /dev/xvdbb --profile bsmobm
+aws ec2 attach-volume --volume-id vol-0da82056fe343e684 --instance-id i-02715942ab119d014 --device /dev/xvdba --profile bsmobm
+
+
+
+aws ec2 detach-volume --volume-id vol-0b70d95fbab6c81ac --instance-id i-0bf2d9513a886d378 --device /dev/xvdba --profile bsmobm
+aws ec2 detach-volume --volume-id vol-08c00d852e0a2e1e6 --instance-id i-0bf2d9513a886d378 --device /dev/xvdbb --profile bsmobm
+aws ec2 detach-volume --volume-id vol-062f177bc31205d26 --instance-id i-0bf2d9513a886d378 --device /dev/xvdbc --profile bsmobm
+aws ec2 detach-volume --volume-id vol-0197538a39b8b64ce --instance-id i-0b13aeaa0990944a3 --device /dev/xvdba --profile bsmobm
+aws ec2 detach-volume --volume-id vol-04b7db7b5e377311c --instance-id i-0b13aeaa0990944a3 --device /dev/xvdbb --profile bsmobm
+aws ec2 detach-volume --volume-id vol-0e2b2f9bf26bf4a47 --instance-id i-0b13aeaa0990944a3 --device /dev/xvdbc --profile bsmobm
+aws ec2 detach-volume --volume-id vol-01e99a4757cbedc7b --instance-id i-094a4138e24865790 --device /dev/xvdbc --profile bsmobm
+aws ec2 detach-volume --volume-id vol-0c02c7721606ab07f --instance-id i-094a4138e24865790 --device /dev/xvdbb --profile bsmobm
+aws ec2 detach-volume --volume-id vol-0da82056fe343e684 --instance-id i-02715942ab119d014 --device /dev/xvdba --profile bsmobm
