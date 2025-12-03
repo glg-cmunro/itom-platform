@@ -33,9 +33,14 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 ## Perform a system backup before performaing any actions  
 > Create Velero Backup  
 ```
+# Set the desired number of hours to keep the Velero backup
+VELERO_TTL=8765h # = 1year
+
+```
+```
+# Environment Specific Variables
 CLUSTER_NAME=$(kubectl get cm -n core cdf --no-headers -o custom-columns=NAME:.data.EXTERNAL_ACCESS_HOST | awk -F. '{print $1}')
 BACKUP_DATE=$(date +%Y%m%d-%H%M)
-VELERO_TTL=8765h # = 1year
 VELERO_BACKUP_NAME=${CLUSTER_NAME}-${BACKUP_DATE}
 
 velero backup create -n velero --ttl ${VELERO_TTL} ${VELERO_BACKUP_NAME}
@@ -43,7 +48,7 @@ velero backup create -n velero --ttl ${VELERO_TTL} ${VELERO_BACKUP_NAME}
 ```
 
 > Create EFS Backup  
-1. SET the requisite Environment Variables
+1. SET the requisite Environment Variables  
 ```
 # Set the desired number of days to keep the EFS Backup
 BACKUP_DAYS=90
@@ -61,12 +66,12 @@ BACKUP_VAULT=$(aws backup list-backup-jobs --profile bsmobm --query "BackupJobs[
 BACKUP_ROLE=arn:aws:iam::${EFS_OWNER}:role/service-role/AWSBackupDefaultServiceRole && echo BACKUP ROLE: ${BACKUP_ROLE}
 
 ```
-2. Start the EFS Backup Job
+2. Start the EFS Backup Job  
 ```
 aws backup start-backup-job --profile bsmobm --backup-vault-name="${BACKUP_VAULT}" --resource-arn="${EFS_ARN}" --lifecycle="DeleteAfterDays=${BACKUP_DAYS}" --iam-role-arn="${BACKUP_ROLE}" > ~/efsbackup.out && jq -r . ~/efsbackup.out
 
 ```
-3. Check the state of the EFS Backup Job
+3. Check the state of the EFS Backup Job  
 > Do not proceed until the Backup Job State = COMPLETED
 ```
 BACKUP_ID=$(jq -r .BackupJobId ~/efsbackup.out) && echo BACKUP ID: ${BACKUP_ID}
@@ -75,16 +80,22 @@ aws backup describe-backup-job --backup-job-id ${BACKUP_ID} --profile bsmobm > ~
 ```
 
 > Create RDS Backup
+1. SET the requisite Environment Variables  
 ```
-SNAPSHOT_NAME="obmdev-pgUpgrade-20251203"
-kubectl get cm -n core default-database-configmap -o custom-columns=NAME:.data.DEFAULT_DB_HOST
-RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_NAME}
-RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o custom-columns=NAME:.data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_NAME}
+# Environment Specific Settingts
+CLUSTER_NAME=$(kubectl get cm -n core cdf --no-headers -o custom-columns=NAME:.data.EXTERNAL_ACCESS_HOST | awk -F. '{print $1}') && echo CLUSTER NAME: ${CLUSTER_NAME}
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap --no-headers -o custom-columns=NAME:.data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo DATABASE NAME: ${RDS_DB_NAME}
+BACKUP_DATE=$(date +%Y%m%d-%H%M) && echo BACKUP DATE: ${BACKUP_DATE}
 
-aws rds create-db-snapshot --profile bsmobm \
- --db-snapshot-identifier="${SNAPSHOT_NAME}" \
- --db-instance-identifier="${RDS_DB_NAME}"
+SNAPSHOT_NAME=${CLUSTER_NAME}-${BACKUP_DATE} && echo SNAPSHOT NAME: ${SNAPSHOT_NAME}
 
+```
+2. Start the RDS DB Snapshot  
+```
+aws rds create-db-snapshot --profile bsmobm --db-snapshot-identifier="${SNAPSHOT_NAME}" --db-instance-identifier="${RDS_DB_NAME}" > ~/rdsbackup.out
+
+```
+3. Check the status of the RDS DB Snapshot  
 ```
 
 Vertica Backup
