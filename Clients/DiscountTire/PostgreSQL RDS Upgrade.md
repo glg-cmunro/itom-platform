@@ -33,8 +33,10 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 ## Perform a system backup before performaing any actions  
 > Create Velero Backup  
 ```
+CLUSTER_NAME=$(kubectl get cm -n core cdf --no-headers -o custom-columns=NAME:.data.EXTERNAL_ACCESS_HOST | awk -F. '{print $1}')
+BACKUP_DATE=$(date +%Y%m%d-%H%M)
 VELERO_TTL=8765h # = 1year
-VELERO_BACKUP_NAME=obmdev-20251203
+VELERO_BACKUP_NAME=${CLUSTER_NAME}-${BACKUP_DATE}
 
 velero backup create -n velero --ttl ${VELERO_TTL} ${VELERO_BACKUP_NAME}
 
