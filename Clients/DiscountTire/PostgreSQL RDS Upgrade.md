@@ -98,6 +98,8 @@ aws rds create-db-snapshot --profile bsmobm --db-snapshot-identifier="${SNAPSHOT
 3. Check the status of the RDS DB Snapshot  
 ```
 
+```
+
 Vertica Backup
 
 # Connect to the database as dbadmin  
