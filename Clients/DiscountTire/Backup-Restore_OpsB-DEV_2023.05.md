@@ -24,8 +24,8 @@ aws ec2 start-instances --instance-ids i-0c359c2ea1fcae2f2 --profile bsmobm  #DR
 > Create Velero Backup
 ```
 VELERO_TTL=8765h
-VELERO_BACKUP_NAME=obmdev-20241203
-velero backup create -n core \
+VELERO_BACKUP_NAME=obmdev-20251203
+velero backup create -n velero \
  --ttl ${VELERO_TTL} \
  ${VELERO_BACKUP_NAME}
 

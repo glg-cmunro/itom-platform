@@ -1,6 +1,6 @@
 package com.hp.opr.api.ws.adapter;
 import com.hp.opr.api.scripting.Event;
-import com.hp.opr.api.ws.adapter.ExternalProcessAdapter;
+//import com.hp.opr.api.ws.adapter.ExternalProcessAdapter;
 import com.hp.opr.api.ws.adapter.ForwardChangeArgs;
 import com.hp.opr.api.ws.adapter.ForwardEventArgs;
 import com.hp.opr.api.ws.adapter.GetExternalEventArgs;
@@ -8,6 +8,7 @@ import com.hp.opr.api.ws.adapter.InitArgs;
 import com.hp.opr.api.ws.adapter.PingArgs;
 import com.hp.opr.api.ws.adapter.ReceiveChangeArgs;
 import com.hp.opr.api.ws.model.event.OprAnnotation;
+import com.hp.opr.api.ws.model.event.OprAnnotationList;
 import com.hp.opr.api.ws.model.event.OprEvent;
 import groovy.json.JsonBuilder;
 import javax.net.ssl.HttpsURLConnection;
@@ -18,8 +19,8 @@ import java.util.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-//class EventForwarderScript {
-class EventForwarderScript implements ExternalProcessAdapter {
+//class EventForwarderScript implements ExternalProcessAdapter {
+class EventForwarderScript {
     
     private static final Log e_log = LogFactory.getLog(EventForwarderScript.class.canonicalName);
     private static final String targetContext = "dev/event";
@@ -35,7 +36,7 @@ class EventForwarderScript implements ExternalProcessAdapter {
     def init(def args) {
         e_log.info("Event Forward Script - init");
         
-        e_log.debug("ARGS: ${args}");
+        e_log.debug("Event Forward - init - ARGS: ${args}");
         String connectedServer = args.getConnectedServerDisplayName();
         String connectedServerCert = args.getConnectedServerCertificate();
         String connectedServerId = args.getConnectedServerId();
@@ -45,7 +46,7 @@ class EventForwarderScript implements ExternalProcessAdapter {
         e_log.info("Connected Server Details - Label: ${connectedServer}");
         e_log.info("Connected Server Details - Name: ${connectedServerName}");
         e_log.info("Connected Server Details - FQDN: ${connectedServerFQDN}");
-
+        
         this.targetHost = args.getNode();
         if (this.targetHost == null || this.targetHost.isEmpty()) {
             e_log.fatal("Unable to retrieve Target Hostname from Connected Server properties");
@@ -65,11 +66,10 @@ class EventForwarderScript implements ExternalProcessAdapter {
         //    throw new IllegalArgumentException("Target Protocol not configured in Connected Server properties.");
         //}
         
-        this.targetUrl = targetProtocol + "://" + targetHost + ":" + targetPort + "/" + targetContext
+        this.targetUrl = "${targetProtocol}://${targetHost}:${targetPort}/${targetContext}";
         //this.targetUrl = "https://gvz679xsmh-vpce-07875b10af3d0925e.execute-api.us-east-1.amazonaws.com/dev/event"
         
-        EventForwarderScript.targetUrl = this.targetUrl;
-        e_log.info("Event Forward TargetURL: ${EventForwarderScript.targetUrl}");
+        e_log.info("Event Forward - init - TargetURL: ${targetUrl}");
     }
     
     //Boolean ping(PingArgs args) {
@@ -88,13 +88,13 @@ class EventForwarderScript implements ExternalProcessAdapter {
         //    e_log.fatal("Unable to retrieve Target Password from Connected Server properties");
         //    throw new IllegalArgumentException("Unable to retrieve Target Password from Connected Server properties.");
         //}
-        e_log("Event Forward Script - Ping - credentails: ${args.credentails.getPassword()}");
+        e_log("Event Forward Script - ping - credentails: ${args.credentials.getPassword()}");
         
         String authString = targetUser + ":" + targetPass;
         this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
         
         EventForwarderScript.encAuthString = this.encAuthString;
-        e_log.info("Event Forward - Ping - Authorization: Basic ${EventForwarderScript.encAuthString}");
+        e_log.info("Event Forward - ping - Authorization: Basic ${EventForwarderScript.encAuthString}");
         
         try {
             URL url = new URL(targetUrl);
@@ -114,7 +114,7 @@ class EventForwarderScript implements ExternalProcessAdapter {
     
     //Boolean forwardEvent(final ForwardEventArgs args) {
     def forwardEvent(def args) {
-        e_log.info("Event Forward - forwardEvent");
+        e_log.info("Event Forward Script - forwardEvent");
         
         this.targetUser = args.credentials?.userName;
         if (this.targetUser == null || this.targetUser.isEmpty()) {
@@ -135,7 +135,7 @@ class EventForwarderScript implements ExternalProcessAdapter {
         e_log.info("Event Forward - forwardEvent - Authorization: Basic ${EventForwarderScript.encAuthString}");
         
         for (OprEvent event : args.getEvent()) {
-            e_log.debug("Event Forward Script - forwardEvent - Event ID: ${event.id}");
+            e_log.debug("Event Forward - forwardEvent - Event ID: ${event.id}");
             
             try {
                 // Construct the JSON payload from the OprEvent object
@@ -169,8 +169,10 @@ class EventForwarderScript implements ExternalProcessAdapter {
                 e_log.info("Event Forward - forwardEvent - HTTP Response Message: ${responseMessage}");
                 
                 int responseCode = connection.getResponseCode();
+                e_log.info("Event Forward - forwardEvent - HTTP Response Code: ${responseCode}");
+
                 if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_ACCEPTED) {
-                    e_log.error("Failed to forward event ${event.getId()}. HTTP response code: ${responseCode}");
+                    e_log.error("Event Forward FAILED for EventID ${event.getId()}. HTTP response code: ${responseCode}");
                     
                     //Add failure to forward annotation if Payload sent
                     try {
@@ -237,7 +239,7 @@ class EventForwarderScript implements ExternalProcessAdapter {
     
     //void destroy() {
     def destroy() {
-        e_log.debug("Event Forward Script - destroy")
+        e_log.debug("Event Forward Script - destroy");
     }
     
     def annotateEvent(OprEvent event, String msg) {

@@ -27,9 +27,16 @@ URL url = new URL("https://tkcloudkey.TK.int.jcthepcguy.com");
 HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
 HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 connection.setRequestMethod("HEAD");
+connection.setDoOutput(true);
+
 println connection.getHostnameVerifier();
 int responseCode = connection.getResponseCode();
 println "Response Code: $responseCode";
+String responseMessage = connection.getResponseMessage();
+println "Response Message: $responseMessage";
+
+DataOutputStream out = connection.getOutputStream();
+println out;
 return responseCode == HttpsURLConnection.HTTP_OK;
 
 
