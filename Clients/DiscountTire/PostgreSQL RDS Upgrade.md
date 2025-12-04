@@ -1,17 +1,23 @@
-# AWS RDS PostgreSQL 16 - DB Parameter Group - AIOps  
+# Discount Tire - How To - AWS RDS PostgreSQL 16 Upgrade  
 
-## Verify the Parameter Group for the new DB version  
+## AWS RDS PostgreSQL 16 - DB Parameter Group - AIOps  
+
+### Verify the Parameter Group for the new DB version  
+> AWS Command to describe the Database Parameter Group
+  If the Parameter Group does not exist this will return an error  
 ```
 aws rds describe-db-parameters --db-parameter-group-name obm-pgsql-16 --source user --profile bsmobm
 
 ```
 
-## Verify / Create New DB Version Parameter Group  
+### Verify / Create New DB Version Parameter Group  
+> Perform these steps only if the Dababase Parameter Group does **NOT** exist  
+1. Create the DB Parameter Group (Only if it did NOT exist)  
 ```
-aws rds create-db-parameter-group --db-parameter-group-name obm-pgsql-16 --db-parameter-group-family postgres16 --description "GreenLight DB Param Group - AIOps" --profile bsmobm
+aws rds create-db-parameter-group --db-parameter-group-name obm-pgsql-16 --db-parameter-group-family postgres16 --description "OpenText DB Param Group - AIOps" --profile bsmobm
 
 ```
-
+2. Add the tuning parameters to the Parameter Group (Only if it did NOT exist)  
 ```
 aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=autovacuum_analyze_scale_factor,ParameterValue=0.2,ApplyMethod=immediate --profile bsmobm
 aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=autovacuum_analyze_threshold,ParameterValue=5000,ApplyMethod=immediate --profile bsmobm
@@ -46,6 +52,11 @@ VELERO_BACKUP_NAME=${CLUSTER_NAME}-${BACKUP_DATE}
 velero backup create -n velero --ttl ${VELERO_TTL} ${VELERO_BACKUP_NAME}
 
 ```
+> Verify Velero Backup  
+```
+velero backup get -n velero
+
+```
 
 > Create EFS Backup  
 1. SET the requisite Environment Variables  
@@ -74,7 +85,7 @@ aws backup start-backup-job --profile bsmobm --backup-vault-name="${BACKUP_VAULT
 3. Check the state of the EFS Backup Job  
 > Do not proceed until the Backup Job State = COMPLETED
 ```
-BACKUP_ID=$(jq -r .BackupJobId ~/efsbackup.out) && echo BACKUP ID: ${BACKUP_ID}
+EFS_BACKUP_ID=$(jq -r .BackupJobId ~/efsbackup.out) && echo EFS BACKUP ID: ${EFS_BACKUP_ID}
 aws backup describe-backup-job --backup-job-id ${BACKUP_ID} --profile bsmobm > ~/efsbackup.out && jq -r . ~/efsbackup.out
 
 ```
@@ -97,6 +108,7 @@ aws rds create-db-snapshot --profile bsmobm --db-snapshot-identifier="${SNAPSHOT
 ```
 3. Check the status of the RDS DB Snapshot  
 ```
+aws rds describe-db-snapshots --profile bsmobm --db-snapshot-identifier=${SNAPSHOT_NAME}
 
 ```
 
@@ -171,13 +183,9 @@ cdfctl runlevel set -l DOWN -n core
 
 # Upgrade the DB Instance  
 ```
-RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_ID};
+RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo RDS DB ID: ${RDS_DB_ID};
 RDS_DB_VERSION='16.6';
 
-aws rds modify-db-instance --profile bsmobm \
-    --db-instance-identifier ${RDS_DB_ID} \
-    --engine-version ${RDS_DB_VERSION} \
-    --allow-major-version-upgrade \
-    --apply-immediately
+aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name obm-pgsql-16 --apply-immediately
 
 ```

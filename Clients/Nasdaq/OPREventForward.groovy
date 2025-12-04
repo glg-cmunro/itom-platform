@@ -66,8 +66,8 @@ class EventForwarderScript {
         //    throw new IllegalArgumentException("Target Protocol not configured in Connected Server properties.");
         //}
 
-        //this.targetUrl = targetProtocol + "://" + targetHost + ":" + targetPort + "/" + targetContext
-        this.targetUrl = "https://gvz679xsmh-vpce-07875b10af3d0925e.execute-api.us-east-1.amazonaws.com/dev/event";
+        this.targetUrl = targetProtocol + "://" + targetHost + ":" + targetPort + "/" + targetContext
+        //this.targetUrl = "https://gvz679xsmh-vpce-07875b10af3d0925e.execute-api.us-east-1.amazonaws.com/dev/event";
 
         e_log.info("Event Forward - init - TargetURL: ${targetUrl}");
     }
@@ -82,25 +82,25 @@ class EventForwarderScript {
             throw new IllegalArgumentException("Target UserName not configured in Connected Server properties.");
         }
 
-        this.targetPass = "338~~da7f6f9d854AD1e64461815c1074a";
+        //this.targetPass = "338~~da7f6f9d854AD1e64461815c1074a";
         //this.targetPass = args.getCredentials().getPassword();
         // if (this.password == null || this.password.isEmpty()) {
         //    e_log.fatal("Unable to retrieve Target Password from Connected Server properties");
         //    throw new IllegalArgumentException("Target Password not configured in Connected Server properties.");
         // }
         
-        String authString = targetUser + ":" + targetPass;
-        this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
+        //String authString = targetUser + ":" + targetPass;
+        //this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
         
-        //char[] basicAuth = Base64.encoder.encode((args.credentials?.userName + ":" + args.credentials?.getPassword()).getBytes());
-        //e_log.fatal("Event Forward - ping - Basic Auth: ${basicAuth}");
+        char[] basicAuth = Base64.encoder.encode((args.credentials?.userName + ":" + args.credentials?.getPassword()).getBytes());
+        //e_log.info("Event Forward - ping - Basic Auth: ${basicAuth}");
 
         try {
             URL url = new URL(targetUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setDefaultHostnameVerifier(allHostsValid);
             connection.setRequestMethod("GET");
-            connection.setRequestProperty("Authorization", "Basic ${encAuthString}");
+            connection.setRequestProperty("Authorization", "Basic ${basicAuth}");
             int responseCode = connection.getResponseCode();
             return responseCode == HttpURLConnection.HTTP_OK;
         } catch (Exception e) {
@@ -119,20 +119,20 @@ class EventForwarderScript {
             throw new IllegalArgumentException("Target UserName not configured in Connected Server properties.");
         }
         
-        this.targetPass = "338~~da7f6f9d854AD1e64461815c1074a";
+        //this.targetPass = "338~~da7f6f9d854AD1e64461815c1074a";
         //this.targetPass = args.credentials?.password;
-        if (this.targetPass == null || this.targetPass.isEmpty()) {
-            e_log.fatal("Unable to retrieve Target Password from Connected Server properties");
-            throw new IllegalArgumentException("Target Password not configured in Connected Server properties.");
-        }
+        //if (this.targetPass == null || this.targetPass.isEmpty()) {
+        //    e_log.fatal("Unable to retrieve Target Password from Connected Server properties");
+        //    throw new IllegalArgumentException("Target Password not configured in Connected Server properties.");
+        //}
         
-        String authString = targetUser + ":" + targetPass;
-        this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
+        //String authString = targetUser + ":" + targetPass;
+        //this.encAuthString = Base64.getEncoder().encodeToString(authString.getBytes());
         
-        e_log.info("Event Forward - forwardEvent - Authorization: Basic ${encAuthString}");
+        //e_log.info("Event Forward - forwardEvent - Authorization: Basic ${encAuthString}");
         
         char[] basicAuth = Base64.encoder.encode((args.credentials?.userName + ":" + args.credentials?.getPassword()).getBytes());
-        e_log.fatal("Event Forward - forwardEvent - Basic Auth: ${basicAuth}");
+        //e_log.info("Event Forward - forwardEvent - Basic Auth: ${basicAuth}");
 
         for (OprEvent event : args.getEvent()) {
 			e_log.debug("Event Forward Script - forwardEvent - Event");
@@ -161,7 +161,7 @@ class EventForwarderScript {
                 connection.setDefaultHostnameVerifier(allHostsValid);
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestProperty("Authorization", "Basic ${encAuthString}");
+                connection.setRequestProperty("Authorization", "Basic ${basicAuth}");
                 connection.setDoOutput(true);
 		
                 connection.getOutputStream().write(eventJson.getBytes("UTF-8"));
