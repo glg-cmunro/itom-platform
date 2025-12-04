@@ -12,7 +12,7 @@ aws rds describe-db-parameters --db-parameter-group-name obm-pgsql-16 --source u
 
 <details><summary>Create DB Version Parameter Group (Only if Paramater Group does **NOT** exist)</summary>  
 
-### Verify / Create New DB Version Parameter Group  
+### Create New DB Version Parameter Group  
 > Perform these steps only if the Dababase Parameter Group does **NOT** exist  
 1. Create the DB Parameter Group (Only if it did NOT exist)  
 ```
@@ -40,6 +40,7 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 ```
 </details>  
 
+---  
 ## Perform a system backup before performaing any actions  
 
 ### Cluster Configuration Backup using Velero
