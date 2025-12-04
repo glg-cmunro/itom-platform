@@ -94,7 +94,7 @@ aws backup start-backup-job --profile bsmobm --backup-vault-name="${BACKUP_VAULT
 > Do not proceed until the Backup Job State = COMPLETED
 ```
 EFS_BACKUP_ID=$(jq -r .BackupJobId ~/efsbackup.out) && echo EFS BACKUP ID: ${EFS_BACKUP_ID}
-aws backup describe-backup-job --backup-job-id ${BACKUP_ID} --profile bsmobm > ~/efsbackup.out && jq -r . ~/efsbackup.out
+aws backup describe-backup-job --backup-job-id ${EFS_BACKUP_ID} --profile bsmobm > ~/efsbackup.out && jq -r . ~/efsbackup.out
 
 ```
 
