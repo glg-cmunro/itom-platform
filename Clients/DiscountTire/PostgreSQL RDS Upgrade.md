@@ -37,6 +37,8 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 ```
 
 ## Perform a system backup before performaing any actions  
+
+### Cluster Configuration Backup using Velero
 > Create Velero Backup  
 ```
 # Set the desired number of hours to keep the Velero backup
@@ -58,6 +60,7 @@ velero backup get -n velero
 
 ```
 
+### Shared Filesystem Storage Backup using AWS CLI  
 > Create EFS Backup  
 1. SET the requisite Environment Variables  
 ```
@@ -90,6 +93,7 @@ aws backup describe-backup-job --backup-job-id ${BACKUP_ID} --profile bsmobm > ~
 
 ```
 
+### Postres RDS Database Backup using AWS CLI  
 > Create RDS Backup
 1. SET the requisite Environment Variables  
 ```
@@ -114,7 +118,10 @@ aws rds describe-db-snapshots --profile bsmobm --db-snapshot-identifier=${SNAPSH
 
 Vertica Backup
 
-# Connect to the database as dbadmin  
+
+## Check the Database for Upgrade Readiness  
+
+### Connect to the database as dbadmin  
 ```
 DB_HOST=$(kubectl get cm -n core  default-database-configmap -o json | jq -r .data.DEFAULT_DB_HOST)
 DB_NAME=$(kubectl get cm -n core  default-database-configmap -o json | jq -r .data.DEFAULT_DB_NAME)
@@ -123,7 +130,7 @@ psql -h $DB_HOST -d $DB_NAME -U dbadmin
 
 ```
 
-# Check the current state of the DB for Upgrade readiness  
+### Check the current state of the DB for Upgrade readiness  
 Each SQL Query should return 0 to be upgrade ready
 
 > There should be '0' transactions  
@@ -161,9 +168,9 @@ SELECT * FROM pg_replication_slots WHERE slot_type NOT LIKE 'physical';
 ```
 
 
+## Drop ALL Database connections before starting the upgrade  
 
-
-# Stop all connections to the database (Shutdown OpsBridge, NOM)  
+### Stop all connections to the database (Shutdown OpsBridge, NOM)  
 > Shutdown NOM  
 ```
 cdfctl runlevel set -l DOWN -n nom
@@ -180,8 +187,7 @@ cdfctl runlevel set -l DOWN -n core
 
 ```
 
-
-# Upgrade the DB Instance  
+## Upgrade DB Instance  
 ```
 RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo RDS DB ID: ${RDS_DB_ID};
 RDS_DB_VERSION='16.6';
