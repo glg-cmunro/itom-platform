@@ -10,6 +10,8 @@ aws rds describe-db-parameters --db-parameter-group-name obm-pgsql-16 --source u
 
 ```
 
+<details><summary>Create DB Version Parameter Group (Only if Paramater Group does **NOT** exist)</summary>  
+
 ### Verify / Create New DB Version Parameter Group  
 > Perform these steps only if the Dababase Parameter Group does **NOT** exist  
 1. Create the DB Parameter Group (Only if it did NOT exist)  
@@ -33,8 +35,10 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=shared_buffers,ParameterValue=6144,ApplyMethod=pending-reboot --profile bsmobm
 aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=wal_buffers,ParameterValue=16,ApplyMethod=pending-reboot --profile bsmobm
 aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=work_mem,ParameterValue=51200,ApplyMethod=immediate --profile bsmobm
+aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --parameters ParameterName=rds.force_ssl,ParameterValue=0,ApplyMethod=pending-reboot --profile bsmobm
 
 ```
+</details>  
 
 ## Perform a system backup before performaing any actions  
 
@@ -193,5 +197,7 @@ RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .
 RDS_DB_VERSION='16.6';
 
 aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name obm-pgsql-16 --apply-immediately
+
+aws rds reboot-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID}
 
 ```
