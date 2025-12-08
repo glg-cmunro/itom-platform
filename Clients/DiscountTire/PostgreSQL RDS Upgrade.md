@@ -61,7 +61,7 @@ velero backup create -n velero --ttl ${VELERO_TTL} ${VELERO_BACKUP_NAME}
 ```
 > Verify Velero Backup  
 ```
-velero backup get -n velero
+velero backup get -n velero ${VELERO_BACKUP_NAME}
 
 ```
 
