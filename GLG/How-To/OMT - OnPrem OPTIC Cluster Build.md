@@ -121,16 +121,21 @@ chmod 0600 .ssh/authorized_keys
    #### Create required databases
    ```
    if [ ! -v PGUSER ]; then PGUSER=postgres; echo Setting PGUSER:  ${PGUSER}; fi
-   
+
    psql -U ${PGUSER} -d postgres
+
+   ```  
+   ```
+   \getenv dbadmin PGUSER
+   \echo 'Setting dbadmin to:' :dbadmin
 
    ```  
    #### Delete if exists (Cleanup/Remove)
    ```
-   DROP DATABASE omtidm IF EXISTS;
-   DROP ROLE omtidm IF EXISTS;
-   DROP DATABASE omtapiserver IF EXISTS;
-   DROP ROLE omtapiserver IF EXISTS;
+   DROP DATABASE IF EXISTS omtidm;
+   DROP ROLE IF EXISTS omtidm;
+   DROP DATABASE IF EXISTS omtapiserver;
+   DROP ROLE IF EXISTS omtapiserver;
    
    ```  
    ```
