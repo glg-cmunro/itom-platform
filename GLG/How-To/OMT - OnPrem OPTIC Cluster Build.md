@@ -120,6 +120,8 @@ chmod 0600 .ssh/authorized_keys
 5. Create OMT Databases  
    #### Create required databases
    ```
+   if [ ! -v PGUSER ]; then PGUSER=postgres; echo Setting PGUSER:  ${PGUSER}; fi
+   
    psql -U ${PGUSER} -d postgres
 
    ```  
