@@ -102,7 +102,7 @@ aws backup describe-backup-job --backup-job-id ${EFS_BACKUP_ID} --profile bsmobm
 > Create RDS Backup
 1. SET the requisite Environment Variables  
 ```
-# Environment Specific Settingts
+# Environment Specific Settings
 CLUSTER_NAME=$(kubectl get cm -n core cdf --no-headers -o custom-columns=NAME:.data.EXTERNAL_ACCESS_HOST | awk -F. '{print $1}') && echo CLUSTER NAME: ${CLUSTER_NAME}
 RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap --no-headers -o custom-columns=NAME:.data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo DATABASE NAME: ${RDS_DB_NAME}
 BACKUP_DATE=$(date +%Y%m%d-%H%M) && echo BACKUP DATE: ${BACKUP_DATE}
@@ -194,11 +194,40 @@ cdfctl runlevel set -l DOWN -n core
 
 ## Upgrade DB Instance  
 ```
-RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo RDS DB ID: ${RDS_DB_ID};
+RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')-restore && echo RDS DB ID: ${RDS_DB_ID};
 RDS_DB_VERSION='16.6';
 
 aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name obm-pgsql-16 --apply-immediately
+aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name default --apply-immediately
 
 aws rds reboot-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID}
 
 ```
+
+#DELETE DB RESTORE
+
+```
+RDS_DB_ID=bsmobmrds-db-restore
+aws rds delete-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --skip-final-snapshot
+
+aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --db-instance-class db.m6g.xlarge --apply-immediately
+aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --storage-type gp3 --apply-immediately
+
+aws rds delete-db-snapshot --profile bsmobm --db-snapshot-identifier rds:preupgrade-bsmobmrds-db-restore-13-15-to-16-6-1765216225502
+
+aws rds describe-db-snapshots --profile bsmobm --db-snapshot-identifier rds:preupgrade-bsmobmrds-db-restore-13-15-to-16-6-1765216225502
+
+```
+
+
+aws rds modify-db-instance \
+    --db-instance-identifier ${RDS_DB_ID}-restore \
+    --new-db-instance-identifier ${RDS_DB_ID} \
+    --apply-immediately
+
+
+aws rds restore-db-instance-from-db-snapshot --profile bsmobm   --db-instance-identifier ${RDS_DB_NAME}   --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME}   --db-subnet-group-name ${RDS_DB_SN_GROUP}   --db-parameter-group-name ${RDS_DB_PARAM_GROUP}   --vpc-security-group-ids ${RDS_DB_SEC_GROUPS}
+
+aws rds restore-db-instance-from-db-snapshot --profile bsmobm   --db-instance-identifier ${RDS_DB_NAME}   --db-snapshot-identifier ${SNAPSHOT_NAME}   --db-subnet-group-name ${RDS_DB_SN_GROUP}   --db-parameter-group-name ${RDS_DB_PARAM_GROUP}   --vpc-security-group-ids ${RDS_DB_SEC_GROUPS}
+
+aws rds create-db-snapshot --profile bsmobm --db-snapshot-identifier="obmqa-db-restore" --db-instance-identifier="${RDS_DB_ID}" > ~/rdsbackup-restore.out

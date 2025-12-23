@@ -24,8 +24,17 @@ chmod 0600 .ssh/authorized_keys
 
 ```
 
-## PostgreSQL Server:  
-> Install PostgreSQL 16 Server
+### PostgreSQL Server:  
+> Install and Configure PostgreSQL 16 Server  
+#### PostgreSQL Variables  
+```
+PGDIR=/pgdata
+PGDATA=${PGDIR}/16/data
+PGUSER=postgres
+
+```
+#### Install PostgreSQL 16  
+- Download/Install PostgreSQL packages  
 ```
 sudo dnf -qy module disable postgresql:13
 sudo dnf module enable postgresql:16
@@ -33,6 +42,48 @@ sudo dnf install -y postgresql-server
 sudo postgresql-setup --initdb
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
+
+```
+
+> Configure PostgreSQL DB Access from cluster hosts
+```
+cat >> ${PGDATA}/pg_hba.conf << EOT
+#OpenText OPTIC Connections:
+host    all             all             10.6.9.0/23            trust
+host    all             all             17.16.0.0/20           trust
+host    all             all             172.17.17.0/24          trust
+EOT
+
+```
+```
+sed -e "/max_connections/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
+sed -e "/shared_buffers/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
+
+cat <<EOT >> /pgdata/14/data/postgresql.conf
+## OPTIC Edits - NOM 2022.11
+listen_addresses = '*'
+max_connections = 450
+shared_buffers = 6GB
+effective_cache_size = 18GB
+maintenance_work_mem = 1536MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100
+random_page_cost = 4
+effective_io_concurrency = 2
+work_mem = 15728kB
+min_wal_size = 1GB
+max_wal_size = 4GB
+max_worker_processes = 8
+max_parallel_workers_per_gather = 4
+max_parallel_workers = 8
+max_parallel_maintenance_workers = 4
+
+track_counts = on
+autovacuum = on
+#timezone = 'UTC'
+## OPTIC Edits - NOM 2022.11
+EOT
 
 ```
 

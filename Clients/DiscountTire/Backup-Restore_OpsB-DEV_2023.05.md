@@ -202,9 +202,9 @@ adminTools -t start_db -d itomdb --password=$(grep dbPassword /opt/vertica/share
 - rename Database
 ```
 RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}') && echo ${RDS_DB_NAME}
-RDS_ARN=$(aws rds describe-db-instances --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text) && echo ${RDS_ARN}
+RDS_ARN=$(aws rds describe-db-instances --profile bsmobm --db-instance-identifier ${RDS_DB_NAME} --query "DBInstances[].DBInstanceArn" --output text) && echo ${RDS_ARN}
 
-aws rds modify-db-instance \
+aws rds modify-db-instance --profile bsmobm \
  --db-instance-identifier ${RDS_DB_NAME} \
  --new-db-instance-identifier ${RDS_DB_NAME}-bak \
  --apply-immediately
@@ -218,13 +218,13 @@ aws rds modify-db-instance \
 >  - RDS Subnet Group Name
 >  - RDS DB Parameter Group
 ```
-RDS_DB_NAME=bsmobm-qa2dr
-RDS_DB_SN_GROUP=bsmobm-dr-db-rdssubnetgroup-kfv4t98rrb4l
-RDS_DB_SEC_GROUPS=sg-0d1955adf7826ced8
-RDS_DB_PARAM_GROUP=smax-postgres15
-SNAPSHOT_RESTORE_NAME="obmdev-db-20241203"
+RDS_DB_NAME=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')-restore && echo ${RDS_DB_NAME}
+RDS_DB_SN_GROUP=bsmobmrds-db-rdssubnetgroup-ss2f2ryq6rjl
+RDS_DB_SEC_GROUPS=sg-02691b90a225d65b9
+RDS_DB_PARAM_GROUP=obm-pgsql-13
+SNAPSHOT_RESTORE_NAME="obmqa-20251205-1950"
 
-aws rds restore-db-instance-from-db-snapshot \
+aws rds restore-db-instance-from-db-snapshot --profile bsmobm \
   --db-instance-identifier ${RDS_DB_NAME} \
   --db-snapshot-identifier ${SNAPSHOT_RESTORE_NAME} \
   --db-subnet-group-name ${RDS_DB_SN_GROUP} \
