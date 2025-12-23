@@ -34,9 +34,8 @@ chmod 0600 .ssh/authorized_keys
 | PGDATA   | ${PGDIR}/16/data | PostgreSQL DB Data directory              |
 | PGUSER   | postgres         | OS System User / PostgreSQL process owner |
 
-1. Install and Configure PostgreSQL 16 Server  
-   #### Install PostgreSQL 16  
-   - Download/Install PostgreSQL packages  
+1. Install PostgreSQL 16 Server  
+   #### Download/Install PostgreSQL packages  
    ```
    sudo dnf -qy module disable postgresql:13
    sudo dnf module enable postgresql:16
@@ -48,70 +47,111 @@ chmod 0600 .ssh/authorized_keys
    ```
 
 2. Configure PostgreSQL DB Access from cluster hosts
-> **_Perform these operations as root or as $PGUSER_**
-```
-if [ ! -v PGDATA ]; then 
-  if [ ! -v PGDIR ]; then 
-    PGDIR=/pgdata; echo Setting PGDIR: ${PGDIR};
-  fi
-  PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA}; 
-fi
+   #### Configure pg_hba.conf  
+   > **_Perform these operations as root or as ${PGUSER}_**
+   ```
+   if [ ! -v PGDATA ]; then
+     if [ ! -v PGDIR ]; then
+       PGDIR=/pgdata; echo Setting PGDIR: ${PGDIR};
+     fi
+     PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA};
+   fi
+   
+   cat << EOT >> ${PGDATA}/pg_hba.conf
+   
+   ## OpenText OPTIC Connections:
+   host    all             all             10.10.10.0/24           trust
+   host    all             all             17.16.0.0/20            trust
+   host    all             all             172.17.17.0/24          trust
+   EOT
+   
+   tail -10 ${PGDATA}/pg_hba.conf
+   
+   ```  
+3. Configure PostgreSQL DB parameters for performance
+   #### Configure postgresql.conf  
+   > **_Perform these operations as root or as ${PGUSER}_**
+   ```
+   if [ ! -v PGDIR ]; then PGDIR=/pgdata; echo Setting PGDIR:  ${PGDIR}; fi
+   if [ ! -v PGDATA ]; then PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA}; fi
+   
+   sed -e "/max_connections/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
+   sed -e "/shared_buffers/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
+   
+   cat << EOT >> ${PGDATA}/postgresql.conf
+   
+   ## BEGIN ## OpenText OPTIC Edits
+   listen_addresses = '*'
+   max_connections = 450
+   shared_buffers = 6GB
+   effective_cache_size = 18GB
+   maintenance_work_mem = 1536MB
+   checkpoint_completion_target = 0.9
+   wal_buffers = 16MB
+   default_statistics_target = 100
+   random_page_cost = 4
+   effective_io_concurrency = 2
+   work_mem = 15728kB
+   min_wal_size = 1GB
+   max_wal_size = 4GB
+   max_worker_processes = 8
+   max_parallel_workers_per_gather = 4
+   max_parallel_workers = 8
+   max_parallel_maintenance_workers = 4
+   
+   track_counts = on
+   autovacuum = on
+   #timezone = 'UTC'
+   ## END ## OpenText OPTIC Edits
+   EOT
+   
+   tail -30 ${PGDATA}/postgresql.conf
+   
+   ```  
 
-cat << EOT >> ${PGDATA}/pg_hba.conf
+4. Restart PostgreSQL to complete the changes  
+   #### Restart PostgreSQL service
+   ```
+   sudo systemctl restart postgresql
+   systemctl status postgresql
+   
+   ```  
 
-## OpenText OPTIC Connections:
-host    all             all             10.10.10.0/24           trust
-host    all             all             17.16.0.0/20            trust
-host    all             all             172.17.17.0/24          trust
-EOT
+5. Create OMT Databases  
+   #### Create required databases
+   ```
+   psql -U ${PGUSER} -d postgres
 
-tail -10 ${PGDATA}/pg_hba.conf
+   ```  
+   #### Delete if exists (Cleanup/Remove)
+   ```
+   DROP DATABASE omtidm IF EXISTS;
+   DROP ROLE omtidm IF EXISTS;
+   DROP DATABASE omtapiserver IF EXISTS;
+   DROP ROLE omtapiserver IF EXISTS;
+   
+   ```  
+   ```
+   CREATE USER omtidm login PASSWORD 'Gr33nl1ght_';
+   GRANT omtidm to ${PGUSER};
+   
+   CREATE DATABASE omtidm WITH owner=omtidm;
+   
+   ```  
+   ```
+   \c omtidm;
 
-```
-```
-if [ ! -v PGDIR ]; then PGDIR=/pgdata; echo Setting PGDIR:  ${PGDIR}; fi
-if [ ! -v PGDATA ]; then PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA}; fi
-
-sed -e "/max_connections/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
-sed -e "/shared_buffers/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
-
-cat << EOT >> ${PGDATA}/postgresql.conf
-
-## BEGIN ## OpenText OPTIC Edits
-listen_addresses = '*'
-max_connections = 450
-shared_buffers = 6GB
-effective_cache_size = 18GB
-maintenance_work_mem = 1536MB
-checkpoint_completion_target = 0.9
-wal_buffers = 16MB
-default_statistics_target = 100
-random_page_cost = 4
-effective_io_concurrency = 2
-work_mem = 15728kB
-min_wal_size = 1GB
-max_wal_size = 4GB
-max_worker_processes = 8
-max_parallel_workers_per_gather = 4
-max_parallel_workers = 8
-max_parallel_maintenance_workers = 4
-
-track_counts = on
-autovacuum = on
-#timezone = 'UTC'
-## END ## OpenText OPTIC Edits
-EOT
-
-tail -30 ${PGDATA}/postgresql.conf
-
-```
-
-3.  Restart PostgreSQL service to complete the changes
-```
-sudo systemctl restart postgresql
-systemctl status postgresql
-
-```
+   ```  
+   ```
+   CREATE SCHEMA omtidmschema AUTHORIZATION omtidm; 
+   GRANT ALL ON SCHEMA omtidmschema to omtidm; 
+   ALTER USER omtidm SET search_path TO omtidmschema;
+   
+   ```  
+   ```
+   \q
+   
+   ```
 </details>
 
 ## NFS Server  
