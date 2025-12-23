@@ -140,7 +140,7 @@ chmod 0600 .ssh/authorized_keys
    ```  
    ```
    CREATE USER omtidm login PASSWORD 'Gr33nl1ght_';
-   GRANT omtidm to ${PGUSER};
+   GRANT omtidm to :dbadmin;
    
    CREATE DATABASE omtidm WITH owner=omtidm;
    
