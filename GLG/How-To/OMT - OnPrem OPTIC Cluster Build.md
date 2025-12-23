@@ -24,15 +24,17 @@ chmod 0600 .ssh/authorized_keys
 
 ```
 
-### PostgreSQL Server:  
-> Install and Configure PostgreSQL 16 Server  
-#### PostgreSQL Variables  
-```
-PGDIR=/pgdata
-PGDATA=${PGDIR}/16/data
-PGUSER=postgres
+### PostgreSQL DB Server  
+<details><summary>PostgreSQL DB Server</summary>  
 
-```
+*_PostgreSQL Variables used throughout this document_*  
+| Variable | GreenLight Value | Description                               |
+| ---      | ---              | ---                                       |
+| PGDIR    | /pgdata          | Mountpoint used for PostgreSQL DB files   |
+| PGDATA   | ${PGDIR}/16/data | PostgreSQL DB Data directory              |
+| PGUSER   | postgres         | OS System User / PostgreSQL process owner |
+
+1. Install and Configure PostgreSQL 16 Server  
 #### Install PostgreSQL 16  
 - Download/Install PostgreSQL packages  
 ```
@@ -45,22 +47,37 @@ sudo systemctl enable postgresql
 
 ```
 
-> Configure PostgreSQL DB Access from cluster hosts
+2. Configure PostgreSQL DB Access from cluster hosts
+> **_Perform these operations as root or as $PGUSER_**
 ```
-cat >> ${PGDATA}/pg_hba.conf << EOT
-#OpenText OPTIC Connections:
-host    all             all             10.6.9.0/23            trust
-host    all             all             17.16.0.0/20           trust
+if [ ! -v PGDATA ]; then 
+  if [ ! -v PGDIR ]; then 
+    PGDIR=/pgdata; echo Setting PGDIR: ${PGDIR};
+  fi
+  PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA}; 
+fi
+
+cat << EOT >> ${PGDATA}/pg_hba.conf
+
+## OpenText OPTIC Connections:
+host    all             all             10.10.10.0/24           trust
+host    all             all             17.16.0.0/20            trust
 host    all             all             172.17.17.0/24          trust
 EOT
 
-```
-```
-sed -e "/max_connections/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
-sed -e "/shared_buffers/ s/^#*/#/g" -i /pgdata/14/data/postgresql.conf
+tail -10 ${PGDATA}/pg_hba.conf
 
-cat <<EOT >> /pgdata/14/data/postgresql.conf
-## OPTIC Edits - NOM 2022.11
+```
+```
+if [ ! -v PGDIR ]; then PGDIR=/pgdata; echo Setting PGDIR:  ${PGDIR}; fi
+if [ ! -v PGDATA ]; then PGDATA=${PGDIR}/16/data; echo Setting PGDATA: ${PGDATA}; fi
+
+sed -e "/max_connections/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
+sed -e "/shared_buffers/ s/^#*/#/g" -i ${PGDATA}/postgresql.conf
+
+cat << EOT >> ${PGDATA}/postgresql.conf
+
+## BEGIN ## OpenText OPTIC Edits
 listen_addresses = '*'
 max_connections = 450
 shared_buffers = 6GB
@@ -82,10 +99,20 @@ max_parallel_maintenance_workers = 4
 track_counts = on
 autovacuum = on
 #timezone = 'UTC'
-## OPTIC Edits - NOM 2022.11
+## END ## OpenText OPTIC Edits
 EOT
 
+tail -30 ${PGDATA}/postgresql.conf
+
 ```
+
+3.  Restart PostgreSQL service to complete the changes
+```
+sudo systemctl restart postgresql
+systemctl status postgresql
+
+```
+</details>
 
 ## NFS Server  
 > Install NFS Utilities for Fileshare  
