@@ -35,17 +35,17 @@ chmod 0600 .ssh/authorized_keys
 | PGUSER   | postgres         | OS System User / PostgreSQL process owner |
 
 1. Install and Configure PostgreSQL 16 Server  
-#### Install PostgreSQL 16  
-- Download/Install PostgreSQL packages  
-```
-sudo dnf -qy module disable postgresql:13
-sudo dnf module enable postgresql:16
-sudo dnf install -y postgresql-server
-sudo postgresql-setup --initdb
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-
-```
+   #### Install PostgreSQL 16  
+   - Download/Install PostgreSQL packages  
+   ```
+   sudo dnf -qy module disable postgresql:13
+   sudo dnf module enable postgresql:16
+   sudo dnf install -y postgresql-server
+   sudo postgresql-setup --initdb
+   sudo systemctl start postgresql
+   sudo systemctl enable postgresql
+   
+   ```
 
 2. Configure PostgreSQL DB Access from cluster hosts
 > **_Perform these operations as root or as $PGUSER_**
