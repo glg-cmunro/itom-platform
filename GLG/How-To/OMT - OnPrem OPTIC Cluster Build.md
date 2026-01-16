@@ -1,6 +1,9 @@
 1. OnPrem OPTIC Cluster Architecture
     - K8s Master Node (1 or 3)
         - OS: Rocky Linux 9.5
+        - CPU: 
+        - RAM: 
+        - DISK: 1. sda - 80GB, 2. sdb - 120GB
     - K8s Worker Node (At least 3)
         - OS: Rocky Linux 9.5
     - PostgreSQL Server
