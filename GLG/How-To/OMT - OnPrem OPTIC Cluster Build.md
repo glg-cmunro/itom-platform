@@ -158,7 +158,7 @@ chmod 0600 .ssh/authorized_keys
    ```
    \q
    
-   ```
+   ```  
 </details>
 
 ## NFS Server  
@@ -202,3 +202,63 @@ sudo systemctl start nfs-server
 sudo systemctl enable nfs-server
 
 ```
+
+## Control Plane
+#### System Pre-requisites
+> SSHD setup / verify
+/etc/ssh/sshd_config
+PasswordAuthentication yes
+PubkeyAuthentication yes
+PermitRootLogin yes
+PermitRootLogin prohibit-password
+PermitTTY yes
+#REMOVE_IF_EXISTS ForceCommand internal-sftp
+
+DELETE_IF_EXISTS /etc/ssh/disable_scp
+
+systemctl restart sshd.service
+
+> Name resolution - localhost
+grep -v '^\s*#' /etc/hosts 2>/dev/null | grep -E '\slocalhost$|\slocalhost\s'
+
+> Disable swap space
+
+> OS Settings
+```
+if [ `lsmod |grep -wc br_netfilter` -gt 0 ]; then 
+  echo REQ_COMPLETE: Module br_netfilter; 
+else 
+  echo "br_netfilter" | sudo tee /etc/modules-load.d/br_netfilter.conf;
+fi
+
+#
+if [ ! -f /etc/sysctl.d/10-optic.conf ]; then 
+  cat << EOT | sudo tee /etc/sysctl.d/10-optic.conf
+  net.bridge.bridge-nf-call-iptables = 1
+  net.bridge.bridge-nf-call-ip6tables = 1
+  net.ipv4.ip_forward = 1
+  kernel.sem=50100 128256000 50100 2560
+  fs.inotify.max_user_watches = 524288
+  fs.inotify.max_user_instances = 512
+  EOT
+
+else
+  echo REQ_COMPLETE: sysctl config; 
+fi
+
+```  
+> OS Packages
+
+> Time synchronization
+
+
+## Cluster Workers
+
+
+
+
+## OMT Install command
+~/omt/24.4/OMT_Embedded_K8s_24.4-270/install \
+ -c ~/omt/omt-install-config.json \
+ --nfsprov-server tkk8snfs01.int.jcthepcguy.com \
+ --nfsprov-folder /var/vols/itom/omt

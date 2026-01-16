@@ -1,0 +1,46 @@
+{
+    "adminPassword": "Gr33nl1ght_",
+    "allowWorkerOnMaster": false,
+    "nodeUser": "cmunro",
+    "nodePassword": "Cyberwolf!92179",
+    "masterNodes": [],
+    "workerNodes": [
+        {
+            "hostname": "tkk8swrk01.int.jcthepcguy.com",
+            "user": "cmunro",
+            "password": "Cyberwolf!92179"
+        },
+        {
+            "hostname": "tkk8swrk02.int.jcthepcguy.com",
+            "user": "cmunro",
+            "password": "Cyberwolf!92179"
+        },
+        {
+            "hostname": "tkk8swrk03.int.jcthepcguy.com",
+            "user": "cmunro",
+            "password": "Cyberwolf!92179"
+        }
+    ],
+    "licenseAgreement": {
+        "eula": true
+    },
+    "connection": {
+        "externalHostname": "tkk8s.int.jcthepcguy.com",
+        "externalAccessPort": 5443,
+        "externalAccessCertPort": 5444
+    },
+    "database": {
+        "type": "extpostgres",
+        "param": {
+            "dbTlsSkipHostnameVerification": false,
+            "dbHost": "tkk8ssql01.int.jcthepcguy.com",
+            "dbPort": 5432,
+            "dbName": "omt",
+            "dbUser": "dbadmin",
+            "dbPassword": "Gr33nl1ght_",
+            "dbAutoCreate": true
+        }
+    },
+    "skipImageCheck": false
+}
+
