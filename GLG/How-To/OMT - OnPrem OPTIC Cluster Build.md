@@ -261,7 +261,8 @@ fi
 
 
 ## OMT Install command
-~/omt/24.4/OMT_Embedded_K8s_24.4-270/install \
- -c ~/omt/omt-install-config.json \
+/opt/glg/ot/omt/24.4/OMT_Embedded_K8s_24.4-270/install \
+ -c /opt/glg/ot/omt/omt-install-config.json \
+ -p /opt/glg/ot/omt/omt-install.properties \
  --nfsprov-server tkk8snfs01.int.jcthepcguy.com \
  --nfsprov-folder /var/vols/itom/omt

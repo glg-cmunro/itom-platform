@@ -50,3 +50,54 @@ aws ec2 authorize-security-group-ingress \
     --port 5433 \
     --cidr 10.110.0.0/16 \
     --profile bsmobm
+
+### Production Vertica Ingress
+#### Add inbound port to Security Group
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0dc73e0cfee64c9b5 \
+    --protocol tcp \
+    --port 5433 \
+    --cidr 10.0.0.0/16 \
+    --profile bsmobm
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0dc73e0cfee64c9b5 \
+    --protocol tcp \
+    --port 5433 \
+    --cidr 10.41.0.0/16 \
+    --profile bsmobm
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0dc73e0cfee64c9b5 \
+    --protocol tcp \
+    --port 5433 \
+    --cidr 10.101.0.0/16 \
+    --profile bsmobm
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0dc73e0cfee64c9b5 \
+    --protocol tcp \
+    --port 5433 \
+    --cidr 10.110.0.0/16 \
+    --profile bsmobm
+
+
+### UDX Plugin setup
+export VERTICA_HOME=/vertica/data
+export VERTICA_DBA=dbadmin
+export VERTICA_RO_USER=vertica_rouser
+export VERTICA_RW_USER=vertica_rwuser
+export VERTICA_DB=itomdb
+export VERTICA_DBA_PASS=TRe6uMA2\$2022
+
+cd /usr/local/itom-di-pulsarudx/bin
+./dbinit.sh genconfig
+
+/opt/vertica/bin/vsql -U dbadmin -d itomdb -f /usr/local/itom-di-pulsarudx/sql/uninstall.sql -w TRe6uMA2\$2022
+
+/opt/vertica/bin/admintools -t stop_db -d itomdb -p TRe6uMA2\$2022 -F
+
+/opt/vertica/bin/admintools -t start_db -d itomdb -p TRe6uMA2\$2022
+
+sudo /usr/local/itom-di-pulsarudx/bin/dbinit.sh
+
