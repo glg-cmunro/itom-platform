@@ -39,20 +39,21 @@ FROM (
 
 SELECT pg_size_pretty( pg_database_size('dbname') );
 SELECT pg_size_pretty( pg_database_size('oocentraldb') );
+SELECT pg_size_pretty( pg_database_size('obm_event') );
 
-SELECT pg_size_pretty( pg_database_size('bo_ats
-SELECT pg_size_pretty( pg_database_size('bo_config
-SELECT pg_size_pretty( pg_database_size('bo_license
-SELECT pg_size_pretty( pg_database_size('bo_user
+SELECT pg_size_pretty( pg_database_size('bo_ats') );
+SELECT pg_size_pretty( pg_database_size('bo_config') );
+SELECT pg_size_pretty( pg_database_size('bo_license') );
+SELECT pg_size_pretty( pg_database_size('bo_user') );
 
-SELECT pg_size_pretty( pg_database_size('autopassdb
-SELECT pg_size_pretty( pg_database_size('idm
-SELECT pg_size_pretty( pg_database_size('maas_admin
-SELECT pg_size_pretty( pg_database_size('maas_template
-SELECT pg_size_pretty( pg_database_size('smartadb
-SELECT pg_size_pretty( pg_database_size('xservices_ems
-SELECT pg_size_pretty( pg_database_size('xservices_mng
-SELECT pg_size_pretty( pg_database_size('xservices_rms
+SELECT pg_size_pretty( pg_database_size('autopassdb') );
+SELECT pg_size_pretty( pg_database_size('idm') );
+SELECT pg_size_pretty( pg_database_size('maas_admin') );
+SELECT pg_size_pretty( pg_database_size('maas_template') );
+SELECT pg_size_pretty( pg_database_size('smartadb') );
+SELECT pg_size_pretty( pg_database_size('xservices_ems') );
+SELECT pg_size_pretty( pg_database_size('xservices_mng') );
+SELECT pg_size_pretty( pg_database_size('xservices_rms') );
 
 aplsdb
 oocentraldb
