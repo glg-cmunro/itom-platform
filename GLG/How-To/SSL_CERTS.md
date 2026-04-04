@@ -10,14 +10,14 @@ Root CA
         |__ Server Certificate
 
 If you trust the Root CA certificate server inturn you trust anything that was signed by the Root CA
-With the Subordinate CA signed by the Root CA inturn you trust anything that was signed by the Subordinate CA as well
+By then trusting the Subordinate CA signed by the Root CA inturn you trust anything that was signed by the Subordinate CA as well
 
 The Server Certificate is used as a way to identify the server providing content.
 The Subordinate, and Root CA certificates are only used to establish trust in the server that is providing content. [^1]
 
 It is possible to combine multiple certificates into a single file creating a full certificate chain.
 Each certificate in the chain should be:
-- PEM formated Base64 encoded string
+- PEM formated
 - Begin with '--------------------- BEGIN CERTIFICATE -----------------------'
 - End with   '--------------------- END CERTIFICATE -------------------------'
 - Reverse order in the chain file starting with the Server Certificate, ending with the Root CA

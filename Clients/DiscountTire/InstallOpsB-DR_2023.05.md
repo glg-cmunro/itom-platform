@@ -652,9 +652,9 @@ aws elbv2 deregister-targets --target-group-arn $TG_383 --targets $TGT_383_OLD -
 curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 sudo mv /tmp/eksctl /usr/bin/
 
-###Get OIDC Provider, or Add it to the cluster
+### Get OIDC Provider, or Add it to the cluster  
 eksctl utils associate-iam-oidc-provider --cluster ${CLUSTER_NAME} --approve --profile bsmobm
-oidc_id=$(aws eks describe-cluster --name ${CLUSTER_NAME} --query "cluster.identity.oidc.issuer" --output text | cut -d '/' -f 5) && echo $oidc_id
+oidc_id=$(aws eks describe-cluster --name ${CLUSTER_NAME} --query "cluster.identity.oidc.issuer" --output text --profile bsmobm | cut -d '/' -f 5) && echo $oidc_id
 
 <!--
 cat << EOT > aws-ebs-csi-driver-trust-policy.json
@@ -678,11 +678,11 @@ cat << EOT > aws-ebs-csi-driver-trust-policy.json
 }
 EOT
 
-aws iam create-role \
+aws iam create-role --profile bsmobm \
   --role-name ${CLUSTER_NAME}_EBS_CSI_DriverRole \
   --assume-role-policy-document file://"aws-ebs-csi-driver-trust-policy.json"
   
-aws iam attach-role-policy \
+aws iam attach-role-policy --profile bsmobm \
   --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy \
   --role-name ${CLUSTER_NAME}_EBS_CSI_DriverRole
 -->

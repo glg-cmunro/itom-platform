@@ -47,7 +47,7 @@ aws rds modify-db-parameter-group --db-parameter-group-name obm-pgsql-16 --param
 > Create Velero Backup  
 ```
 # Set the desired number of hours to keep the Velero backup
-VELERO_TTL=8765h # = 1year
+VELERO_TTL=8765h # 8765 hours = 1year
 
 ```
 ```
@@ -195,7 +195,7 @@ cdfctl runlevel set -l DOWN -n core
 ## Upgrade DB Instance  
 ```
 RDS_DB_ID=$(kubectl get cm -n core default-database-configmap -o json |  jq -r .data.DEFAULT_DB_HOST | awk -F. '{print $1}')-restore && echo RDS DB ID: ${RDS_DB_ID};
-RDS_DB_VERSION='16.6';
+RDS_DB_VERSION='16.10';
 
 aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name obm-pgsql-16 --apply-immediately
 aws rds modify-db-instance --profile bsmobm --db-instance-identifier ${RDS_DB_ID} --engine-version ${RDS_DB_VERSION} --allow-major-version-upgrade --db-parameter-group-name default --apply-immediately
