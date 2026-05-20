@@ -1,5 +1,4 @@
-# AWS_EKS - Upgrade aws-node / kube-proxy
-
+# AWS_EKS - Upgrade aws-node / kube-proxy  
 
 aws eks describe-addon --cluster-name my-cluster --addon-name vpc-cni --query addon.addonVersion --output text	#Should not return anything for self-managed
 
